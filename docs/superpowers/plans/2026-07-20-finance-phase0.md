@@ -63,24 +63,24 @@ committed at matching sha.
 **Files:** create `correction/judge.py`, `scripts/judge_reliability.py`;
 tests `tests/test_judge.py`.
 
-1. [ ] `judge.py`: `grade(question, rubric, answer, model=JUDGE_MODEL, passes=1)
+1. [x] `judge.py`: `grade(question, rubric, answer, model=JUDGE_MODEL, passes=1)
    -> {"total": float, "max": float, "normalized": float, "items": {"R1": pts, ...},
    "traps_hit": ["T2", ...], "bonuses": [...], "raw": str}` — prompt per plan §2
    (rubric verbatim, required output format), strict output parser with one
    repair-retry on parse failure, then hard error (no silent zeros). Uses
    `_chat_with_retry`. Assert `JUDGE_MODEL != TEACHER_MODEL` at import.
-2. [ ] Parser tests on synthetic judge outputs: clean, malformed-then-repaired,
+2. [x] Parser tests on synthetic judge outputs: clean, malformed-then-repaired,
    trap lines, bonus lines, missing TOTAL (→ error).
-3. [ ] **[LIVE]** `scripts/judge_reliability.py`: 40 stratified questions ×
+3. [x] **[LIVE]** `scripts/judge_reliability.py`: 40 stratified questions ×
    1 student answer each (generate once with `qwen/qwen3-8b`, cache to JSONL)
    → judge twice in fresh contexts → report test–retest Pearson r + MAD
    (normalized). Output table into `docs/FINDINGS_FINANCE.md` (new file).
    **Gate: MAD ≤ 5 → single pass; 5 < MAD ≤ 8 → set `JUDGE_PASSES=2` default;
    MAD > 8 → STOP, write to Questions section (K1 territory).**
-4. [ ] Select 15 of the 40 for hand-audit: dump `(question, answer, judge
+4. [x] Select 15 of the 40 for hand-audit: dump `(question, answer, judge
    breakdown)` to `runs/judge_audit_sample.md` for Rohan to eyeball — flag in
    the execution log when ready.
-5. [ ] Commit: `feat: rubric judge harness + reliability check results`
+5. [x] Commit: `feat: rubric judge harness + reliability check results`
 
 **Acceptance:** reliability numbers in `docs/FINDINGS_FINANCE.md`, verbatim;
 gate decision recorded; audit sample ready for human review.
@@ -122,7 +122,7 @@ ambiguities → Questions section, do NOT improvise around plan §1–§2 rules.
 
 - v1 closeout: DONE 2026-07-20 — probe 228/448 (~183 hard), no merge/manifest; hermetic G0.1–G0.2 tooling in `71ae446` + this closeout commit.
 - Task 1: DONE 2026-07-20 — HF test split cached (400); manifest 200/80/120 seed=42; rubric firewall tests; pytest 285 passed.
-- Task 2:
+- Task 2: DONE 2026-07-20 — MAD=4.456 (n=26 pairs), pearson_r=0.829 → GATE PASS_SINGLE (JUDGE_PASSES=1). Answers 33/40 usable. Audit: runs/judge_audit_sample.md (Rohan). Findings in docs/FINDINGS_FINANCE.md.
 - Task 3:
 
 ## Questions
