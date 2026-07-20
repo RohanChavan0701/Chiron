@@ -15,10 +15,11 @@ All numbers from real runs, multi-repeat, committed in `docs/FINDINGS_CODING.md`
 
 1. **The pipeline works mechanically.** Drift detection fires, teacher repairs verify against unit tests, memory reaches the student's prompts (confirmed by a per-run injection audit we built).
 2. **Student capacity is a hard precondition.** A 3B student cannot absorb teaching on hard problems (p ≈ 0.0000 vs a strong model on identical questions).
-3. **The key negative result: teacher-verified memory is not automatically useful.** On two capacity-adequate students, the same memory bundle produced zero effect on one (confirmed across 4 repeats) and a *deterministic −26.5 point* accuracy drop on the other (identical across 3 repeats). Correct examples ≠ helpful examples.
-4. **Measurement discipline established.** We quantified provider-side nondeterminism (deltas under ~6 points are noise on our stack) and now require ≥3 repeats + paired statistics before believing any effect.
+3. **The key negative result: teacher-verified memory is not automatically useful.** On two capacity-adequate students, the same memory bundle produced zero effect on one (confirmed across 4 repeats) and a *deterministic −26.5 percentage-point* accuracy drop on the other (identical across 3 repeats). Correct examples ≠ helpful examples.
+4. **Measurement discipline established.** We quantified provider-side nondeterminism (deltas under ~6 percentage points are noise on our stack) and now require ≥3 repeats + paired statistics before believing any effect.
+5. **A first uplift-gating trial (GSM8K, 3B student) sharpened the design.** The gate itself worked — it admitted only items with measured positive effect and rejected the rest — but held-out transfer still failed, because topic-based retrieval left 43% of held-out questions with no injected memory at all. Lesson: gating must be paired with better retrieval and a capacity-adequate student; both are built into the new plan.
 
-Finding #3 is the scientific core going forward: memory items must be admitted by **measured student improvement** ("uplift gating"), not by teacher correctness. No published system in our reference set does this — it is our novel mechanism.
+Finding #3 is the scientific core going forward: memory items must be admitted by **measured student improvement** ("uplift gating"), not by teacher correctness. No published system in our reference set gates memory writes this way — it is our novel mechanism, and finding #5 tells us the two conditions it needs to work.
 
 ## Current phase: FinancePro-Bench (started today)
 
@@ -33,7 +34,7 @@ Why this benchmark: 400 expert finance questions with point-based rubrics that *
 | Dataset cached, licensed (CC-BY-4.0), splits frozen 200 train / 80 validation / 120 held-out, category-stratified, seed-pinned | ✅ Done, committed |
 | Rubric firewall (students can never see grading rubrics — enforced by tests, not convention) | ✅ Done |
 | LLM judge harness (rubric-following grader, strict output parsing, judge ≠ teacher to avoid self-preference bias) | ✅ Code done, tested |
-| Judge reliability check (grade 40 answers twice; gate: mean absolute difference ≤ 5 points or the benchmark is unusable at our effect size) | 🔄 Running — answer generation ~90% done |
+| Judge reliability check (grade 40 answers twice; gate: mean absolute difference ≤ 5 points or the benchmark is unusable at our effect size) | 🔄 Running — 28 of 40 sample answers generated and usable; 12 being regenerated after model timeouts, then the double-grading pass runs |
 | Student model selection by measured headroom + held-out baselines | Next |
 
 ## Working model
