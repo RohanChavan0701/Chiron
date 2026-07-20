@@ -63,10 +63,26 @@ Honest numbers only. Nulls and skips reported as such.
 
 Mean normalized score on this validation reliability set is ~8 (pass1/pass2). That is **not** the Phase 0 held-out baseline; it only characterizes this probe sample under a weak 8B student.
 
-## C. Headroom + held-out baselines (G0.3/G0.4)
+## C. Headroom probe (G0.4)
 
-*(pending — Task 3; only after this gate)*
+*(LIVE numbers pending — harness ready in `scripts/finance_baselines.py`)*
+
+| Model | n graded | Mean normalized | In band 15–40? |
+|-------|---------:|----------------:|:---------------|
+| `qwen/qwen3-8b` | — | — | — |
+| `qwen/qwen3-30b-a3b-instruct-2507` | — | — | — |
+| `qwen/qwen3.6-27b` | — | — | — |
+
+**Chosen student:** *(pending LIVE)*
+
+### Reliability (band-range) — after student pick
+
+*(pending 3b)*
+
+## D. Held-out baselines (G0.3)
+
+*(pending 3c — only after band-range gate)*
 
 ---
 
-*Updated 2026-07-20 after G0.2 LIVE reliability run.*
+*Updated 2026-07-20 — G0.2 done; Task-3 hermetic harness staged.*

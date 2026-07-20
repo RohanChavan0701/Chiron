@@ -92,23 +92,29 @@ gate decision recorded; audit sample ready for human review.
 Task 3 spec — build it here if v1 never finished it); tests
 `tests/test_finance_baselines.py`.
 
-1. [ ] **[LIVE] Headroom probe (G0.4):** 3 student candidates × 20 stratified
+**User order (binding):** 3a headroom → **3b band-range judge recheck** → 3c
+held-out baselines. Commit after each sub-step.
+
+1. [ ] **[LIVE] 3a Headroom probe (G0.4):** 3 student candidates × 20 stratified
    VALIDATION questions, bare prompt → judged. Pick the smallest model scoring
    15–40 normalized as THE student; record the table. If all <15 → try
    `qwen/qwen3.5-35b-a3b`; if all >40 → add smaller qwen. Write outcome to
    `docs/FINDINGS_FINANCE.md`.
-2. [ ] **[LIVE] Baselines on HELD-OUT (120 Qs), chunked:** student-alone and
+2. [ ] **[LIVE] 3b Band-range judge recheck (NEW, before held-out):** re-judge
+   the chosen student's 20 probe answers in a fresh context; Pearson r + MAD.
+   Gate: MAD≤5 → JUDGE_PASSES=1; 5–8 → JUDGE_PASSES=2; >8 → STOP (no 3c).
+3. [ ] **[LIVE] 3c Baselines on HELD-OUT (120 Qs), chunked:** student-alone and
    teacher-alone arms, single pass each (both temp-0; note deterministic-or-not
    per model as measured), judged with the gated `JUDGE_PASSES`. Per-category
    breakdown + overall mean ± bootstrap CI into `docs/FINDINGS_FINANCE.md`.
    THIS IS THE ONLY HELD-OUT TOUCH ALLOWED in Phase 0 — no memory arms yet.
-3. [ ] Tests: baseline script plumbing with mocked judge/adapter; bootstrap
-   math (if newly built).
-4. [ ] Commit: `feat: headroom probe + held-out baselines (student, teacher)`
+4. [x] Tests: baseline script plumbing with mocked judge/adapter; `mean_bootstrap`
+   math. Hermetic harness in `scripts/finance_baselines.py`.
+5. [ ] Commits: hermetic harness; then per-step LIVE commits (3a / 3b / 3c).
 
 **Acceptance:** `docs/FINDINGS_FINANCE.md` has: judge reliability table, student
-band table + choice, held-out baseline table (student vs teacher, per-category),
-all verbatim from logs under `runs/`.
+band table + choice, band-range reliability, held-out baseline table (student vs
+teacher, per-category), all verbatim from logs under `runs/`.
 
 ---
 
@@ -123,7 +129,8 @@ ambiguities → Questions section, do NOT improvise around plan §1–§2 rules.
 - v1 closeout: DONE 2026-07-20 — probe 228/448 (~183 hard), no merge/manifest; hermetic G0.1–G0.2 tooling in `71ae446` + this closeout commit.
 - Task 1: DONE 2026-07-20 — HF test split cached (400); manifest 200/80/120 seed=42; rubric firewall tests; pytest 285 passed.
 - Task 2: DONE 2026-07-20 — MAD=4.456 (n=26 pairs), pearson_r=0.829 → GATE PASS_SINGLE (JUDGE_PASSES=1). Answers 33/40 usable. Audit: runs/judge_audit_sample.md (Rohan). Findings in docs/FINDINGS_FINANCE.md.
-- Task 3:
+- Task 3: hermetic harness DONE (scripts/finance_baselines.py, mean_bootstrap,
+  tests). LIVE 3a in progress / resume from runs/finance_headroom_*.jsonl.
 
 ## Questions
 

@@ -1,7 +1,15 @@
-"""Hermetic tests for paired_bootstrap."""
+"""Hermetic tests for paired_bootstrap / mean_bootstrap."""
 from __future__ import annotations
 
-from analysis.bootstrap import paired_bootstrap
+from analysis.bootstrap import mean_bootstrap, paired_bootstrap
+
+
+class TestMeanBootstrap:
+    def test_constant(self):
+        out = mean_bootstrap([5.0] * 20, n_boot=1000, seed=0)
+        assert out["mean"] == 5.0
+        assert out["ci_low"] == 5.0
+        assert out["ci_high"] == 5.0
 
 
 class TestPairedBootstrap:
