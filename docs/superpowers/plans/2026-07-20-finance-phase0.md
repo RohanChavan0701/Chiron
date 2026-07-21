@@ -85,7 +85,7 @@ tests `tests/test_judge.py`.
 **Acceptance:** reliability numbers in `docs/FINDINGS_FINANCE.md`, verbatim;
 gate decision recorded; audit sample ready for human review.
 
-### Task 3 — Headroom probe + baselines (G0.3, G0.4)
+### Task 3 — Headroom probe + baselines (G0.3, G0.4) ✅ (3a+3b+3c DONE)
 
 **Files:** create `scripts/finance_baselines.py`; extend
 `analysis/bootstrap.py` if not yet built (paired bootstrap per v1 work-order
@@ -103,14 +103,14 @@ held-out baselines. Commit after each sub-step.
 2. [x] **[LIVE] 3b Band-range judge recheck (NEW, before held-out):** re-judge
    the chosen student's 20 probe answers in a fresh context; Pearson r + MAD.
    Gate: MAD≤5 → JUDGE_PASSES=1; 5–8 → JUDGE_PASSES=2; >8 → STOP (no 3c).
-3. [ ] **[LIVE] 3c Baselines on HELD-OUT (120 Qs), chunked:** student-alone and
+3. [x] **[LIVE] 3c Baselines on HELD-OUT (120 Qs), chunked:** student-alone and
    teacher-alone arms, single pass each (both temp-0; note deterministic-or-not
    per model as measured), judged with the gated `JUDGE_PASSES`. Per-category
    breakdown + overall mean ± bootstrap CI into `docs/FINDINGS_FINANCE.md`.
    THIS IS THE ONLY HELD-OUT TOUCH ALLOWED in Phase 0 — no memory arms yet.
 4. [x] Tests: baseline script plumbing with mocked judge/adapter; `mean_bootstrap`
    math. Hermetic harness in `scripts/finance_baselines.py`.
-5. [ ] Commits: hermetic harness; then per-step LIVE commits (3a / 3b / 3c).
+5. [x] Commits: hermetic harness; then per-step LIVE commits (3a / 3b / 3c).
 
 **Acceptance:** `docs/FINDINGS_FINANCE.md` has: judge reliability table, student
 band table + choice, band-range reliability, held-out baseline table (student vs
@@ -131,7 +131,9 @@ ambiguities → Questions section, do NOT improvise around plan §1–§2 rules.
 - Task 2: DONE 2026-07-20 — MAD=4.456 (n=26 pairs), pearson_r=0.829 → GATE PASS_SINGLE (JUDGE_PASSES=1). Answers 33/40 usable. Audit: runs/judge_audit_sample.md (Rohan). Findings in docs/FINDINGS_FINANCE.md.
 - Task 3: hermetic `11729de`; 3a `e9c3d7f` chosen `qwen/qwen3.6-27b`.
   3b DONE — band-range n=17, pearson_r=0.962, MAD=4.188 → PASS_SINGLE
-  (`JUDGE_PASSES=1`). Next: 3c held-out baselines.
+  (`JUDGE_PASSES=1`). 3c DONE — see Task 3c line.
+
+- Task 3c: DONE 2026-07-21 09:21 UTC — held-out baselines n=114 gradable/120. Student `qwen/qwen3.6-27b` mean **26.044** CI [22.331, 29.811]; teacher `minimax/minimax-m3` mean **35.794** CI [31.559, 40.278]; Δ **+9.749** CI [5.390, 14.037] p=0. Trap highlight student **T3=23**. 6 rubrics ungradable (no Item R*). FINDINGS §D updated. Reminder: Rohan owes `runs/judge_audit_sample.md` eyeball.
 
 ## Questions
 
