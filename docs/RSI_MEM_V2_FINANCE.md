@@ -170,7 +170,8 @@ Write path: teacher repairs a failed answer against the rubric → distills into
 
 **Phase 0 nearly complete** (`docs/FINDINGS_FINANCE.md`):
 - G0.1 splits frozen 200/80/120 seed 42, rubric firewall (test-enforced) — done.
-- G0.2 judge (gpt-5.2) ≠ teacher (minimax-m3); reliability PASS: low-range MAD 4.46 / r 0.83, band-range MAD 4.19 / r 0.96 → JUDGE_PASSES=1.
+- G0.2 judge (gpt-5.2) ≠ teacher; reliability PASS: low-range MAD 4.46 / r 0.83, band-range MAD 4.19 / r 0.96 → JUDGE_PASSES=1.
+- **Teacher = `deepseek/deepseek-v3.2`** (swapped from minimax-m3 on 2026-07-20: minimax hung/timed out at 240s on long finance answers; deepseek ~22s/answer, ~10× faster, strong reasoner, disjoint from judge and student family). This is the ceiling arm (A5) AND the Phase-2 memory-repair engine.
 - G0.4 student = **qwen/qwen3.6-27b** (26.3/100, mid-band; thinking disabled). 8B floored at 9.3.
 - G0.3 held-out baselines (A1 student + A5 teacher) — running at v2.1 adoption.
 - Pending human gate: 15-Q hand-audit (`runs/judge_audit_sample.md`).
