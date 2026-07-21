@@ -21,10 +21,12 @@ OR_BASE="https://openrouter.ai/api/v1"
 export AGENT_BASE_URL="$OR_BASE"
 export AGENT_API_KEY="$OPENROUTER_API_KEY"
 
-# Teacher
+# Teacher (CTO: GLM 5.2 — heavy reasoner, needs large token budget or content
+# comes back empty because it truncates mid-thinking).
 export TEACHER_BASE_URL="$OR_BASE"
 export TEACHER_API_KEY="$OPENROUTER_API_KEY"
-export TEACHER_MODEL="${TEACHER_MODEL:-deepseek/deepseek-v3.2}"
+export TEACHER_MODEL="${TEACHER_MODEL:-z-ai/glm-5.2}"
+export TEACHER_MAX_TOKENS="${TEACHER_MAX_TOKENS:-4000}"
 
 # Judge (must differ from teacher — asserted in code)
 export JUDGE_BASE_URL="$OR_BASE"

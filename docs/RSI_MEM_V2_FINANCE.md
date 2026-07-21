@@ -172,6 +172,19 @@ Write path: teacher repairs a failed answer against the rubric → distills into
 - G0.1 splits frozen 200/80/120 seed 42, rubric firewall (test-enforced) — done.
 - G0.2 judge (gpt-5.2) ≠ teacher; reliability PASS: low-range MAD 4.46 / r 0.83, band-range MAD 4.19 / r 0.96 → JUDGE_PASSES=1.
 - **Teacher = `deepseek/deepseek-v3.2`** (swapped from minimax-m3 on 2026-07-20: minimax hung/timed out at 240s on long finance answers; deepseek ~1.5s/ping, strong reasoner, disjoint from judge and student family). Ceiling arm (A5) AND Phase-2 repair engine.
+### CTO directive (2026-07-20, 21:55) — focused single test
+
+> "Let's test one implementation at a time. Take finance-pro-bench. Use **GLM 5.2 as the teacher**, **Qwen 3.6 27B as the student**. See how **TraceLift** is able to improve. Don't go for methods that require finetuning."
+
+This narrows the active plan to ONE vertical slice, superseding the multi-phase sweep for now:
+- **Student:** `qwen/qwen3.6-27b` (fixed by CTO — no headroom re-selection needed).
+- **Teacher:** `z-ai/glm-5.2` (was deepseek-v3.2). Heavy reasoner: needs ≥4000 max_tokens or content returns empty (truncates mid-thinking). Judge stays `openai/gpt-5.2` — still ≠ teacher ✓.
+- **Method:** TraceLift = uplift-gated memory only (`correction/tracelift.py`, ported from GSM8K). **NO fine-tuning / LoRA** — Phase 5 is OFF.
+- **Deliverable:** A1 (student alone) vs A4 (student + TraceLift memory) on held-out, with A2 (compute-matched retries) as the honest bar and A5 (GLM teacher) as ceiling.
+- Everything on OpenRouter.
+
+### Platform
+
 - **PLATFORM = OpenRouter only** (CTO requirement, 2026-07-20). All three roles use identical model slugs on OpenRouter (`qwen/qwen3.6-27b`, `deepseek/deepseek-v3.2`, `openai/gpt-5.2`) — all confirmed serving. Entrypoint: `scripts/use_openrouter_finance.sh`. **Prime is abandoned.** Consequence: the Prime-measured Phase-0 gates (judge MAD 4.19, student headroom 26.3) must be **re-validated on OpenRouter** before trusting them (same slug ≠ same serving backend), and the Prime baseline partial is discarded — the full held-out baseline re-runs on OpenRouter so no comparison mixes platforms.
 - G0.4 student = **qwen/qwen3.6-27b** (26.3/100, mid-band; thinking disabled). 8B floored at 9.3.
 - G0.3 held-out baselines (A1 student + A5 teacher) — running at v2.1 adoption.
