@@ -132,11 +132,16 @@ def _judge_client() -> OpenAI:
     ).strip()
     if not key:
         raise RuntimeError("JUDGE_API_KEY or PRIME_API_KEY required for grading")
-    return OpenAI(
-        api_key=key,
-        base_url=base,
-        timeout=float(os.environ.get("AGENT_TIMEOUT_S", "90")),
-    )
+    kwargs: dict = {
+        "api_key": key,
+        "base_url": base,
+        "timeout": float(os.environ.get("AGENT_TIMEOUT_S", "90")),
+    }
+    # Team billing only when set; personal Prime accounts omit this.
+    team = (os.environ.get("PRIME_TEAM_ID") or os.environ.get("PRIME_TEAM") or "").strip()
+    if team and ("pinference" in base.lower() or "primeintellect" in base.lower()):
+        kwargs["default_headers"] = {"X-Prime-Team-ID": team}
+    return OpenAI(**kwargs)
 
 
 def _build_judge_messages(question: str, rubric: str, answer: str) -> list[dict]:

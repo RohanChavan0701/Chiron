@@ -238,21 +238,38 @@ def generate_answer(
             "chat_template_kwargs": {"enable_thinking": False},
         }
 
-    resp = _chat_with_retry(client, **kwargs)
+    def _call(kw: dict):
+        return _chat_with_retry(client, **kw)
+
+    resp = _call(kwargs)
     msg = resp.choices[0].message
     text = (msg.content or "").strip()
     if not text:
-        # Last-resort: some gateways put text only in reasoning when thinking
-        # cannot be disabled — do not treat as success for scoring.
         reasoning = getattr(msg, "reasoning", None) or (
             (msg.model_extra or {}).get("reasoning") if hasattr(msg, "model_extra") else None
         )
         if reasoning:
             _log.warning(
-                "empty content from %s (reasoning_len=%d); treating as empty answer",
+                "empty content from %s (reasoning_len=%d); retrying with max_tokens=8192",
                 config.model,
                 len(str(reasoning)),
             )
+            # Thinking models often exhaust a 2048 budget on reasoning alone.
+            for bump in (8192, 16384):
+                kw2 = dict(kwargs)
+                kw2["max_tokens"] = bump
+                # Prefer bare request — chat_template_kwargs can leave some
+                # providers in reasoning-only mode with empty content.
+                kw2.pop("extra_body", None)
+                _log.warning(
+                    "empty content from %s; retry max_tokens=%d no extra_body",
+                    config.model,
+                    bump,
+                )
+                resp2 = _call(kw2)
+                text = (resp2.choices[0].message.content or "").strip()
+                if text:
+                    break
     return text, stats
 
 

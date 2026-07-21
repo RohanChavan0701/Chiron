@@ -33,7 +33,7 @@ from adapters.finance import (  # noqa: E402
 from analysis.bootstrap import mean_bootstrap, paired_bootstrap  # noqa: E402
 from contracts.schemas import AgentConfig  # noqa: E402
 from correction import judge as judge_mod  # noqa: E402
-from correction.judge import grade  # noqa: E402
+from correction.judge import JudgeParseError, grade, rubric_max_points  # noqa: E402
 
 RUNS = ROOT / "runs"
 DEFAULT_CANDIDATES = [
@@ -177,6 +177,21 @@ def generate_for_ids(
                     f"FAILED ({err})",
                     flush=True,
                 )
+                # Do not burn the chunk retrying hard quota / auth failures.
+                low = err.lower()
+                if any(
+                    k in low
+                    for k in (
+                        "insufficient_funds",
+                        "insufficient balance",
+                        "insufficient_quota",
+                        "401",
+                        "403",
+                    )
+                ):
+                    raise SystemExit(
+                        f"FATAL provider error — refill funds or switch endpoint: {err}"
+                    ) from exc
                 time.sleep(min(2 ** attempt, 15))
         if err or not answer.strip():
             # Record failure but do NOT mark done for resume (require_ok filters it).
@@ -246,24 +261,47 @@ def grade_for_ids(
     answers = _latest_ok_answers(_answers_path(tag, model))
     t0 = time.time()
     n_new = 0
-    pending = [qid for qid in ids if (qid, pass_label) not in done]
+    # Only grade ids that already have answers — unanswered wait for a later resume.
+    pending = [
+        qid
+        for qid in ids
+        if (qid, pass_label) not in done and qid in answers
+    ]
+    skipped_no_ans = sum(
+        1 for qid in ids if (qid, pass_label) not in done and qid not in answers
+    )
     print(
         f"[grade/{tag}] model={model} pass={pass_label} pending={len(pending)} "
-        f"judge_passes={judge_passes}",
+        f"(no-answer-yet={skipped_no_ans}) judge_passes={judge_passes}",
         flush=True,
     )
-    for i, qid in enumerate(pending, 1):
-        if max_new is not None and n_new >= max_new:
-            print(f"[grade/{tag}] max-new={max_new} reached; pause", flush=True)
-            break
-        if time_budget_s is not None and (time.time() - t0) >= time_budget_s:
-            print(f"[grade/{tag}] time budget {time_budget_s}s; pause", flush=True)
-            break
-        row_a = answers.get(qid)
-        if not row_a:
-            print(f"  [grade {i}/{len(pending)}] {qid} wait (no answer yet)", flush=True)
-            continue
+    # Shuffle so persistent empty-judge failures don't monopolize every chunk.
+    random.Random(time.time()).shuffle(pending)
+    failed: list[str] = []
+    queue = list(pending)
+
+    def _grade_one(qid: str, i: int, total: int) -> bool:
+        """Return True if a row was written (success or permanent skip)."""
+        nonlocal n_new
+        row_a = answers[qid]
         p = get_problem(qid)
+        try:
+            rubric_max_points(p["rubric"])
+        except JudgeParseError as exc:
+            _append(
+                path,
+                {
+                    "id": qid,
+                    "category": p["category"],
+                    "model": model,
+                    "pass_i": pass_label,
+                    "error": f"ungradable_rubric: {exc}",
+                    "ts": time.time(),
+                },
+            )
+            n_new += 1
+            print(f"  [grade {i}/{total}] {qid} SKIP ungradable rubric", flush=True)
+            return True
         try:
             result = grade(
                 question=p["question"],
@@ -273,10 +311,10 @@ def grade_for_ids(
             )
         except Exception as exc:
             print(
-                f"  [grade {i}/{len(pending)}] {qid} FAILED ({exc}) — retry on --resume",
+                f"  [grade {i}/{total}] {qid} FAILED ({exc}) — defer",
                 flush=True,
             )
-            continue
+            return False
         _append(
             path,
             {
@@ -294,39 +332,104 @@ def grade_for_ids(
         )
         n_new += 1
         print(
-            f"  [grade {i}/{len(pending)}] {qid} norm={result['normalized']:.2f} "
+            f"  [grade {i}/{total}] {qid} norm={result['normalized']:.2f} "
             f"traps={result.get('traps_hit')}",
             flush=True,
         )
+        return True
+
+    for i, qid in enumerate(queue, 1):
+        if max_new is not None and n_new >= max_new:
+            print(f"[grade/{tag}] max-new={max_new} reached; pause", flush=True)
+            break
+        if time_budget_s is not None and (time.time() - t0) >= time_budget_s:
+            print(f"[grade/{tag}] time budget {time_budget_s}s; pause", flush=True)
+            break
+        if not _grade_one(qid, i, len(queue)):
+            failed.append(qid)
+
+    # One deferred pass on failures if budget remains.
+    if failed and (time_budget_s is None or (time.time() - t0) < time_budget_s):
+        print(f"[grade/{tag}] retrying {len(failed)} deferred failures", flush=True)
+        for i, qid in enumerate(failed, 1):
+            if max_new is not None and n_new >= max_new:
+                break
+            if time_budget_s is not None and (time.time() - t0) >= time_budget_s:
+                print(f"[grade/{tag}] time budget {time_budget_s}s; pause", flush=True)
+                break
+            _grade_one(qid, i, len(failed))
     return path
 
 
 def mean_for_model(tag: str, model: str, pass_i: int = 1) -> dict:
-    scores = []
-    traps: Counter[str] = Counter()
-    by_cat: dict[str, list[float]] = defaultdict(list)
+    # Keep latest OK grade per id (concurrent resumes may append duplicates).
+    latest: dict[str, dict] = {}
+    n_skip = 0
     for r in _load_jsonl(_grades_path(tag, model)):
         if int(r.get("pass_i", 1)) != pass_i:
             continue
+        if r.get("error") or "normalized" not in r:
+            n_skip += 1
+            continue
+        latest[r["id"]] = r
+    scores = []
+    traps: Counter[str] = Counter()
+    by_cat: dict[str, list[float]] = defaultdict(list)
+    ids_scores: dict[str, float] = {}
+    for qid, r in latest.items():
         scores.append(float(r["normalized"]))
         by_cat[r["category"]].append(float(r["normalized"]))
+        ids_scores[qid] = float(r["normalized"])
         for t in r.get("traps_hit") or []:
             traps[t] += 1
     if not scores:
-        return {"n": 0, "mean": float("nan"), "by_category": {}, "traps": {}}
+        return {
+            "n": 0,
+            "n_skip": n_skip,
+            "mean": float("nan"),
+            "by_category": {},
+            "traps": {},
+        }
     return {
         "n": len(scores),
+        "n_skip": n_skip,
         "mean": sum(scores) / len(scores),
         "scores": scores,
         "by_category": {c: sum(v) / len(v) for c, v in sorted(by_cat.items())},
         "by_category_n": {c: len(v) for c, v in sorted(by_cat.items())},
         "traps": dict(traps),
-        "ids_scores": {
-            r["id"]: float(r["normalized"])
-            for r in _load_jsonl(_grades_path(tag, model))
-            if int(r.get("pass_i", 1)) == pass_i
-        },
+        "ids_scores": ids_scores,
     }
+
+
+def _gradable_ids(ids: list[str]) -> list[str]:
+    out = []
+    for qid in ids:
+        try:
+            rubric_max_points(get_problem(qid)["rubric"])
+            out.append(qid)
+        except JudgeParseError:
+            continue
+    return out
+
+
+def baselines_complete(ids: list[str], student: str, teacher: str) -> bool:
+    """True when every gradable id has an OK answer + grade for both arms."""
+    gradable = set(_gradable_ids(ids))
+    for model in (student, teacher):
+        ans = set(_latest_ok_answers(_answers_path("heldout", model)))
+        graded = {
+            r["id"]
+            for r in _load_jsonl(_grades_path("heldout", model))
+            if int(r.get("pass_i", 1)) == 1
+            and "normalized" in r
+            and not r.get("error")
+        }
+        if not gradable <= ans:
+            return False
+        if not gradable <= graded:
+            return False
+    return True
 
 
 def pick_student(means: dict[str, float]) -> dict:
@@ -452,7 +555,7 @@ def summarize_baselines(student: str, teacher: str) -> dict:
     # Per-category trap hits (student)
     traps_by_cat: dict[str, Counter] = defaultdict(Counter)
     for r in _load_jsonl(_grades_path("heldout", student)):
-        if int(r.get("pass_i", 1)) != 1:
+        if int(r.get("pass_i", 1)) != 1 or r.get("error") or "normalized" not in r:
             continue
         for trap in r.get("traps_hit") or []:
             traps_by_cat[r["category"]][trap] += 1
@@ -519,6 +622,12 @@ def main() -> None:
     ap.add_argument("--models", nargs="+", default=None, help="Override candidate models")
     ap.add_argument("--student-model", default=None)
     ap.add_argument("--teacher-model", default=TEACHER_DEFAULT)
+    ap.add_argument(
+        "--only-arm",
+        choices=("student", "teacher"),
+        default=None,
+        help="Baselines: run only one arm this chunk",
+    )
     ap.add_argument("--n", type=int, default=20, help="Headroom sample size")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--resume", action="store_true")
@@ -668,7 +777,13 @@ def main() -> None:
             f"JUDGE_PASSES={judge_passes}",
             flush=True,
         )
-        for arm_model, label in ((student, "student"), (teacher, "teacher")):
+        arms = [(student, "student"), (teacher, "teacher")]
+        if args.only_arm == "student":
+            arms = [(student, "student")]
+        elif args.only_arm == "teacher":
+            arms = [(teacher, "teacher")]
+        n_gradable = len(_gradable_ids(ids))
+        for arm_model, label in arms:
             print(f"=== arm {label}: {arm_model} ===", flush=True)
             if not args.grades_only:
                 generate_for_ids(
@@ -691,11 +806,14 @@ def main() -> None:
                 max_new=args.max_new,
                 time_budget_s=args.time_budget_s,
             )
-        # Only summarize when both complete
         s_n = mean_for_model("heldout", student)["n"]
         t_n = mean_for_model("heldout", teacher)["n"]
-        print(f"[baselines] graded student={s_n}/{len(ids)} teacher={t_n}/{len(ids)}", flush=True)
-        if s_n >= len(ids) and t_n >= len(ids):
+        print(
+            f"[baselines] graded student={s_n}/{n_gradable} teacher={t_n}/{n_gradable} "
+            f"(heldout={len(ids)}, ungradable_rubrics={len(ids) - n_gradable})",
+            flush=True,
+        )
+        if baselines_complete(ids, student, teacher):
             print(json.dumps(summarize_baselines(student, teacher), indent=2))
         else:
             print("[baselines] incomplete — re-run with --resume", flush=True)
