@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# FinancePro-Bench on OpenRouter (CTO-mandated platform).
+# Wires all three roles — student / teacher / judge — to OpenRouter, then
+# execs whatever finance command you pass. Same model slugs as Prime.
+#
+# Usage:
+#   bash scripts/use_openrouter_finance.sh <python args to finance_baselines.py>
+# e.g.
+#   bash scripts/use_openrouter_finance.sh --mode headroom --resume
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+if [[ -f .env ]]; then
+  set -a; source .env; set +a
+fi
+: "${OPENROUTER_API_KEY:?Add OPENROUTER_API_KEY to .env}"
+
+OR_BASE="https://openrouter.ai/api/v1"
+
+# Student (agent)
+export AGENT_BASE_URL="$OR_BASE"
+export AGENT_API_KEY="$OPENROUTER_API_KEY"
+
+# Teacher
+export TEACHER_BASE_URL="$OR_BASE"
+export TEACHER_API_KEY="$OPENROUTER_API_KEY"
+export TEACHER_MODEL="${TEACHER_MODEL:-deepseek/deepseek-v3.2}"
+
+# Judge (must differ from teacher — asserted in code)
+export JUDGE_BASE_URL="$OR_BASE"
+export JUDGE_API_KEY="$OPENROUTER_API_KEY"
+export JUDGE_MODEL="${JUDGE_MODEL:-openai/gpt-5.2}"
+
+export AGENT_TIMEOUT_S="${AGENT_TIMEOUT_S:-120}"
+
+echo "== finance on OpenRouter =="
+echo "  student : ${STUDENT_MODEL:-qwen/qwen3.6-27b}"
+echo "  teacher : $TEACHER_MODEL"
+echo "  judge   : $JUDGE_MODEL"
+echo
+
+python3 scripts/finance_baselines.py "$@"
