@@ -220,18 +220,39 @@ def generate_answer(
     client = agent._get_client()
     from adapters.coding import _chat_with_retry
 
-    resp = _chat_with_retry(
-        client,
-        model=config.model,
-        messages=[
+    # Thinking SKUs (e.g. qwen3.6-27b) can return content=None and spend the
+    # entire max_tokens budget on reasoning. Default: disable thinking so bare
+    # student answers are comparable across candidates. Opt-in via env.
+    kwargs: dict = {
+        "model": config.model,
+        "messages": [
             {"role": "system", "content": _SYSTEM},
             {"role": "user", "content": prompt},
         ],
-        temperature=temperature,
-        max_tokens=max_tokens,
-        max_retries=int(os.environ.get("AGENT_MAX_RETRIES", "5")),
-    )
-    text = (resp.choices[0].message.content or "").strip()
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+        "max_retries": int(os.environ.get("AGENT_MAX_RETRIES", "5")),
+    }
+    if os.environ.get("AGENT_ENABLE_THINKING", "").strip() not in ("1", "true", "yes"):
+        kwargs["extra_body"] = {
+            "chat_template_kwargs": {"enable_thinking": False},
+        }
+
+    resp = _chat_with_retry(client, **kwargs)
+    msg = resp.choices[0].message
+    text = (msg.content or "").strip()
+    if not text:
+        # Last-resort: some gateways put text only in reasoning when thinking
+        # cannot be disabled — do not treat as success for scoring.
+        reasoning = getattr(msg, "reasoning", None) or (
+            (msg.model_extra or {}).get("reasoning") if hasattr(msg, "model_extra") else None
+        )
+        if reasoning:
+            _log.warning(
+                "empty content from %s (reasoning_len=%d); treating as empty answer",
+                config.model,
+                len(str(reasoning)),
+            )
     return text, stats
 
 

@@ -65,19 +65,39 @@ Mean normalized score on this validation reliability set is ~8 (pass1/pass2). Th
 
 ## C. Headroom probe (G0.4)
 
-*(LIVE numbers pending — harness ready in `scripts/finance_baselines.py`)*
+**Protocol:** 20 category-stratified VALIDATION ids (seed 42), bare student prompt
+(`AGENT_USE_EXAMPLES=0`), temp 0, `max_tokens=2048`, judge `openai/gpt-5.2` with
+`JUDGE_PASSES=1`. Endpoint: Prime. Thinking disabled for student gen via
+`chat_template_kwargs.enable_thinking=false` (required for `qwen/qwen3.6-27b`,
+which otherwise returned empty `content`).
 
-| Model | n graded | Mean normalized | In band 15–40? |
-|-------|---------:|----------------:|:---------------|
-| `qwen/qwen3-8b` | — | — | — |
-| `qwen/qwen3-30b-a3b-instruct-2507` | — | — | — |
-| `qwen/qwen3.6-27b` | — | — | — |
+### Means (verbatim from `runs/finance_headroom_summary.json`)
 
-**Chosen student:** *(pending LIVE)*
+```json
+{
+  "qwen/qwen3-8b": 9.262307868713286,
+  "qwen/qwen3-30b-a3b-instruct-2507": 15.752503500053054,
+  "qwen/qwen3.6-27b": 26.305344197683876
+}
+```
+
+| Model | n graded / 20 | Mean normalized | In band 15–40? |
+|-------|--------------:|----------------:|:---------------|
+| `qwen/qwen3-8b` | 19 | **9.262** | No (&lt;15) |
+| `qwen/qwen3-30b-a3b-instruct-2507` | 19 | **15.753** | Yes |
+| `qwen/qwen3.6-27b` | 18 | **26.305** | Yes |
+
+**Ungradable / excluded:** `fpb-00262` (rubric lacks `Item R*(max N)` — all models);
+`fpb-00072` for 27b only (empty judge output after repair-retry). Answers generated
+for all 20 ids × 3 models.
+
+**Chosen student:** `qwen/qwen3.6-27b` — smallest model in band [15, 40]
+(SIZE_ORDER: 8b out of band; 27b &lt; 30b MoE among in-band). Fallback
+`qwen/qwen3.5-35b-a3b` not needed.
 
 ### Reliability (band-range) — after student pick
 
-*(pending 3b)*
+*(pending 3b — re-judge the 20 `qwen/qwen3.6-27b` probe answers)*
 
 ## D. Held-out baselines (G0.3)
 
@@ -85,4 +105,4 @@ Mean normalized score on this validation reliability set is ~8 (pass1/pass2). Th
 
 ---
 
-*Updated 2026-07-20 — G0.2 done; Task-3 hermetic harness staged.*
+*Updated 2026-07-20 after G0.4 LIVE headroom probe.*
