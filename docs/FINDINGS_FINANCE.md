@@ -97,12 +97,50 @@ for all 20 ids × 3 models.
 
 ### Reliability (band-range) — after student pick
 
-*(pending 3b — re-judge the 20 `qwen/qwen3.6-27b` probe answers)*
+**Protocol:** same 20 headroom answers from `qwen/qwen3.6-27b` → grade a second
+time in a fresh context (pass2) → Pearson *r* + MAD on normalized pairs.
+
+#### Low-range (G0.2, for comparison)
+
+| Metric | Value |
+|--------|------:|
+| n pairs | 26 |
+| pearson_r | 0.829 |
+| MAD | 4.456 |
+| gate | PASS_SINGLE → `JUDGE_PASSES=1` |
+| Student answers | `qwen/qwen3-8b` (~mean 8) |
+
+#### Band-range (verbatim from `runs/finance_band_recheck_summary.json`)
+
+```json
+{
+  "label": "reliability (band-range)",
+  "student_model": "qwen/qwen3.6-27b",
+  "n": 17,
+  "pearson_r": 0.9617178576630094,
+  "mad": 4.188280804907782,
+  "gate": "PASS_SINGLE",
+  "JUDGE_PASSES": 1,
+  "mean_pass1": 25.685534723244224,
+  "mean_pass2": 26.76587003266326
+}
+```
+
+| Criterion | Result |
+|-----------|--------|
+| MAD ≤ 5 | **Yes** (MAD ≈ **4.19**) → **`JUDGE_PASSES=1` stands** |
+| 5 &lt; MAD ≤ 8 | n/a |
+| MAD &gt; 8 (STOP) | **No** |
+
+**Verdict: BAND-RANGE GATE PASSED — proceed to held-out baselines with `JUDGE_PASSES=1`.**
+
+Incomplete pairs (excluded from n=17): `fpb-00262` (bad rubric), `fpb-00072`
+(empty judge both passes), `fpb-00025` (pass2 missing TOTAL after repair).
 
 ## D. Held-out baselines (G0.3)
 
-*(pending 3c — only after band-range gate)*
+*(pending 3c)*
 
 ---
 
-*Updated 2026-07-20 after G0.4 LIVE headroom probe.*
+*Updated 2026-07-20 after band-range judge recheck (3b).*

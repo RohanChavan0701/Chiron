@@ -100,7 +100,7 @@ held-out baselines. Commit after each sub-step.
    15–40 normalized as THE student; record the table. If all <15 → try
    `qwen/qwen3.5-35b-a3b`; if all >40 → add smaller qwen. Write outcome to
    `docs/FINDINGS_FINANCE.md`.
-2. [ ] **[LIVE] 3b Band-range judge recheck (NEW, before held-out):** re-judge
+2. [x] **[LIVE] 3b Band-range judge recheck (NEW, before held-out):** re-judge
    the chosen student's 20 probe answers in a fresh context; Pearson r + MAD.
    Gate: MAD≤5 → JUDGE_PASSES=1; 5–8 → JUDGE_PASSES=2; >8 → STOP (no 3c).
 3. [ ] **[LIVE] 3c Baselines on HELD-OUT (120 Qs), chunked:** student-alone and
@@ -129,9 +129,9 @@ ambiguities → Questions section, do NOT improvise around plan §1–§2 rules.
 - v1 closeout: DONE 2026-07-20 — probe 228/448 (~183 hard), no merge/manifest; hermetic G0.1–G0.2 tooling in `71ae446` + this closeout commit.
 - Task 1: DONE 2026-07-20 — HF test split cached (400); manifest 200/80/120 seed=42; rubric firewall tests; pytest 285 passed.
 - Task 2: DONE 2026-07-20 — MAD=4.456 (n=26 pairs), pearson_r=0.829 → GATE PASS_SINGLE (JUDGE_PASSES=1). Answers 33/40 usable. Audit: runs/judge_audit_sample.md (Rohan). Findings in docs/FINDINGS_FINANCE.md.
-- Task 3: hermetic harness DONE (`11729de`). LIVE 3a DONE — means 8b=9.262
-  (n=19), 30b=15.753 (n=19), 27b=26.305 (n=18); chosen student
-  `qwen/qwen3.6-27b`. Next: 3b band-range recheck.
+- Task 3: hermetic `11729de`; 3a `e9c3d7f` chosen `qwen/qwen3.6-27b`.
+  3b DONE — band-range n=17, pearson_r=0.962, MAD=4.188 → PASS_SINGLE
+  (`JUDGE_PASSES=1`). Next: 3c held-out baselines.
 
 ## Questions
 
