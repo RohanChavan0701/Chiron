@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-labelledby="title desc">
+  <title id="title">Chiron runtime teacher-repair loop</title>
+  <desc id="desc">The student feeds a drift detector, teacher repair, verification, and prompt memory before returning to the same student. A separate held-out evaluation reads frozen prompt memory.</desc>
+  <defs>
+    <style>
+      .title { fill: #f8fafc; font: 700 22px system-ui, sans-serif; }
+      .label { fill: #f8fafc; font: 600 14px system-ui, sans-serif; }
+      .detail { fill: #cbd5e1; font: 13px system-ui, sans-serif; }
+      .box { fill: #172033; stroke: #60a5fa; stroke-width: 2; rx: 12; }
+      .memory { stroke: #a78bfa; }
+      .heldout { fill: #111827; stroke: #94a3b8; stroke-width: 2; stroke-dasharray: 7 6; rx: 12; }
+      .edge { fill: none; stroke: #94a3b8; stroke-width: 2.5; marker-end: url(#arrow); }
+      .eval-edge { fill: none; stroke: #94a3b8; stroke-width: 2; stroke-dasharray: 6 5; marker-end: url(#arrow); }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect width="1120" height="420" fill="#0f172a" rx="16"/>
+  <text class="title" x="560" y="42" text-anchor="middle">Chiron: runtime repair, not weight updates</text>
+  <text class="detail" x="560" y="66" text-anchor="middle">Verified teacher corrections become text examples in prompt memory.</text>
+
+  <rect class="box" x="40" y="120" width="150" height="76"/>
+  <text class="label" x="115" y="153" text-anchor="middle">Student</text>
+  <text class="detail" x="115" y="176" text-anchor="middle">same weights</text>
+
+  <rect class="box" x="260" y="120" width="160" height="76"/>
+  <text class="label" x="340" y="153" text-anchor="middle">Drift Detector</text>
+  <text class="detail" x="340" y="176" text-anchor="middle">windowed accuracy</text>
+
+  <rect class="box" x="490" y="120" width="150" height="76"/>
+  <text class="label" x="565" y="153" text-anchor="middle">Teacher Repair</text>
+  <text class="detail" x="565" y="176" text-anchor="middle">failure correction</text>
+
+  <rect class="box" x="710" y="120" width="150" height="76"/>
+  <text class="label" x="785" y="153" text-anchor="middle">Verification</text>
+  <text class="detail" x="785" y="176" text-anchor="middle">accept or reject</text>
+
+  <rect class="box memory" x="930" y="120" width="150" height="76"/>
+  <text class="label" x="1005" y="153" text-anchor="middle">Prompt Memory</text>
+  <text class="detail" x="1005" y="176" text-anchor="middle">few-shots + rules</text>
+
+  <path class="edge" d="M190 158 H260"/>
+  <path class="edge" d="M420 158 H490"/>
+  <path class="edge" d="M640 158 H710"/>
+  <path class="edge" d="M860 158 H930"/>
+  <path class="edge" d="M1005 196 V242 C1005 268 979 278 950 278 H132 C103 278 115 226 115 196"/>
+  <text class="detail" x="545" y="300" text-anchor="middle">accepted examples are inserted into the student's next prompt</text>
+
+  <rect class="heldout" x="420" y="330" width="280" height="58"/>
+  <text class="label" x="560" y="354" text-anchor="middle">Held-out Evaluation</text>
+  <text class="detail" x="560" y="376" text-anchor="middle">frozen memory · unseen problems</text>
+  <path class="eval-edge" d="M930 190 C870 220 740 311 650 330"/>
+</svg>

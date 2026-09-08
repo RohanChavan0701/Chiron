@@ -1,12 +1,14 @@
 # Chiron
 
-Research code for a simple question: can a **stronger teacher model** help a **cheaper student model** do better on hard tasks **without fine-tuning**?
+**Runtime teacher repair for smaller language models, without fine-tuning.**
 
-We tried several answers. Some demos look good. The honest held-out story is thinner. This README says what the repo is, what we measured, and how to run it.
+Chiron detects accuracy drift, asks a stronger teacher to repair failures, verifies those repairs, and adds accepted examples to the same student's prompt memory. The student's weights never change.
 
-Public repo: [rohanpc0701/Chiron](https://github.com/rohanpc0701/Chiron)
+The same-distribution coding demo improves after correction; hard held-out transfer often does not. Both results are documented below.
 
----
+[Architecture](docs/architecture.svg) · [Findings](docs/FINDINGS_CODING.md) · [Repository](https://github.com/rohanpc0701/Chiron)
+
+![Chiron runtime repair architecture](docs/architecture.svg)
 
 ## What this repo contains
 
@@ -67,7 +69,7 @@ Harness ──telemetry──▶ Detector ──drift──▶ Correction (teach
 | [`correction/`](correction/) | Teacher repair → verified few-shots; optional KG |
 | [`viewer/`](viewer/) | Plots the run from `events.jsonl` |
 
-The student **weights never change**. Only the prompt grows.
+The student **weights never change**. Only its prompt memory changes.
 
 **Memory lookup:** few-shots are filtered by domain (`db_id` / topic). KG rules match by **substring** (trigger phrase or table/column name in the question) — not embeddings.
 
