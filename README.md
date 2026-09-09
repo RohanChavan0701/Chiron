@@ -6,7 +6,7 @@ Chiron detects accuracy drift, asks a stronger teacher to repair failures, verif
 
 The same-distribution coding demo improves after correction; hard held-out transfer often does not. Both results are documented below.
 
-[Architecture](docs/architecture.svg) · [Findings](docs/FINDINGS_CODING.md) · [Repository](https://github.com/rohanpc0701/Chiron)
+[Architecture](docs/architecture.svg) · [Findings](docs/FINDINGS_CODING.md) · [Repository](https://github.com/RohanChavan0701/Chiron)
 
 ![Chiron runtime repair architecture](docs/architecture.svg)
 
@@ -80,7 +80,7 @@ The student **weights never change**. Only its prompt memory changes.
 Python ≥ 3.10.
 
 ```bash
-git clone https://github.com/rohanpc0701/Chiron.git
+git clone https://github.com/RohanChavan0701/Chiron.git
 cd Chiron
 pip install -e .
 pip install -r requirements.txt   # if you want the viewer / extras
