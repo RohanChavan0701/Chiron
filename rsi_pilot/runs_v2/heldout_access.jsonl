@@ -1,0 +1,14 @@
+{"time": 1793651720.8009238, "split": "H", "harness_id": "9884a86dd3450126", "is_baseline": true, "purpose": "baseline"}
+{"time": 1793651731.0244741, "split": "B", "harness_id": "9884a86dd3450126", "is_baseline": true, "purpose": "baseline"}
+{"time": 1793652740.0778759, "split": "H", "harness_id": "9884a86dd3450126", "is_baseline": true, "purpose": "heldout_final"}
+{"time": 1793652740.0803752, "split": "B", "harness_id": "9884a86dd3450126", "is_baseline": true, "purpose": "heldout_final"}
+{"time": 1793652740.084288, "split": "H", "harness_id": "766fe863bc35ebe6", "is_baseline": false, "purpose": "heldout_final"}
+{"time": 1793652752.4745686, "split": "B", "harness_id": "766fe863bc35ebe6", "is_baseline": false, "purpose": "heldout_final"}
+{"time": 1793652779.6174626, "split": "H", "harness_id": "e7b8d6228ffd6b6a", "is_baseline": false, "purpose": "heldout_final"}
+{"time": 1793652801.0291348, "split": "B", "harness_id": "e7b8d6228ffd6b6a", "is_baseline": false, "purpose": "heldout_final"}
+{"time": 1793652859.358058, "split": "H", "harness_id": "9884a86dd3450126", "is_baseline": true, "purpose": "audit"}
+{"time": 1793652859.712333, "split": "B", "harness_id": "9884a86dd3450126", "is_baseline": true, "purpose": "audit"}
+{"time": 1793652860.0857775, "split": "H", "harness_id": "766fe863bc35ebe6", "is_baseline": false, "purpose": "audit"}
+{"time": 1793652860.3828275, "split": "B", "harness_id": "766fe863bc35ebe6", "is_baseline": false, "purpose": "audit"}
+{"time": 1793652860.7735403, "split": "H", "harness_id": "e7b8d6228ffd6b6a", "is_baseline": false, "purpose": "audit"}
+{"time": 1793652861.1514485, "split": "B", "harness_id": "e7b8d6228ffd6b6a", "is_baseline": false, "purpose": "audit"}

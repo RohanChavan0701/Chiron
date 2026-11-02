@@ -1,0 +1,111 @@
+{
+ "baseline/E": {
+  "passes": 20,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 12,
+  "testsuite_checked": 20,
+  "testsuite_false_positives": 3,
+  "testsuite_false_positive_ids": [
+   "spider_dev_404",
+   "spider_dev_410",
+   "spider_dev_487"
+  ]
+ },
+ "baseline/H": {
+  "passes": 29,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 6,
+  "testsuite_checked": 29,
+  "testsuite_false_positives": 8,
+  "testsuite_false_positive_ids": [
+   "spider_dev_219",
+   "spider_dev_220",
+   "spider_dev_255",
+   "spider_dev_256",
+   "spider_dev_28",
+   "spider_dev_32",
+   "spider_dev_346",
+   "spider_dev_43"
+  ]
+ },
+ "baseline/B": {
+  "passes": 3,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 0
+ },
+ "arm_A/E": {
+  "passes": 24,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 14,
+  "testsuite_checked": 24,
+  "testsuite_false_positives": 4,
+  "testsuite_false_positive_ids": [
+   "spider_dev_423",
+   "spider_dev_505",
+   "spider_dev_540",
+   "spider_dev_668"
+  ]
+ },
+ "arm_A/H": {
+  "passes": 23,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 6,
+  "testsuite_checked": 23,
+  "testsuite_false_positives": 5,
+  "testsuite_false_positive_ids": [
+   "spider_dev_219",
+   "spider_dev_255",
+   "spider_dev_30",
+   "spider_dev_63",
+   "spider_dev_64"
+  ]
+ },
+ "arm_A/B": {
+  "passes": 3,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 0
+ },
+ "arm_B/E": {
+  "passes": 25,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 14,
+  "testsuite_checked": 25,
+  "testsuite_false_positives": 2,
+  "testsuite_false_positive_ids": [
+   "spider_dev_504",
+   "spider_dev_505"
+  ]
+ },
+ "arm_B/H": {
+  "passes": 32,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 6,
+  "testsuite_checked": 32,
+  "testsuite_false_positives": 8,
+  "testsuite_false_positive_ids": [
+   "spider_dev_212",
+   "spider_dev_219",
+   "spider_dev_220",
+   "spider_dev_255",
+   "spider_dev_256",
+   "spider_dev_32",
+   "spider_dev_43",
+   "spider_dev_64"
+  ]
+ },
+ "arm_B/B": {
+  "passes": 5,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 0
+ },
+ "bird_label_csv": "/home/ubuntu/Chiron/rsi_pilot/runs_v2/audit_bird_labels.csv"
+}

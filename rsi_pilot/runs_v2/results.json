@@ -1,0 +1,145 @@
+{
+ "n_per_split": 50,
+ "accuracy": {
+  "baseline/E": 0.4,
+  "baseline/H": 0.58,
+  "baseline/B": 0.06,
+  "arm_A/E": 0.48,
+  "arm_A/H": 0.46,
+  "arm_A/B": 0.06,
+  "arm_B/E": 0.5,
+  "arm_B/H": 0.64,
+  "arm_B/B": 0.1
+ },
+ "tokens_per_task": {
+  "baseline/E": 406.76,
+  "baseline/H": 360.74,
+  "baseline/B": 1071.44,
+  "arm_A/E": 3035.02,
+  "arm_A/H": 2995.06,
+  "arm_A/B": 4945.5,
+  "arm_B/E": 3395.68,
+  "arm_B/H": 2330.02,
+  "arm_B/B": 6562.0
+ },
+ "tests": {
+  "arm_A_vs_baseline/E": {
+   "acc_base": 0.4,
+   "acc_new": 0.48,
+   "delta": 0.07999999999999996,
+   "improved": 9,
+   "regressed": 5,
+   "p_mcnemar": 0.4239501953125,
+   "ci95": [
+    -0.06,
+    0.24
+   ]
+  },
+  "arm_A_vs_baseline/H": {
+   "acc_base": 0.58,
+   "acc_new": 0.46,
+   "delta": -0.11999999999999994,
+   "improved": 6,
+   "regressed": 12,
+   "p_mcnemar": 0.237884521484375,
+   "ci95": [
+    -0.28,
+    0.04
+   ]
+  },
+  "arm_A_vs_baseline/B": {
+   "acc_base": 0.06,
+   "acc_new": 0.06,
+   "delta": 0.0,
+   "improved": 2,
+   "regressed": 2,
+   "p_mcnemar": 1.0,
+   "ci95": [
+    -0.08,
+    0.08
+   ]
+  },
+  "arm_B_vs_baseline/E": {
+   "acc_base": 0.4,
+   "acc_new": 0.5,
+   "delta": 0.09999999999999998,
+   "improved": 13,
+   "regressed": 8,
+   "p_mcnemar": 0.38331031799316406,
+   "ci95": [
+    -0.08,
+    0.28
+   ]
+  },
+  "arm_B_vs_baseline/H": {
+   "acc_base": 0.58,
+   "acc_new": 0.64,
+   "delta": 0.06000000000000005,
+   "improved": 7,
+   "regressed": 4,
+   "p_mcnemar": 0.548828125,
+   "ci95": [
+    -0.06,
+    0.18
+   ]
+  },
+  "arm_B_vs_baseline/B": {
+   "acc_base": 0.06,
+   "acc_new": 0.1,
+   "delta": 0.04000000000000001,
+   "improved": 3,
+   "regressed": 1,
+   "p_mcnemar": 0.625,
+   "ci95": [
+    -0.04,
+    0.12
+   ]
+  },
+  "arm_B_vs_arm_A/E": {
+   "acc_base": 0.48,
+   "acc_new": 0.5,
+   "delta": 0.020000000000000018,
+   "improved": 8,
+   "regressed": 7,
+   "p_mcnemar": 1.0,
+   "ci95": [
+    -0.14,
+    0.18
+   ]
+  },
+  "arm_B_vs_arm_A/H": {
+   "acc_base": 0.46,
+   "acc_new": 0.64,
+   "delta": 0.18,
+   "improved": 13,
+   "regressed": 4,
+   "p_mcnemar": 0.049041748046875,
+   "ci95": [
+    0.02,
+    0.34
+   ]
+  },
+  "arm_B_vs_arm_A/B": {
+   "acc_base": 0.06,
+   "acc_new": 0.1,
+   "delta": 0.04000000000000001,
+   "improved": 3,
+   "regressed": 1,
+   "p_mcnemar": 0.625,
+   "ci95": [
+    -0.04,
+    0.12
+   ]
+  }
+ },
+ "transfer": {
+  "arm_A": {
+   "H": -1.5,
+   "B": 0.0
+  },
+  "arm_B": {
+   "H": 0.6000000000000006,
+   "B": 0.4000000000000002
+  }
+ }
+}

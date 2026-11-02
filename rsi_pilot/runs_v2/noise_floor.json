@@ -1,0 +1,22 @@
+{
+ "reps": 5,
+ "passed": [
+  20,
+  20,
+  20,
+  20,
+  20
+ ],
+ "spread_tasks": 0,
+ "flipping_tasks": [],
+ "student": {
+  "provider": "ollama",
+  "model": "qwen2.5:1.5b-instruct",
+  "base_url": "http://localhost:11434",
+  "temperature": 0,
+  "seed": 20261102,
+  "num_ctx": 8192,
+  "num_predict": 512,
+  "request_timeout_s": 120
+ }
+}

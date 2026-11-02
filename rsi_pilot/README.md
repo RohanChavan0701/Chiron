@@ -3,7 +3,8 @@
 **Question.** Does a self-improving harness loop tuned on Spider transfer to held-out
 Spider databases and to BIRD, and does RRSI-style regularization change that?
 
-**Status.** Pilot run once on 2026-11-02 (see Results): a null result.
+**Status.** Run twice on 2026-11-02. Run 1 (see Results): a null result. Run 2, after a critique of
+run 1 (see Run 2): same direction, B vs A on H p=0.049 uncorrected; not yet a finding.
 This is a pilot: n=50 per set, one seed, a 1.5B student.
 
 Inspired by RRSI (Regularized Recursive Self-Improvement of Agent Harnesses, arXiv
@@ -181,6 +182,62 @@ the keep threshold was 2 tasks.
 - **Proposer settings.** The proposer and critic used Ollama's default sampling with no seed and
   the server's default 4096-token context (prompts were about 3k tokens). Evolution is not
   exactly reproducible.
+
+## Run 2: after the critique of run 1
+
+Same day, same models, run with `RSI_FROZEN=frozen_v2.yaml RSI_SPLITS=splits_v2.json
+RSI_RUNS=runs_v2`. Run 1's files are untouched. Changes (all in `frozen_v2.yaml`):
+
+- Proposer through Ollama's native API with fixed temperature (0.7), seed and a 16k context.
+- Critic is a different model family, `llama3.1:8b` (temperature 0), not the proposer.
+- Both arms see a history of earlier candidates and their E scores.
+- Arm B pruning also reverts a field whose E gain is under the keep threshold and that makes
+  the harness 1.25x more expensive.
+- Splits: at most 6 tasks per database (E now spans 10 databases, H 9; 5 was infeasible) and
+  tasks whose gold query returns no rows are excluded. E, H and B are therefore different
+  task sets from run 1, so compare conclusions, not numbers.
+- Noise floor from 5 baseline runs instead of 3.
+
+Predictions were again not registered. Several run-2 E databases (car_1, museum_visit,
+network_1) were run-1 H databases; the run-2 proposer saw only run-2 E failures, but the
+run-2 changes were designed after looking at run 1's results.
+
+| Harness | E | H | B | prompt tokens/task (H) |
+|---|---|---|---|---|
+| baseline | 40% | 58% | 6% | 361 |
+| arm_A (unconstrained) | 48% | 46% | 6% | 2995 |
+| arm_B (regularized) | 50% | 64% | 10% | 2330 |
+
+| Comparison | E | H | B |
+|---|---|---|---|
+| A vs baseline | +8% [-6, +24], 9/5, p=0.42 | -12% [-28, +4], 6/12, p=0.24 | +0% [-8, +8], 2/2, p=1.0 |
+| B vs baseline | +10% [-8, +28], 13/8, p=0.38 | +6% [-6, +18], 7/4, p=0.55 | +4% [-4, +12], 3/1, p=0.63 |
+| B vs A | +2% [-14, +18], 8/7, p=1.0 | +18% [+2, +34], 13/4, p=0.049 | +4% [-4, +12], 3/1, p=0.63 |
+
+**What changed in the picture.**
+
+- *Same direction as run 1, stronger.* Arm A's E gain did not transfer: it lost 6 tasks on H.
+  Arm B kept most of its gain (+3 on H, +2 on B). B vs A on H is the only comparison with
+  p < 0.05 (0.049), one of nine uncorrected tests; with a Bonferroni correction it is not
+  significant. Treat it as a lead to replicate, not a finding.
+- *Empty-gold exclusion worked.* No pass came from an empty gold result, and test-suite false
+  positives on E fell from about half of passes (run 1) to 2-4 of 20-25. Test-suite-corrected
+  passes: E baseline 17, A 20, B 23; H baseline 21, A 18, B 24. The ordering B > baseline > A
+  on H holds under the stricter check.
+- *The student was fully deterministic* (five E runs all scored 20), so the keep threshold
+  fell to 1 task. Arms kept edits worth +1 to +3 tasks on E; real (no sampling noise), but small enough to be
+  overfitting to E.
+- *Both arms converged on 3 sample rows plus 3 few-shot examples*, raising prompt cost about
+  7x (361 to 2300-3000 tokens per H task). In run 1 few-shot never helped. The difference
+  between the arms is in the rest: A uses fixed few-shot examples and an E-flavoured suffix
+  ("handling multiple years or conditions"); B uses lexical (question-matched) examples, one
+  retry and no suffix. That may explain the H gap, but this run does not test it.
+- *The cost rule never fired.* With a threshold of 1, any 1-task drop counts as above
+  noise, so Arm B kept all four of its changed fields, including a retry worth 1 task for
+  about 40% more tokens.
+- *The new critic approved every candidate* (0 of 15 rejected), the opposite failure from run
+  1's critic, which rejected generic edits. The leak check flagged two Arm A candidates for
+  the common word "addresses" (a table name in an E database).
 
 ## Limitations
 

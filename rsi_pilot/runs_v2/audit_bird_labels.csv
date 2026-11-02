@@ -1,0 +1,13 @@
+harness,task_id,difficulty,question,evidence,gold_sql,pred_sql,label (correct|wrong_reason),notes
+arm_A,bird_704,simple,What is the excerpt post ID and wiki post ID of the tag named sample?,tag named sample refers to TagName = 'sample';,"SELECT ExcerptPostId, WikiPostId FROM tags WHERE TagName = 'sample'","SELECT ExcerptPostId, WikiPostId FROM tags WHERE TagName = 'sample'",,
+arm_B,bird_1198,simple,How many female patients were given an APS diagnosis?,female refers to SEX = 'F'; APS diagnosis refers to Diagnosis='APS',SELECT COUNT(ID) FROM Patient WHERE SEX = 'F' AND Diagnosis = 'APS',SELECT count(*) FROM Patient WHERE SEX = 'F' AND Diagnosis = 'APS',,
+arm_B,bird_397,moderate,"What is the mana cost of cards with a normal layout, a 2003 frame version, with a black border color, and available in paper and mtgo?","available in paper and mtgo refers to availability = 'mtgo,paper'; frameVersion = 2003;borderColor = 'black'","SELECT manaCost FROM cards WHERE availability = 'mtgo,paper' AND borderColor = 'black' AND frameVersion = 2003 AND layout = 'normal'","SELECT manaCost FROM cards WHERE layout = 'normal' AND frameVersion = 2003 AND borderColor = 'black' AND availability = 'mtgo,paper'",,
+arm_B,bird_704,simple,What is the excerpt post ID and wiki post ID of the tag named sample?,tag named sample refers to TagName = 'sample';,"SELECT ExcerptPostId, WikiPostId FROM tags WHERE TagName = 'sample'","SELECT ExcerptPostId, WikiPostId FROM tags WHERE TagName  =  'sample'",,
+arm_A,bird_1198,simple,How many female patients were given an APS diagnosis?,female refers to SEX = 'F'; APS diagnosis refers to Diagnosis='APS',SELECT COUNT(ID) FROM Patient WHERE SEX = 'F' AND Diagnosis = 'APS',"SELECT COUNT(DISTINCT ID) AS FemalePatientsWithAPS
+FROM Patient
+WHERE Diagnosis = 'APS' AND SEX = 'F'",,
+arm_B,bird_379,simple,What are the cards belong to duel deck a? List the ID.,duel deck a refers to duelDeck = a;,SELECT id FROM cards WHERE duelDeck = 'a',SELECT id FROM cards WHERE duelDeck = 'a',,
+arm_B,bird_576,simple,Name the user that commented 'thank you user93!',"""thank you user93"" is the Text of comment; user refers to DisplayName",SELECT T1.DisplayName FROM users AS T1 INNER JOIN comments AS T2 ON T1.Id = T2.UserId WHERE T2.Text = 'thank you user93!',SELECT T1.DisplayName FROM users AS T1 JOIN comments AS T2 ON T1.Id  =  T2.UserId WHERE T2.Text  =  'thank you user93!',,
+arm_A,bird_945,simple,"How many circuits are there in Adelaide, Australia?",Australia is the country; Melbourne is the location of circuit;,SELECT COUNT(circuitId) FROM circuits WHERE location = 'Adelaide' AND country = 'Australia',"SELECT COUNT(DISTINCT circuitId) AS circuit_count
+FROM circuits
+WHERE location = 'Adelaide' AND country = 'Australia'",,
