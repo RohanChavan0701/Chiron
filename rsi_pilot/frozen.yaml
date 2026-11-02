@@ -1,0 +1,50 @@
+# Settings the evolution loop may NOT edit. Changing any of these after the
+# baseline run invalidates the comparison; record the change in the README.
+
+seed: 20261102
+
+student:
+  provider: ollama
+  model: qwen2.5:1.5b-instruct     # same student as AgentWatch; confirm the exact tag you used there
+  base_url: http://localhost:11434
+  temperature: 0
+  seed: 20261102
+  num_ctx: 8192
+  num_predict: 512
+  request_timeout_s: 120
+
+proposer:
+  provider: anthropic               # anthropic | openai_compatible
+  model: claude-opus-5-5
+  effort: high                      # Opus 5.5 defaults to medium; set explicitly
+  base_url: null                    # only for openai_compatible (e.g. https://openrouter.ai/api/v1)
+  api_key_env: null                 # only for openai_compatible (e.g. OPENROUTER_API_KEY)
+
+data:
+  spider_dir: data/spider           # contains dev.json, train_spider.json, tables.json, database/
+  bird_dir: data/bird_minidev       # contains mini_dev_sqlite.json (or similar) and dev_databases/
+  bird_json: null                   # override the BIRD json filename if autodetect fails
+
+splits:
+  n_per_split: 50
+  e_hardness: [hard, extra]
+  h_hardness: [hard]
+  b_difficulty: [simple, moderate, challenging]
+  b_fallback_difficulty: [simple, moderate]   # use only if B baseline < 5%; record it
+
+eval:
+  verifier: agentwatch              # agentwatch (harness/evaluator.py, reused per plan) | spider_official
+  bird_include_evidence: true       # standard BIRD setting; frozen, never editable
+  keep_distinct: true               # stricter than Spider's default (which strips DISTINCT)
+  exec_timeout_s: 30
+  max_result_rows: 100000
+
+evolution:
+  generations: 5
+  candidates_per_generation: 3
+  failures_shown: 10
+  show_gold_sql_to_proposer: false  # true lets the proposer copy answers into the harness; say so in README if enabled
+  min_keep_delta_tasks: 1           # overwritten by runs/noise_floor.json when present
+  arm_b_max_fields: 2
+  arm_b_max_fields_late: 1
+  arm_b_late_from_generation: 4     # generations are 1-indexed; "1 after generation 3"

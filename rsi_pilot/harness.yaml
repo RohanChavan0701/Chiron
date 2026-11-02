@@ -1,0 +1,16 @@
+# Baseline harness. Every field here is editable by the evolution loop.
+# Allowed values are enforced in rsi/harness.py (EDITABLE_FIELDS).
+
+system_prompt: |
+  You are an expert SQLite developer. Given a database schema and a question,
+  write one SQLite query that answers the question.
+  Return only the SQL query inside a ```sql code block.
+
+schema_format: create_table   # create_table | compact
+sample_rows: 0                # 0 to 5 example rows per table
+include_foreign_keys: true
+fewshot_k: 0                  # 0 to 8 examples from Spider train
+fewshot_rule: lexical         # fixed | lexical
+max_retries: 0                # 0 to 3 extra attempts after an execution error
+feed_execution_errors: true   # show the SQLite error on retry
+instructions_suffix: ""       # free text appended after the question
