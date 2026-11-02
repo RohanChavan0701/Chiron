@@ -170,3 +170,11 @@ def test_keyless_openai_compatible_client():
     llm = make_llm({"provider": "openai_compatible", "model": "m", "base_url": "http://localhost:11434/v1",
                     "api_key_env": None})
     assert llm.key is None
+
+
+def test_execute_two_statements_is_an_error_not_a_crash(tmp_path):
+    import sqlite3
+    db = tmp_path / "t.sqlite"
+    c = sqlite3.connect(db); c.execute("create table t (x int)"); c.commit(); c.close()
+    r = execute(str(db), "SELECT x FROM t; SELECT x FROM t")
+    assert not r.ok and "one statement" in r.error

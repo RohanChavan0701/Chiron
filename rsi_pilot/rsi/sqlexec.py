@@ -46,7 +46,9 @@ def execute(db_path: str, sql: str, timeout_s: float = 30.0, max_rows: int = 100
     except sqlite3.OperationalError as e:
         msg = "timeout" if time.monotonic() > deadline else str(e)
         return ExecResult(False, error=msg, seconds=time.monotonic() - t0)
-    except (sqlite3.Error, ValueError, OverflowError) as e:
+    # sqlite3.Warning (e.g. "You can only execute one statement at a time" when the model
+    # writes two statements) is not a subclass of sqlite3.Error; treat it as an execution error.
+    except (sqlite3.Error, sqlite3.Warning, ValueError, OverflowError) as e:
         return ExecResult(False, error=f"{type(e).__name__}: {e}", seconds=time.monotonic() - t0)
     finally:
         conn.close()
