@@ -1,0 +1,72 @@
+# RUN 2 settings (2026-11-02). Same as frozen.yaml (run 1) except the changes marked
+# "v2:", which follow the critique of run 1. Run with:
+#   RSI_FROZEN=frozen_v2.yaml RSI_SPLITS=splits_v2.json RSI_RUNS=runs_v2 python -m rsi.<stage>
+# Settings the evolution loop may NOT edit. Changing any of these after the
+# baseline run invalidates the comparison; record the change in the README.
+
+seed: 20261102
+
+student:
+  provider: ollama
+  model: qwen2.5:1.5b-instruct     # same student as AgentWatch; confirm the exact tag you used there
+  base_url: http://localhost:11434
+  temperature: 0
+  seed: 20261102
+  num_ctx: 8192
+  num_predict: 512
+  request_timeout_s: 120
+
+proposer:
+  # v2: native Ollama API so temperature, seed and context are fixed (run 1 used the
+  # OpenAI-compatible endpoint: default sampling, no seed, 4096-token server context).
+  provider: ollama
+  model: qwen2.5:14b-instruct
+  base_url: http://localhost:11434
+  temperature: 0.7
+  seed: 20261102
+  num_ctx: 16384
+  num_predict: 2048
+
+critic:
+  # v2: a different model family from the proposer, so the critic is not judging its own edits.
+  provider: ollama
+  model: llama3.1:8b
+  base_url: http://localhost:11434
+  temperature: 0
+  seed: 20261102
+  num_ctx: 8192
+  num_predict: 512
+
+data:
+  spider_dir: data/spider           # contains dev.json, train_spider.json, tables.json, database/
+  bird_dir: data/bird_minidev       # contains mini_dev_sqlite.json (or similar) and dev_databases/
+  bird_json: null                   # override the BIRD json filename if autodetect fails
+
+splits:
+  n_per_split: 50
+  e_hardness: [hard, extra]
+  h_hardness: [hard]
+  b_difficulty: [simple, moderate, challenging]
+  b_fallback_difficulty: [simple, moderate]   # use only if B baseline < 5%; record it
+  max_tasks_per_db: 6               # v2: spread E and H over more databases (run 1: E had 4); 5 is infeasible for H
+  exclude_empty_gold: true          # v2: drop tasks whose gold query returns no rows (run-1 audit)
+
+eval:
+  verifier: agentwatch              # agentwatch (harness/evaluator.py, reused per plan) | spider_official
+  bird_include_evidence: true       # standard BIRD setting; frozen, never editable
+  keep_distinct: true               # stricter than Spider's default (which strips DISTINCT)
+  exec_timeout_s: 30
+  max_result_rows: 100000
+
+evolution:
+  generations: 5
+  candidates_per_generation: 3
+  failures_shown: 10
+  show_gold_sql_to_proposer: false  # true lets the proposer copy answers into the harness; say so in README if enabled
+  min_keep_delta_tasks: 1           # overwritten by runs/noise_floor.json when present
+  arm_b_max_fields: 2
+  arm_b_max_fields_late: 1
+  arm_b_late_from_generation: 4     # generations are 1-indexed; "1 after generation 3"
+  show_edit_history: true           # v2: both arms see earlier candidates and their scores
+  prune_cost_ratio: 1.25            # v2: Arm B also reverts a field whose E gain is within noise
+                                    #     and that makes the harness 1.25x more expensive

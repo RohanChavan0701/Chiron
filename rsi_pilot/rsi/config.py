@@ -3,12 +3,31 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-RUNS = ROOT / "runs"
+
+
+def _env_path(var: str, default: Path) -> Path:
+    """Path from an environment variable (relative to ROOT), else the default.
+
+    Lets a second run (e.g. run 2) use its own frozen settings, splits and output
+    directory without touching run 1's files:
+    RSI_FROZEN=frozen_v2.yaml RSI_SPLITS=splits_v2.json RSI_RUNS=runs_v2
+    """
+    v = os.environ.get(var)
+    if not v:
+        return default
+    p = Path(v)
+    return p if p.is_absolute() else ROOT / p
+
+
+RUNS = _env_path("RSI_RUNS", ROOT / "runs")
+FROZEN = _env_path("RSI_FROZEN", ROOT / "frozen.yaml")
+SPLITS = _env_path("RSI_SPLITS", ROOT / "splits.json")
 
 
 def load_yaml(path: str | Path) -> dict:
@@ -23,7 +42,7 @@ def dump_yaml(obj: dict, path: str | Path) -> None:
 
 
 def frozen(path: str | Path | None = None) -> dict:
-    return load_yaml(path or ROOT / "frozen.yaml")
+    return load_yaml(path or FROZEN)
 
 
 def resolve(p: str | Path) -> Path:

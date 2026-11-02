@@ -178,3 +178,57 @@ def test_execute_two_statements_is_an_error_not_a_crash(tmp_path):
     c = sqlite3.connect(db); c.execute("create table t (x int)"); c.commit(); c.close()
     r = execute(str(db), "SELECT x FROM t; SELECT x FROM t")
     assert not r.ok and "one statement" in r.error
+
+
+# --- run 2 (critique) changes ---------------------------------------------
+
+def test_prune_decision_cost_rule():
+    from rsi.evolve import prune_decision
+    assert prune_decision(29, 29, 100, 100, 2, 1.25) == (True, "no_E_loss")
+    # 1-task gain (within threshold 2) but 2x tokens: revert under the cost rule
+    assert prune_decision(29, 28, 200, 100, 2, 1.25) == (True, "gain_within_noise_and_expensive")
+    # same, cost rule off: keep
+    assert prune_decision(29, 28, 200, 100, 2, None)[0] is False
+    # gain at/above threshold: keep even if expensive
+    assert prune_decision(29, 25, 200, 100, 2, 1.25)[0] is False
+
+
+def test_edit_history_lists_earlier_candidates(tmp_path):
+    from rsi.config import append_jsonl
+    from rsi.evolve import edit_history, proposer_prompt
+    log = tmp_path / "log.jsonl"
+    assert edit_history(log) == "None yet."
+    append_jsonl(log, {"event": "candidate", "gen": 1, "edits": {"sample_rows": 3}, "E_passed": 29})
+    append_jsonl(log, {"event": "candidate", "gen": 1, "edits": {"fewshot_k": 2}, "decision": "rejected_critic"})
+    h = edit_history(log)
+    assert "sample_rows" in h and "E=29" in h and "rejected_critic" in h
+    res = {"passed": 1, "n": 2}
+    assert "Edits already tried" in proposer_prompt({"a": 1}, res, "T", 3, None, h)
+    assert "Edits already tried" not in proposer_prompt({"a": 1}, res, "T", 3, None)
+
+
+def test_ollama_llm_requires_fixed_sampling():
+    from rsi.llm import OllamaLLM, make_llm
+    with pytest.raises(ValueError):
+        make_llm({"provider": "ollama", "model": "m", "base_url": "http://x"})
+    ok = make_llm({"provider": "ollama", "model": "m", "base_url": "http://x", "temperature": 0,
+                   "seed": 1, "num_ctx": 8192})
+    assert isinstance(ok, OllamaLLM)
+
+
+def test_splits_cap_and_empty_gold(tasks):
+    import copy
+    from rsi.splits import gold_nonempty, make_splits
+    cfg = copy.deepcopy(load_yaml(ROOT / "frozen.yaml"))
+    cfg["splits"]["n_per_split"] = 2
+    cfg["splits"]["e_hardness"] = cfg["splits"]["h_hardness"] = sorted({t.difficulty for t in tasks["E"] + tasks["H"]})
+    cfg["splits"]["b_difficulty"] = sorted({t.difficulty for t in tasks["B"]})
+    dev = tasks["E"] + tasks["H"]
+    base = make_splits(dev, tasks["B"], cfg)
+    assert "max_tasks_per_db" not in base and "exclude_empty_gold" not in base  # run-1 output unchanged
+    cfg["splits"]["max_tasks_per_db"] = 2
+    cfg["splits"]["exclude_empty_gold"] = True
+    sp = make_splits(dev, tasks["B"], cfg)
+    assert sp["max_tasks_per_db"] == 2 and sp["exclude_empty_gold"] is True
+    by_id = {t.task_id: t for t in dev + tasks["B"]}
+    assert all(gold_nonempty(by_id[i], cfg) for i in sp["E"] + sp["H"] + sp["B"])

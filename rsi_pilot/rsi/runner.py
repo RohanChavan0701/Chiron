@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-from rsi.config import RUNS, ROOT, append_jsonl, frozen, load_yaml, resolve, stable_hash
+from rsi.config import RUNS, ROOT, SPLITS, append_jsonl, frozen, load_yaml, resolve, stable_hash
 from rsi.data import Task, load_bird, load_spider, tasks_from_split
 from rsi.fewshot import FewShotPool
 from rsi.harness import harness_id, run_task, validate
@@ -46,7 +46,7 @@ def pool_without(train: list[Task], forbidden: set[str]) -> list[Task]:
     return [t for t in train if t.db_id not in forbidden]
 
 
-def load_context(splits_path: str | Path = ROOT / "splits.json", workers: int = 1) -> Context:
+def load_context(splits_path: str | Path = SPLITS, workers: int = 1) -> Context:
     cfg = frozen()
     sp = json.loads(Path(splits_path).read_text())
     dev = load_spider(resolve(cfg["data"]["spider_dir"]), "dev")

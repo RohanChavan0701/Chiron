@@ -62,7 +62,26 @@ def failure_traces(ctx: Context, res: dict, k: int, rng: random.Random, show_gol
     return "\n\n".join(out)
 
 
-def proposer_prompt(cur: dict, res: dict, traces: str, n: int, max_fields: int | None) -> str:
+def edit_history(log_path, max_items: int = 20) -> str:
+    """Earlier candidates this arm tried, with outcome, so the proposer does not repeat them."""
+    from rsi.config import read_jsonl
+    lines = []
+    for r in read_jsonl(log_path):
+        if r.get("event") != "candidate":
+            continue
+        out = f"E={r['E_passed']}" if "E_passed" in r else r.get("decision", "?")
+        lines.append(f"- gen {r['gen']}: {json.dumps(r.get('edits'), ensure_ascii=False)[:400]} -> {out}")
+    if not lines:
+        return "None yet."
+    return "\n".join(lines[-max_items:])
+
+
+def proposer_prompt(cur: dict, res: dict, traces: str, n: int, max_fields: int | None,
+                    history: str | None = None) -> str:
+    # Empty when history is off, so run-1 prompts are unchanged byte for byte.
+    hist_block = ("" if history is None else
+                  "\nEdits already tried in earlier generations (do not repeat these; prefer untried "
+                  "directions):\n" + history + "\n")
     limit = (f"Each candidate may change at most {max_fields} field(s)." if max_fields
              else "Each candidate may change any number of fields.")
     return f"""Current harness (YAML):
@@ -73,7 +92,7 @@ Editable fields and allowed values:
 {field_spec()}
 
 Current score on the tuning set: {res['passed']}/{res['n']}.
-
+{hist_block}
 Failure traces from the tuning set:
 {traces}
 
@@ -91,6 +110,17 @@ def critic_prompt(cur: dict, new: dict, rationale: str) -> str:
 Proposer's rationale: {rationale}
 
 Is this edit benchmark-specific? Return {{"benchmark_specific": true|false, "reason": "one sentence"}}"""
+
+
+def prune_decision(e_with: int, e_without: int, tok_with: int, tok_without: int,
+                   threshold: int, cost_ratio: float | None) -> tuple[bool, str]:
+    """Revert a field if removing it does not lower E, or (RRSI's cost rule) if its E gain
+    is within noise (< keep threshold) while it makes the harness cost_ratio x more expensive."""
+    if e_without >= e_with:
+        return True, "no_E_loss"
+    if cost_ratio and (e_with - e_without) < threshold and tok_with > cost_ratio * tok_without:
+        return True, "gain_within_noise_and_expensive"
+    return False, "keeps_its_weight"
 
 
 def keep_threshold(cfg: dict, runs_dir=RUNS) -> int:
@@ -118,7 +148,9 @@ def run_arm(ctx: Context, arm: str, llm, critic=None) -> dict:
     cur_res = evaluate(ctx, cur, "E", purpose=f"evolve_{arm}")
     leak = LeakChecker(ctx.tasks["E"])
     append_jsonl(log, {"event": "start", "arm": arm, "time": time.time(), "keep_threshold": threshold,
-                       "harness_id": harness_id(cur), "E_passed": cur_res["passed"]})
+                       "harness_id": harness_id(cur), "E_passed": cur_res["passed"],
+                       "proposer": ctx.cfg["proposer"].get("model"),
+                       "critic": (ctx.cfg.get("critic") or ctx.cfg["proposer"]).get("model")})
 
     for g in range(1, ev["generations"] + 1):
         if arm == "B":
@@ -126,7 +158,8 @@ def run_arm(ctx: Context, arm: str, llm, critic=None) -> dict:
         else:
             max_fields = None
         traces = failure_traces(ctx, cur_res, ev["failures_shown"], rng, ev["show_gold_sql_to_proposer"])
-        prompt = proposer_prompt(cur, cur_res, traces, ev["candidates_per_generation"], max_fields)
+        history = edit_history(log) if ev.get("show_edit_history", False) else None
+        prompt = proposer_prompt(cur, cur_res, traces, ev["candidates_per_generation"], max_fields, history)
         reply = llm(PROPOSER_SYSTEM, prompt)
         try:
             cands = parse_json(reply.text)
@@ -191,9 +224,13 @@ def run_arm(ctx: Context, arm: str, llm, critic=None) -> dict:
         for f in diff_fields(base, cur):
             trial = validate({**cur, f: base[f]})
             res = evaluate(ctx, trial, "E", purpose="evolve_B_prune")
-            reverted = res["passed"] >= cur_res["passed"]
+            tok_with = cur_res["prompt_tokens"] + cur_res["completion_tokens"]
+            tok_without = res["prompt_tokens"] + res["completion_tokens"]
+            reverted, why = prune_decision(cur_res["passed"], res["passed"], tok_with, tok_without,
+                                           threshold, ev.get("prune_cost_ratio"))
             append_jsonl(log, {"event": "prune", "field": f, "E_with": cur_res["passed"],
-                               "E_without": res["passed"], "reverted": reverted})
+                               "E_without": res["passed"], "tokens_with": tok_with,
+                               "tokens_without": tok_without, "reverted": reverted, "why": why})
             if reverted:
                 cur, cur_res = trial, res
 
@@ -213,7 +250,8 @@ def main() -> None:
     args = ap.parse_args()
     ctx = load_context(workers=args.workers)
     llm = make_llm(ctx.cfg["proposer"])
-    s = run_arm(ctx, args.arm, llm)
+    critic = make_llm(ctx.cfg["critic"]) if ctx.cfg.get("critic") else None
+    s = run_arm(ctx, args.arm, llm, critic)
     print(json.dumps(s, indent=1))
 
 

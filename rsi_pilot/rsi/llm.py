@@ -7,6 +7,9 @@ openai_compatible: for non-Claude models via an OpenAI-style endpoint
   (a local Ollama server at http://localhost:11434/v1, or OpenRouter). Plain HTTP;
   set base_url in frozen.yaml, and api_key_env only if the endpoint needs a key.
   <think>...</think> blocks that open reasoning models emit are stripped.
+ollama: Ollama's native /api/chat. Unlike the OpenAI-compatible endpoint it accepts
+  per-request options, so temperature, seed and num_ctx are fixed from frozen.yaml
+  (the OpenAI endpoint silently uses the server's default context, 4096 tokens).
 """
 from __future__ import annotations
 
@@ -90,7 +93,32 @@ class OpenAICompatibleLLM:
                         u.get("completion_tokens", 0), out.get("model", ""))
 
 
+class OllamaLLM:
+    def __init__(self, cfg: dict):
+        for k in ("model", "base_url", "temperature", "seed", "num_ctx"):
+            if k not in cfg:
+                raise ValueError(f"ollama proposer/critic needs `{k}` in frozen.yaml")
+        self.cfg = cfg
+
+    def __call__(self, system: str, user: str, max_tokens: int = 4096) -> LLMReply:
+        c = self.cfg
+        body = {"model": c["model"], "stream": False,
+                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+                "options": {"temperature": c["temperature"], "seed": c["seed"], "num_ctx": c["num_ctx"],
+                            "num_predict": min(max_tokens, c.get("num_predict", 4096))}}
+        req = urllib.request.Request(c["base_url"].rstrip("/") + "/api/chat", data=json.dumps(body).encode(),
+                                     headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=600) as r:
+            out = json.loads(r.read())
+        if out.get("done_reason") == "length":
+            raise RuntimeError("proposer/critic hit num_predict; raise it in frozen.yaml")
+        return LLMReply(strip_think(out["message"]["content"] or ""), out.get("prompt_eval_count", 0),
+                        out.get("eval_count", 0), out.get("model", c["model"]))
+
+
 def make_llm(cfg: dict):
+    if cfg["provider"] == "ollama":
+        return OllamaLLM(cfg)
     if cfg["provider"] == "anthropic":
         return AnthropicLLM(cfg)
     if cfg["provider"] == "openai_compatible":
