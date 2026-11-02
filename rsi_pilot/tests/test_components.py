@@ -143,3 +143,17 @@ def test_score_records_both_verifiers(dbs):
     s = score(dbs["evo"], "SELECT band_id, name FROM evo_band", "SELECT name, band_id FROM evo_band",
               verifier="agentwatch")
     assert s["pass"] is False and s["pass_other"] is True
+
+
+def test_parse_json_strips_think_blocks():
+    from rsi.llm import parse_json
+    reply = '<think>maybe [1, 2] or {"x": 1}?</think>\n```json\n[{"edits": {"fewshot_k": 2}, "rationale": "r"}]\n```'
+    assert parse_json(reply) == [{"edits": {"fewshot_k": 2}, "rationale": "r"}]
+    assert parse_json('reasoning [ ] </think> {"benchmark_specific": false}') == {"benchmark_specific": False}
+
+
+def test_keyless_openai_compatible_client():
+    from rsi.llm import make_llm
+    llm = make_llm({"provider": "openai_compatible", "model": "m", "base_url": "http://localhost:11434/v1",
+                    "api_key_env": None})
+    assert llm.key is None

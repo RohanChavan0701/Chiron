@@ -4,7 +4,9 @@ anthropic: official SDK, beta endpoint so the server-side refusal fallback
   (`fallbacks="default"`) is on. Thinking is always on for claude-opus-5-5;
   depth is set with output_config.effort.
 openai_compatible: for non-Claude models via an OpenAI-style endpoint
-  (e.g. OpenRouter). Plain HTTP; set base_url and api_key_env in frozen.yaml.
+  (a local Ollama server at http://localhost:11434/v1, or OpenRouter). Plain HTTP;
+  set base_url in frozen.yaml, and api_key_env only if the endpoint needs a key.
+  <think>...</think> blocks that open reasoning models emit are stripped.
 """
 from __future__ import annotations
 
@@ -58,11 +60,13 @@ class AnthropicLLM:
 
 class OpenAICompatibleLLM:
     def __init__(self, cfg: dict):
-        if not cfg.get("base_url") or not cfg.get("api_key_env"):
-            raise ValueError("openai_compatible proposer needs base_url and api_key_env in frozen.yaml")
-        key = os.environ.get(cfg["api_key_env"])
-        if not key:
-            raise RuntimeError(f"environment variable {cfg['api_key_env']} is not set")
+        if not cfg.get("base_url"):
+            raise ValueError("openai_compatible proposer needs base_url in frozen.yaml")
+        key = None
+        if cfg.get("api_key_env"):
+            key = os.environ.get(cfg["api_key_env"])
+            if not key:
+                raise RuntimeError(f"environment variable {cfg['api_key_env']} is not set")
         self.cfg, self.key = cfg, key
 
     def __call__(self, system: str, user: str, max_tokens: int = 16000) -> LLMReply:
@@ -70,7 +74,8 @@ class OpenAICompatibleLLM:
                 "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
         req = urllib.request.Request(
             self.cfg["base_url"].rstrip("/") + "/chat/completions", data=json.dumps(body).encode(),
-            headers={"Content-Type": "application/json", "Authorization": f"Bearer {self.key}"})
+            headers={"Content-Type": "application/json",
+                     **({"Authorization": f"Bearer {self.key}"} if self.key else {})})
         for attempt in range(5):
             try:
                 with urllib.request.urlopen(req, timeout=600) as r:
@@ -81,7 +86,7 @@ class OpenAICompatibleLLM:
                     time.sleep(2 ** (attempt + 1)); continue
                 raise
         u = out.get("usage", {})
-        return LLMReply(out["choices"][0]["message"]["content"], u.get("prompt_tokens", 0),
+        return LLMReply(strip_think(out["choices"][0]["message"]["content"] or ""), u.get("prompt_tokens", 0),
                         u.get("completion_tokens", 0), out.get("model", ""))
 
 
@@ -93,9 +98,16 @@ def make_llm(cfg: dict):
     raise ValueError(f"unknown proposer provider {cfg['provider']}")
 
 
+def strip_think(text: str) -> str:
+    import re
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.S)
+    return text.split("</think>", 1)[-1].strip()  # unmatched closing tag: keep what follows
+
+
 def parse_json(text: str):
     """Pull the last JSON object or array out of a model reply."""
     import re
+    text = strip_think(text)
     fenced = re.findall(r"```(?:json)?\s*(.*?)```", text, re.S)
     for cand in reversed(fenced + [text]):
         cand = cand.strip()

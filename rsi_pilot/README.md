@@ -72,17 +72,20 @@ Student: `ollama pull qwen2.5:1.5b-instruct` (confirm it matches the AgentWatch 
 `OLLAMA_NUM_PARALLEL` set, and check the noise floor afterwards: parallel batching can
 break determinism.
 
-Proposer: `claude-opus-5-5` via the Anthropic SDK by default (`ANTHROPIC_API_KEY` or an
-`ant auth login` profile). The server-side refusal fallback (`fallbacks="default"`) is
-enabled. For a non-Claude model, set `proposer.provider: openai_compatible` with
-`base_url` and `api_key_env` in `frozen.yaml`.
+Proposer: free and local by default, `qwen2.5:14b-instruct` served by the same Ollama
+instance as the student (`ollama pull qwen2.5:14b-instruct`), through Ollama's
+OpenAI-compatible API. Fixed weights keep the run reproducible. It fits beside the student
+on a 24 GB GPU such as an A10. A 14B proposer is much weaker than the frontier models the
+RRSI and HarnessCompass papers used, so a null result may reflect proposer quality; say so
+in the write-up. Alternatives in `frozen.yaml`: an OpenRouter free model (free models rotate
+and are rate-limited; record the exact model name), or Claude via the Anthropic SDK.
 
 ## Run order
 
 Run everything from `rsi_pilot/`; the AgentWatch verifier is imported from the repo root.
 
 ```bash
-.venv/bin/python -m pytest -q                      # 30 plumbing tests, synthetic data
+.venv/bin/python -m pytest -q                      # 32 plumbing tests, synthetic data
 .venv/bin/python -m rsi.splits                     # writes splits.json
 git add PREDICTION.md && git commit -m "Predictions"   # fill it in first
 .venv/bin/python -m rsi.baseline                   # noise floor on E x3, baseline on E/H/B
