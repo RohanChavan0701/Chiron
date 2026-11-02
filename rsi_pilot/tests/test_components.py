@@ -118,6 +118,19 @@ def test_fewshot_pool_rejects_eval_databases(tasks):
     assert len(pool.select(tasks["E"][0], 2, "lexical")) == 2
 
 
+def test_pool_without_drops_shared_databases(tasks):
+    # Real data: Spider train and BIRD Mini-Dev both contain formula_1.
+    import dataclasses
+    from rsi.runner import pool_without
+    shared = dataclasses.replace(tasks["train"][0], task_id="spider_train_shared", db_id="bird")
+    train = tasks["train"] + [shared]
+    with pytest.raises(ValueError):
+        FewShotPool(train, {"evo", "held", "bird"}, 0)
+    kept = pool_without(train, {"evo", "held", "bird"})
+    assert kept == tasks["train"]
+    FewShotPool(kept, {"evo", "held", "bird"}, 0)
+
+
 # --- leak check -----------------------------------------------------------
 
 def test_leakcheck(tasks):

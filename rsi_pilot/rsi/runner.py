@@ -41,6 +41,11 @@ class Context:
         return stable_hash(self.cfg["student"])
 
 
+def pool_without(train: list[Task], forbidden: set[str]) -> list[Task]:
+    """Spider train examples whose database is not used by any evaluation source."""
+    return [t for t in train if t.db_id not in forbidden]
+
+
 def load_context(splits_path: str | Path = ROOT / "splits.json", workers: int = 1) -> Context:
     cfg = frozen()
     sp = json.loads(Path(splits_path).read_text())
@@ -49,8 +54,11 @@ def load_context(splits_path: str | Path = ROOT / "splits.json", workers: int = 
     bird = load_bird(resolve(cfg["data"]["bird_dir"]), cfg["data"].get("bird_json"))
     tasks = {"E": tasks_from_split(sp["E"], dev), "H": tasks_from_split(sp["H"], dev),
              "B": tasks_from_split(sp["B"], bird)}
-    forbidden = {t.db_id for ts in tasks.values() for t in ts}
-    pool = FewShotPool(train, forbidden, cfg["seed"])
+    # Exclude every database from Spider dev and BIRD Mini-Dev, not only those in the
+    # sampled splits. Spider train and BIRD Mini-Dev both contain `formula_1`, so its
+    # 80 train examples are dropped from the few-shot pool.
+    forbidden = {t.db_id for t in dev} | {t.db_id for t in bird}
+    pool = FewShotPool(pool_without(train, forbidden), forbidden, cfg["seed"])
     return Context(cfg, sp, tasks, pool, make_student(cfg["student"]), workers=workers)
 
 
