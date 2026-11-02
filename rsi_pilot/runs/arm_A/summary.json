@@ -1,0 +1,13 @@
+{
+ "arm": "A",
+ "final_harness_id": "20d10d594cfb29f7",
+ "E_base": 24,
+ "E_final": 31,
+ "n": 50,
+ "changed_from_baseline": [
+  "system_prompt",
+  "sample_rows",
+  "include_foreign_keys"
+ ],
+ "keep_threshold": 2
+}

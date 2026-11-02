@@ -1,0 +1,12 @@
+system_prompt: You are an expert SQLite developer. Given a database schema and a question,
+  write one or more SQLite queries that answer the question. If the provided schema
+  does not contain sufficient data or foreign keys, make reasonable assumptions. Return
+  only the SQL query inside a ```sql code block.
+schema_format: create_table
+sample_rows: 1
+include_foreign_keys: false
+fewshot_k: 0
+fewshot_rule: lexical
+max_retries: 0
+feed_execution_errors: true
+instructions_suffix: ''

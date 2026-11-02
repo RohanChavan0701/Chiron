@@ -3,7 +3,7 @@
 **Question.** Does a self-improving harness loop tuned on Spider transfer to held-out
 Spider databases and to BIRD, and does RRSI-style regularization change that?
 
-**Status.** Pipeline built and tested on synthetic data only. No experimental results yet.
+**Status.** Pilot run once on 2026-11-02 (see Results): a null result.
 This is a pilot: n=50 per set, one seed, a 1.5B student.
 
 Inspired by RRSI (Regularized Recursive Self-Improvement of Agent Harnesses, arXiv
@@ -117,7 +117,70 @@ rerun `rsi.splits --bird-fallback` and record it), or if a task takes over 2 s.
 
 ## Results
 
-Not yet run.
+Run on 2026-11-02 on one NVIDIA A10 (Lambda), Ollama 0.40.13, student `qwen2.5:1.5b-instruct`,
+proposer and critic `qwen2.5:14b-instruct`. One seed, n=50 per set. Raw outputs:
+`runs/results.md`, `runs/results.json`, `runs/audit.json`, `runs/arm_{A,B}/`, `splits.json`.
+
+**Headline: a null result.** No comparison reaches p < 0.05, and no confidence interval
+excludes zero or a loss. Arm B kept more of its E gain on held-out Spider than Arm A, but the
+difference is one or two tasks.
+
+| Harness | E (tuned on) | H (held-out Spider) | B (BIRD) | prompt tokens/task (H) |
+|---|---|---|---|---|
+| baseline | 48% | 20% | 10% | 321 |
+| arm_A (unconstrained) | 62% | 26% | 8% | 428 |
+| arm_B (regularized) | 58% | 28% | 12% | 606 |
+
+| Comparison | E | H | B |
+|---|---|---|---|
+| A vs baseline | +14% [+0, +28], 10/3, p=0.092 | +6% [-6, +18], 6/3, p=0.51 | -2% [-12, +6], 2/3, p=1.0 |
+| B vs baseline | +10% [+0, +20], 6/1, p=0.125 | +8% [-2, +18], 6/2, p=0.29 | +2% [-4, +8], 2/1, p=1.0 |
+| B vs A | -4% [-16, +8], 4/6, p=0.75 | +2% [-4, +10], 2/1, p=1.0 | +4% [-6, +14], 4/2, p=0.69 |
+
+Cells: delta, paired 95% bootstrap CI, improved/regressed tasks, exact McNemar p (uncorrected).
+Transfer ratio (secondary): A: H 0.43, B -0.14; B: H 0.80, B 0.20.
+
+**What evolution kept.** Arm A kept one edit (generation 2): a rewritten system prompt that
+asks for "one or more SQLite queries", 1 sample row per table, and foreign keys turned off.
+Arm B ended with one field changed, `sample_rows: 3`; pruning reverted `max_retries` because
+removing it did not lower E. Arm B's leak check rejected 1 candidate and its critic 2. None of
+Arm A's 15 candidates tripped the leak check.
+
+**Audit: E passes are inflated.** Re-scored on Spider's test-suite databases, about half of the
+E passes are false positives, many from gold queries that return no rows:
+
+| Harness | E passes -> survive test suite | H passes -> survive |
+|---|---|---|
+| baseline | 24 -> 12 | 10 -> 8 |
+| arm_A | 31 -> 16 | 13 -> 11 |
+| arm_B | 29 -> 13 | 14 -> 10 |
+
+Under the test suite, E gains shrink from +7 to +4 tasks (A) and +5 to +1 (B). E is a noisy
+optimization target; this may matter more than the choice of arm. The two single-database
+verifiers (AgentWatch and Spider's comparison) disagreed once in the whole run.
+`runs/audit_bird_labels.csv` (BIRD passes to hand-label) has not been labeled yet.
+
+**Noise floor.** Baseline on E three times at temperature 0: 25, 24, 24 (one task flipped), so
+the keep threshold was 2 tasks.
+
+**Leakage.** `runs/heldout_access.jsonl` shows non-baseline harnesses touched H and B only in
+`rsi.heldout` and `rsi.audit`, after both arms had `final.yaml`.
+
+### Deviations from the plan
+
+- **Predictions were not registered.** `PREDICTION.md` was left blank and the run went ahead
+  at the user's request, so there is no record that expectations preceded results.
+- **Arm B was restarted.** The first Arm B run crashed in generation 2 when the student wrote two
+  SQL statements and `sqlite3.Warning` escaped the executor (fixed in `rsi/sqlexec.py`). Arm B
+  was rerun from generation 1; scored harnesses came from the cache, but the proposer is not
+  seeded, so its proposals differ from the crashed run. The crashed log is kept in
+  `runs/arm_B_crashed_run1/`. Arm A and the baseline never hit this path.
+- **Few-shot pool.** Spider train and BIRD Mini-Dev share the `formula_1` database; its 80
+  train examples were removed from the pool (`rsi/runner.py`). Neither final harness uses
+  few-shot examples.
+- **Proposer settings.** The proposer and critic used Ollama's default sampling with no seed and
+  the server's default 4096-token context (prompts were about 3k tokens). Evolution is not
+  exactly reproducible.
 
 ## Limitations
 
