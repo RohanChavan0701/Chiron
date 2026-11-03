@@ -21,7 +21,7 @@ import random
 import re
 from pathlib import Path
 
-from rsi.config import RUNS, ROOT, load_yaml
+from rsi.config import BASELINE, RUNS, ROOT, load_yaml
 from rsi.runner import arms_of, evaluate, load_context
 from rsi.sqlexec import compare_with, execute, strip_distinct
 
@@ -54,7 +54,7 @@ def main() -> None:
     args = ap.parse_args()
     ctx = load_context()
     ev = ctx.cfg["eval"]
-    harnesses = {"baseline": load_yaml(ROOT / "harness.yaml")}
+    harnesses = {"baseline": load_yaml(BASELINE)}
     for a in arms_of(ctx.cfg):
         p = RUNS / f"arm_{a}" / "final.yaml"
         if p.exists():

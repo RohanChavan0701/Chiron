@@ -126,6 +126,12 @@ def make_splits_v4(spider_dev: list[Task], spider_train: list[Task], bird: list[
 
     H = sorted((t for t in spider_dev if t.difficulty in tiers and keep(t)), key=lambda t: t.task_id)
     B = sorted((t for t in bird if t.difficulty in s["b_difficulty"] and keep(t)), key=lambda t: t.task_id)
+    # Run 5 (slower agent): optional fixed subsamples of H and B. The RNG does not depend on
+    # the seed, so every seed still gets the same held-out tasks.
+    if s.get("h_max") and len(H) > s["h_max"]:
+        H = sorted(random.Random("heldout-H").sample(H, s["h_max"]), key=lambda t: t.task_id)
+    if s.get("b_max") and len(B) > s["b_max"]:
+        B = sorted(random.Random("heldout-B").sample(B, s["b_max"]), key=lambda t: t.task_id)
 
     by_db = defaultdict(list)
     for t in spider_train:
