@@ -539,7 +539,7 @@ Runs 4 and 5 implement these fixes.
 |---|---|
 | Runs 1-3 | No predictions were registered (`PREDICTION.md` was blank). The user asked to run without them. |
 | Run 1 | Arm B was restarted after a crash; the crashed log is kept. The proposer was unseeded. Run-2 changes were designed after seeing run-1 results. |
-| Run 4 | `PREDICTION.md` (written by the AI assistant, as the file states) was pushed at 02:25 UTC, 8 minutes after the run started; only baseline numbers existed then. Amendment 1 (10 → 6 seeds) was pushed before any seed finished. Run 4 was then paused. |
+| Run 4 | `PREDICTION.md` (written by the AI assistant, as the file states) was pushed at 02:26 UTC, 8 minutes after the run started (02:17:37); only baseline numbers existed then. Amendment 1 (10 → 6 seeds) was pushed before any seed finished. Run 4 was then paused. |
 | Run 5 | `PREDICTION_run5.md` was committed locally at 02:50 UTC, before any result. It reached GitHub only at 05:09 UTC, **after seed 1 finished (04:23)**, because the relay waited for the user's approval. Seeds 2-6 are pre-registered on GitHub; seed 1 rests only on the local commit time. |
 | Run 5 | The design was cut before launch (E/E2 60 → 50, 10 → 8 generations) to fit the time. This happened before the pre-registration commit. |
 | Run 5 | Token cost was not a pre-registered endpoint, so the "B keeps cost at baseline" finding is exploratory. |
