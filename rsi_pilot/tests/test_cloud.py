@@ -61,6 +61,14 @@ def test_cap_rejects_nonpositive_price():
         L.cap_hours(0)
 
 
+def test_cap_with_split_budget():
+    # run 4: $50 over three A10s
+    assert L.cap_hours(129, 50 / 3) == pytest.approx(50 / 3 * 100 / 129)
+    for bad in (0, -1, 50.01):
+        with pytest.raises(L.GuardrailError):
+            L.cap_hours(129, bad)
+
+
 def test_spend_estimate_uses_launch_price():
     lau = {"launched_at": L._iso(T0), "price_cents_per_hour": 129}
     hours, usd = L.elapsed_and_spend(lau, T0 + timedelta(hours=10))
@@ -117,12 +125,21 @@ def test_launch_picks_1x_a10_by_specs_and_records_cap(api):
     assert L.open_instances(L.read_ledger(ledger)) == ["i-new"]
 
 
-def test_launch_refuses_while_an_instance_is_open(api):
+def test_launch_refuses_at_max_open(api):
     calls, ledger = api
-    _launched(ledger, "i-1")
+    for i in range(L.MAX_OPEN - 1):
+        _launched(ledger, f"i-{i}")
+    L.launch("chiron-run4-b", "us-east-1", "laptop", "ok", budget_usd=50 / 3, ledger=ledger)
+    n = len(calls)
     with pytest.raises(L.GuardrailError, match="without a terminate"):
-        L.launch("chiron-run4-b", "us-east-1", "laptop", "ok", ledger=ledger)
-    assert calls == []
+        L.launch("chiron-run4-c", "us-east-1", "laptop", "ok", ledger=ledger)
+    assert len(calls) == n
+
+
+def test_launch_records_split_budget_cap(api):
+    calls, ledger = api
+    e = L.launch("chiron-run4-a", "us-east-1", "laptop", "ok", budget_usd=50 / 3, ledger=ledger)
+    assert e["budget_usd"] == 16.67 and e["cap_hours"] == pytest.approx(12.92, abs=1e-2)
 
 
 @pytest.mark.parametrize("name,approved", [("run4-a", "ok"), ("chiron-" + "x" * 60, "ok"),

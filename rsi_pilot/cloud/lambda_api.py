@@ -3,9 +3,10 @@ CLOUD_RUN.md.
 
 Every launch, status check and termination appends a line to ledger.jsonl (committed). The
 guardrails are enforced here, not left to the caller:
-- one instance at a time: launch refuses while the ledger has a launch without a terminate;
+- at most MAX_OPEN instances: launch refuses while that many launches lack a terminate;
 - 1x A10 only, name prefix `chiron-`, author approval recorded on the launch line;
-- cap hours = min(48, 5000 / live price_cents_per_hour), price read from the API at launch;
+- cap hours = min(48, budget_usd * 100 / live price_cents_per_hour), budget_usd <= $50, price
+  read from the API at launch;
 - terminate refuses any id that this ledger did not launch.
 
 The API key is read from LAMBDA_API_KEY and only ever goes into a request header. Module named
@@ -35,6 +36,9 @@ LEDGER = Path(__file__).resolve().parent / "ledger.jsonl"
 
 MAX_HOURS = 48.0
 MAX_USD = 50.0
+# Author, 2026-11-03: up to 3 run-4 A10s at once besides the adopted run-5 instance, run 4
+# total $50, so each run-4 launch gets budget_usd = 50 / 3.
+MAX_OPEN = 4
 NAME_PREFIX = "chiron-"
 # Lambda's Cloudflare front blocks urllib's default User-Agent (error 1010, HTTP 403).
 USER_AGENT = "chiron-rsi-pilot/0.1"
@@ -121,10 +125,12 @@ def append_ledger(entry: dict, ledger: Path = LEDGER) -> None:
         f.write(json.dumps(entry) + "\n")
 
 
-def cap_hours(price_cents_per_hour: int) -> float:
+def cap_hours(price_cents_per_hour: int, budget_usd: float = MAX_USD) -> float:
     if price_cents_per_hour <= 0:
         raise GuardrailError(f"implausible price {price_cents_per_hour} cents/hour")
-    return min(MAX_HOURS, MAX_USD * 100 / price_cents_per_hour)
+    if not 0 < budget_usd <= MAX_USD:
+        raise GuardrailError(f"budget must be in (0, {MAX_USD}] dollars per launch: {budget_usd}")
+    return min(MAX_HOURS, budget_usd * 100 / price_cents_per_hour)
 
 
 def launches(rows: list[dict]) -> dict[str, dict]:
@@ -146,18 +152,19 @@ def elapsed_and_spend(launch: dict, at: datetime) -> tuple[float, float]:
 
 def launch(name: str, region: str, ssh_key: str, approved_by: str,
            filesystem: str | None = None, user_data: str | None = None,
-           ledger: Path = LEDGER) -> dict:
+           budget_usd: float = MAX_USD, ledger: Path = LEDGER) -> dict:
     if not name.startswith(NAME_PREFIX) or len(name) > 64:
         raise GuardrailError(f"name must start with {NAME_PREFIX!r} and be <= 64 chars: {name!r}")
     if not approved_by.strip():
         raise GuardrailError("every launch needs the author's go-ahead (--approved-by)")
     still_open = open_instances(read_ledger(ledger))
-    if still_open:
-        raise GuardrailError(f"ledger has instances without a terminate line: {still_open}")
+    if len(still_open) >= MAX_OPEN:
+        raise GuardrailError(f"{len(still_open)} instances without a terminate line "
+                             f"(max {MAX_OPEN}): {still_open}")
     type_name, price, regions = a10_type(instance_types())
     if region not in regions:
         raise GuardrailError(f"no {type_name} capacity in {region}; available: {regions}")
-    hours = cap_hours(price)
+    hours = cap_hours(price, budget_usd)
     body = {"region_name": region, "instance_type_name": type_name, "ssh_key_names": [ssh_key],
             "name": name}
     if filesystem:
@@ -171,6 +178,7 @@ def launch(name: str, region: str, ssh_key: str, approved_by: str,
         entry = {"event": "launch", "id": iid, "name": name, "type": type_name, "region": region,
                  "price_cents_per_hour": price, "launched_at": _iso(t),
                  "terminate_by": _iso(t + timedelta(hours=hours)), "cap_hours": round(hours, 3),
+                 "budget_usd": round(budget_usd, 2),
                  "filesystem": filesystem, "approved_by_author": approved_by}
         append_ledger(entry, ledger)
     if len(ids) != 1:
@@ -225,6 +233,7 @@ def main(argv: list[str] | None = None) -> int:
     pl.add_argument("--approved-by", required=True)
     pl.add_argument("--filesystem")
     pl.add_argument("--user-data", type=Path, help="cloud-init user-data file")
+    pl.add_argument("--budget-usd", type=float, default=MAX_USD)
     ps = sub.add_parser("status")
     ps.add_argument("id")
     ps.add_argument("--job-state", default="")
@@ -246,7 +255,7 @@ def main(argv: list[str] | None = None) -> int:
         out = [{k: i.get(k) for k in ("id", "name", "status", "region")} for i in instances()]
     elif a.cmd == "launch":
         ud = a.user_data.read_text(encoding="utf-8") if a.user_data else None
-        out = launch(a.name, a.region, a.ssh_key, a.approved_by, a.filesystem, ud)
+        out = launch(a.name, a.region, a.ssh_key, a.approved_by, a.filesystem, ud, a.budget_usd)
     elif a.cmd == "status":
         out = status(a.id, a.job_state)
     else:

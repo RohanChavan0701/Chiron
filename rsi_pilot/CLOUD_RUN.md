@@ -46,6 +46,17 @@ docstring lists the commands. Guardrail tests: `tests/test_cloud.py`.
 - **The API key never appears** in chat, logs, commits, command lines visible in `ps`, or files
   in the repo. Read it from `LAMBDA_API_KEY` in the environment.
 
+### Author changes for run 4 (2026-11-03, in chat)
+
+- The author's manually launched A10 (`Chiron`, running run 5) is adopted into the ledger
+  with its cap counted from its billing start. It keeps running.
+- Run 4 (6 seeds after amendment 1) runs on **up to 3 more 1x A10s at once**, two seeds each,
+  for **$50 in total**: each launch gets `budget_usd = 50/3`, cap = 1667 / live price
+  (12.9 h at $1.29). `lambda_api.MAX_OPEN = 4` covers the adopted instance plus three.
+- Seed 20261111 restarts from scratch: its partial outputs on the old instance stopped after
+  8 minutes, before any evolution result.
+- Run-4 instances run the working branch (a git bundle, not a push); see `cloud/bootstrap.sh`.
+
 ## Ledger (`rsi_pilot/cloud/ledger.jsonl`, committed)
 
 Append one JSON line per event and commit it:
