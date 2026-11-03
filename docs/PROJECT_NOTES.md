@@ -527,10 +527,23 @@ All times UTC, 2026-11-03 unless noted. Costs are the ledger's estimates (hours 
 | 12:32 | Seed 20261112 done; a terminated 12:35, $6.22 |
 | 12:40 | Seed 20261116 done; c terminated 12:40, $6.34 |
 | 12:42 | README run-4 section committed (26540ff); pushed to `claude/laughing-ritchie-zafhnk` |
+| 18:55 | Merge of main (run 5, PR #2) into the branch pushed (3e4fdc9) |
+| 19:03 | Backup of everything unique on `Chiron` copied to the laptop (see below) |
+| 19:05 | `Chiron` terminated through the ledger (reason `author`), 24.2 h, $31.17 |
 
-Run-4 instance spend: $17.43 of the $50 budget. The adopted instance `Chiron` (run 5) is still
-running at $1.29/h; the ledger estimated $16.29 at 07:33 UTC and its ledger cap ends
-2026-11-04 09:41 UTC. It has no watchdog.
+Run-4 instance spend: $17.43 of the $50 budget. The adopted instance `Chiron` (runs 1 to 3 and
+5, plus run 4's discarded first attempt) cost about $31.17 from its billing start to
+termination. Total in the ledger: about $48.60. No instance is running.
+
+Backup made before terminating `Chiron`:
+`C:\Users\Rohan\Desktop\Chiron_backup_2026-11-03\instance_chiron_backup.tar.gz` (1.97 GB
+compressed, 10.7 GB raw, 43,414 entries; file counts checked against the instance). It holds
+`Chiron/rsi_pilot/data/` (Spider, BIRD Mini-Dev, test-suite databases; the only remaining
+copy), all of `Chiron_r5/rsi_pilot/runs_v5/` including caches and per-task evals, the per-seed
+`frozen_v5_s*.yaml`, run-5 figures, untracked `evals/` of runs 2 and 3, run 4's discarded first
+attempt (`Chiron/rsi_pilot/runs_v4`, `run_v4_all.sh`), `~/.claude` and the Ollama serve log.
+Not kept: the 6.4 GB of Ollama model files (re-pullable; digests are in `docs/DEV_PLAN.md`).
+Run 5's per-seed outputs without caches and `evals/` are also committed in the repo.
 
 ---
 
@@ -565,13 +578,13 @@ running at $1.29/h; the ledger estimated $16.29 at 07:33 UTC and its ledger cap 
 | Item | Process step | Notes |
 |---|---|---|
 | Open a PR from `claude/laughing-ritchie-zafhnk` to main | PR | `gh` on the laptop is not logged in (`gh auth login`), or open it on github.com |
-| Decide on the adopted run-5 instance's cap and watchdog | Author decision | Ledger cap 2026-11-04 09:41 UTC, nothing enforces it |
 | Remove the Lambda key from the Windows user env if no more launches | Author decision | |
 | Label `audit_bird_labels.csv` | Phase 3 | Six files, one per seed |
 | Poisoning audit | Phase 4 | Designed and implemented (`POISON_AUDIT.md`, `rsi/poison.py`), not run; run 4's arms are the clean control |
 | Fix the inconsistencies in section 12 | Docs | |
 | Add 5xx retry to `rsi/student.py` | Code, future runs only | |
-| Run 5 (multi-step SQL agent) | Done | Merged to main in PR #2; results summarized in section 7.1. Its instance `Chiron` may still be billing |
+| Run 5 (multi-step SQL agent) | Done | Merged to main in PR #2; results summarized in section 7.1. Per-seed outputs committed on this branch; instance terminated |
+| Keep the data archive safe | Author decision | `Chiron_backup_2026-11-03` is the only copy of the 8 GB of data; consider a second copy |
 | Write-up and publication | Phase 6 | Outline in `docs/WRITEUP_OUTLINE.md`; citations must be checked |
 
 ---

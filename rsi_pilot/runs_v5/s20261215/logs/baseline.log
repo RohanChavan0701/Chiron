@@ -1,0 +1,7 @@
+Noise floor: E passed across 2 runs = [29, 31]; spread 2; 4 tasks flipped
+Placebo deltas on E: [-2, -6, -6, -5, -3, -1, -2, 0, -4, -3] -> Arm B keep threshold 2 tasks
+Baseline E: 31/50 = 62.0% | 5.20s/task
+Baseline E2: 25/50 = 50.0% | 6.25s/task
+Baseline H: 93/200 = 46.5% | 6.48s/task
+Baseline B: 39/200 = 19.5% | 8.19s/task
+NOTE: 5.2s/task > 2s. Consider candidates_per_generation: 2 in frozen.yaml.

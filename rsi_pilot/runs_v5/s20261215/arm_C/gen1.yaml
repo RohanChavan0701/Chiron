@@ -1,0 +1,20 @@
+system_prompt: 'You are an expert SQLite developer working as an agent. You answer
+  a question about a
+
+  database by exploring it with tools, then submitting one SQLite query.
+
+  '
+tool_guide: 'Answer in JSON, one action per turn:
+
+  {"tool": "describe", "arg": "TABLE"} | {"tool": "list_tables"} | {"tool": "run_sql",
+  "arg": "SQL"} | {"tool": "submit", "arg": "SQL"}
+
+  If run_sql returns an error, fix the query before submitting.
+
+  '
+rules: ''
+schema_upfront: tables
+describe_sample_rows: 3
+result_preview_rows: 8
+max_steps: 6
+verify_before_submit: false
