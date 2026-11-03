@@ -1,0 +1,75 @@
+harness,task_id,difficulty,question,evidence,gold_sql,pred_sql,label (correct|wrong_reason),notes
+arm_A,bird_1375,moderate,"List all the members of the ""School of Applied Sciences, Technology and Education"" department.","list all members means to list all the full name; full name refers to first_name, last_name;","SELECT T1.first_name, T1.last_name FROM member AS T1 INNER JOIN major AS T2 ON T1.link_to_major = T2.major_id WHERE T2.department = 'School of Applied Sciences, Technology and Education'","SELECT first_name, last_name
+FROM member
+JOIN major ON member.link_to_major = major.major_id
+WHERE major.department = 'School of Applied Sciences, Technology and Education'",,
+arm_B,bird_1346,simple,"Tell the phone number of ""Carlo Jacobs"".","Carlo Jacobs is the full name; full name refers to first_name, last_name;",SELECT phone FROM member WHERE first_name = 'Carlo' AND last_name = 'Jacobs',SELECT phone FROM member WHERE first_name = 'Carlo' AND last_name = 'Jacobs',,
+arm_C,bird_480,moderate,"What is the Italian flavor text of the card ""Ancestor's Chosen""?","Italian refers to language = 'Italian'; flavor text refers to flavorText; ""Ancestor''s Chosen"" refers to name = 'Ancestor''s Chosen'",SELECT T2.flavorText FROM cards AS T1 INNER JOIN foreign_data AS T2 ON T2.uuid = T1.uuid WHERE T1.name = 'Ancestor''s Chosen' AND T2.language = 'Italian',"SELECT T2.flavorText
+FROM cards AS T1
+JOIN foreign_data AS T2
+ON T1.uuid = T2.uuid
+WHERE T1.name = 'Ancestor''s Chosen' AND T2.language = 'Italian'",,
+arm_C,bird_576,simple,Name the user that commented 'thank you user93!',"""thank you user93"" is the Text of comment; user refers to DisplayName",SELECT T1.DisplayName FROM users AS T1 INNER JOIN comments AS T2 ON T1.Id = T2.UserId WHERE T2.Text = 'thank you user93!',"SELECT u.DisplayName
+FROM comments c
+JOIN users u ON c.UserId = u.Id
+WHERE c.Text = 'thank you user93!'",,
+arm_C,bird_1357,simple,State the date Connor Hilton paid his/her dues.,"Connor Hilton is the full name; full name refers to first_name, last_name; date the dues was paid refers to date_received where source = 'Dues';",SELECT T2.date_received FROM member AS T1 INNER JOIN income AS T2 ON T1.member_id = T2.link_to_member WHERE T1.first_name = 'Connor' AND T1.last_name = 'Hilton' AND T2.source = 'Dues',"SELECT T2.date_received
+FROM member AS T1
+JOIN income AS T2
+ON T1.member_id = T2.link_to_member
+WHERE T1.first_name = 'Connor' AND T1.last_name = 'Hilton' AND T2.source = 'Dues'",,
+arm_C,bird_1394,simple,How many members of the Student_Club have major in 'Physics Teaching'?,'Physics Teaching' is the major_name;,SELECT COUNT(T2.member_id) FROM major AS T1 INNER JOIN member AS T2 ON T1.major_id = T2.link_to_major WHERE T1.major_name = 'Physics Teaching',"SELECT COUNT(DISTINCT T1.member_id) AS member_count
+FROM member AS T1
+JOIN major AS T2 ON T1.link_to_major = T2.major_id
+WHERE T2.major_name = 'Physics Teaching'",,
+arm_A,bird_572,moderate,How many views did the post titled 'Integration of Weka and/or RapidMiner into Informatica PowerCenter/Developer' get?,"""Integration of Weka and/or RapidMiner into Informatica PowerCenter/Developer"" is the Title of post; views refers to ViewCount",SELECT ViewCount FROM posts WHERE Title = 'Integration of Weka and/or RapidMiner into Informatica PowerCenter/Developer',"SELECT SUM(ViewCount) AS TotalViews
+FROM posts
+WHERE Title = 'Integration of Weka and/or RapidMiner into Informatica PowerCenter/Developer'",,
+arm_C,bird_1375,moderate,"List all the members of the ""School of Applied Sciences, Technology and Education"" department.","list all members means to list all the full name; full name refers to first_name, last_name;","SELECT T1.first_name, T1.last_name FROM member AS T1 INNER JOIN major AS T2 ON T1.link_to_major = T2.major_id WHERE T2.department = 'School of Applied Sciences, Technology and Education'","SELECT first_name, last_name
+FROM member
+JOIN major ON member.link_to_major = major.major_id
+WHERE major.department = 'School of Applied Sciences, Technology and Education'",,
+arm_A,bird_1312,simple,What's Angela Sanders's major?,"Angela Sanders is the full name; full name refers to first_name, last_name; major refers to major_name.",SELECT T2.major_name FROM member AS T1 INNER JOIN major AS T2 ON T1.link_to_major = T2.major_id WHERE T1.first_name = 'Angela' AND T1.last_name = 'Sanders',SELECT major_name FROM major WHERE major_id = (SELECT link_to_major FROM member WHERE first_name = 'Angela' AND last_name = 'Sanders'),,
+arm_C,bird_1136,moderate,How many players had the highest potential score for crossing that preferred to use their left foots while attacking?,highest potential score for crossing refers to MAX(crossing); preferred to use their left foots while attacking refers to preferred_foot = 'left',SELECT COUNT(t1.id) FROM Player_Attributes AS t1 WHERE t1.preferred_foot = 'left' AND t1.crossing = ( SELECT MAX(crossing) FROM Player_Attributes),"SELECT COUNT(T1.player_api_id)
+FROM Player_Attributes AS T1
+JOIN Player AS T2 ON T1.player_api_id = T2.player_api_id
+WHERE T1.preferred_foot = 'left' AND T1.crossing = (SELECT MAX(crossing) FROM Player_Attributes)",,
+arm_B,bird_1344,simple,What was the notes of the fundraising on 2019/9/14?,fundraising on 2019/9/14 refers to source = 'Fundraising' where date_received = '2019-09-14',SELECT notes FROM income WHERE source = 'Fundraising' AND date_received = '2019-09-14',"SELECT notes
+FROM income
+WHERE source = 'Fundraising' AND date_received = '2019-09-14'",,
+arm_C,bird_1057,moderate,Calculate the average home team goal in the 2010/2011 season in the country of Poland.,average home team goal = AVG(home_team_goal)= SUM(home_team_goal) / COUNT(DISTINCT Match.id) WHERE name = 'Poland' and season = '2010/2011';,SELECT CAST(SUM(t2.home_team_goal) AS REAL) / COUNT(t2.id) FROM Country AS t1 INNER JOIN Match AS t2 ON t1.id = t2.country_id WHERE t1.name = 'Poland' AND t2.season = '2010/2011',"SELECT AVG(home_team_goal) AS average_home_team_goal
+FROM Match
+WHERE season = '2010/2011' AND country_id = (SELECT id FROM Country WHERE name = 'Poland')",,
+arm_A,bird_704,simple,What is the excerpt post ID and wiki post ID of the tag named sample?,tag named sample refers to TagName = 'sample';,"SELECT ExcerptPostId, WikiPostId FROM tags WHERE TagName = 'sample'","SELECT ExcerptPostId, WikiPostId
+FROM tags
+WHERE TagName = 'sample'",,
+arm_B,bird_960,moderate,What is the average of fastest lap speed in the 2009 Spanish Grand Prix race?,Spanish Grand Prix is the name of race refers to name = 'Spanish Grand Prix'; average fastest lap speed refers to avg(fastestLapSpeed);,SELECT AVG(T1.fastestLapSpeed) FROM results AS T1 INNER JOIN races AS T2 on T1.raceId = T2.raceId WHERE T2.year = 2009 AND T2.name = 'Spanish Grand Prix',"SELECT AVG(T2.fastestLapSpeed) AS average_fastest_lap_speed
+FROM races AS T1
+JOIN results AS T2 ON T1.raceId = T2.raceId
+JOIN circuits AS T3 ON T1.circuitId = T3.circuitId
+WHERE T1.name = 'Spanish Grand Prix'
+  AND T1.year = 2009",,
+arm_C,bird_737,simple,What is Copycat's race?,Copycat is the superhero_name;,SELECT T2.race FROM superhero AS T1 INNER JOIN race AS T2 ON T1.race_id = T2.id WHERE T1.superhero_name = 'Copycat',"SELECT r.race FROM superhero AS s
+JOIN publisher AS p ON s.publisher_id = p.id
+JOIN race AS r ON s.race_id = r.id
+WHERE s.superhero_name = 'Copycat'",,
+arm_C,bird_822,moderate,How many green-skinned villains are there in the superhero universe?,green-skinned refers to colour.colour = 'Green' WHERE skin_colour_id = colour.id; villains refers to alignment = 'Bad';,SELECT COUNT(T1.id) FROM superhero AS T1 INNER JOIN alignment AS T2 ON T1.alignment_id = T2.id INNER JOIN colour AS T3 ON T1.skin_colour_id = T3.id WHERE T2.alignment = 'Bad' AND T3.colour = 'Green',"SELECT COUNT(*)
+FROM superhero
+WHERE alignment_id = (SELECT id FROM alignment WHERE alignment = 'Bad')
+  AND skin_colour_id = (SELECT id FROM colour WHERE colour = 'Green')",,
+arm_C,bird_368,simple,What is the percentage of borderless cards?,"borderless card refers to borderColor = 'borderless'; percentage = Divide(Count (id) where borderColor = 'borderless', Count(id)) *100",SELECT CAST(SUM(CASE WHEN borderColor = 'borderless' THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(id) FROM cards,"SELECT CAST(COUNT(CASE WHEN borderColor = 'borderless' THEN 1 ELSE NULL END) AS REAL) * 100 / COUNT(id) AS Percentage
+FROM cards",,
+arm_B,bird_753,moderate,"Among the superheroes with height from 170 to 190, list the names of the superheroes with no eye color.",height from 170 to 190 refers to height_cm BETWEEN 170 AND 190; no eye color refers to colour = 'No Colour',SELECT DISTINCT T1.superhero_name FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id WHERE T1.height_cm BETWEEN 170 AND 190 AND T2.colour = 'No Colour',"SELECT superhero_name
+FROM superhero
+WHERE height_cm BETWEEN 170 AND 190
+  AND eye_colour_id = (SELECT id FROM colour WHERE colour = 'No Colour')",,
+arm_B,bird_796,moderate,State all of 3-D Man's attributes along with their values.,3-D Man is the superhero_name. attributes refers to attribute_name; values refers to attribute_value;,"SELECT T3.attribute_name, T2.attribute_value FROM superhero AS T1 INNER JOIN hero_attribute AS T2 ON T1.id = T2.hero_id INNER JOIN attribute AS T3 ON T2.attribute_id = T3.id WHERE T1.superhero_name = '3-D Man'","SELECT attribute_name, attribute_value
+FROM attribute
+JOIN hero_attribute ON attribute.id = hero_attribute.attribute_id
+JOIN superhero ON hero_attribute.hero_id = superhero.id
+JOIN alignment ON superhero.alignment_id = alignment.id
+WHERE superhero_name = '3-D Man'",,
+arm_B,bird_1394,simple,How many members of the Student_Club have major in 'Physics Teaching'?,'Physics Teaching' is the major_name;,SELECT COUNT(T2.member_id) FROM major AS T1 INNER JOIN member AS T2 ON T1.major_id = T2.link_to_major WHERE T1.major_name = 'Physics Teaching',"SELECT COUNT(DISTINCT member_id)
+FROM member
+JOIN major ON member.link_to_major = major.major_id
+WHERE major_name = 'Physics Teaching'",,

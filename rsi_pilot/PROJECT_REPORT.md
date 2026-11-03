@@ -33,7 +33,9 @@ to a different benchmark? And does RRSI-style regularization change that?
 - Regularization did **not** change accuracy. It did keep the harness at baseline cost:
   1,918 tokens per task, against 4,969 for the unregularized arm (exploratory).
 
-**Run 4** (pre-registered, single-shot) is paused during seed 1.
+**Run 4** (pre-registered, single-shot, 1.5B student, 6 seeds) finished on 2026-11-03: no
+transfer. B vs A on held-out Spider -4.3 tasks of 322 (p = 0.56), and random edits matched the
+LLM proposer. See section 7.5.
 
 ---
 
@@ -389,7 +391,7 @@ Four independent reviewer agents examined the project.
 
 Runs 4 and 5 implement these fixes.
 
-### 7.5 Run 4: single-shot, pre-registered (paused)
+### 7.5 Run 4: single-shot, pre-registered (complete)
 
 **Design** (`frozen_v4.yaml`, `PREDICTION.md`, pushed in e085db7).
 - E and E2: 100 tasks each from Spider train.
@@ -400,10 +402,21 @@ Runs 4 and 5 implement these fixes.
 
 **Status.**
 - Paused at the user's request at 02:37 UTC, during seed 20261111's evolution, so run 5
-  could use the GPU.
-- The partial `arm_*` directories of that seed must be deleted before resuming.
+  could use the GPU. Its partial outputs were discarded.
+- Then run in full on 2026-11-03, two seeds each on three separate Lambda A10s (same Ollama
+  version and model digests), seed 20261111 restarted from scratch. Instance spend $17.43.
+- Full results, predictions and deviations: README "Run 4" and `docs/PROJECT_NOTES.md`.
 
-**Seed 1 baseline.**
+**Results** (`runs_v4/pooled_seed_level.md`, unit = seed, exact Wilcoxon).
+- Primary, B vs A on H: -4.3 tasks of 322, 95% CI [-13.7, +2.7], p = 0.56.
+- A vs baseline on H +4.0 (p 0.19); B vs baseline on H -0.3 (p 0.88).
+- A vs C (random edits): +1.7 on E, -0.5 on H, both not significant.
+- Selection gap (E gain minus E2 gain): A +7.5 pp (5 of 6 seeds positive, p 0.062, Holm 0.50).
+- Every arm gained +4 to +9 tasks of 100 on E and -0.2 to +2.2 on fresh E2 tasks.
+- Deviation: in seed 20261112 arm C crashed on one Ollama HTTP 500 and only that arm was rerun
+  (the pre-registered rule says rerun the seed).
+
+**Seed 1 baseline (first attempt, discarded).**
 - E: 35 and 33 out of 100 on two repeats. E2 34/100. H 108/322 (33.5%). B 55/398 (13.8%).
 - Placebo deltas on E: +3, +2, +4, +5, +2, +5, +2, +1, +5, +1, so Arm B's threshold was 6 tasks.
 
@@ -539,12 +552,12 @@ Runs 4 and 5 implement these fixes.
 |---|---|
 | Runs 1-3 | No predictions were registered (`PREDICTION.md` was blank). The user asked to run without them. |
 | Run 1 | Arm B was restarted after a crash; the crashed log is kept. The proposer was unseeded. Run-2 changes were designed after seeing run-1 results. |
-| Run 4 | `PREDICTION.md` (written by the AI assistant, as the file states) was pushed at 02:26 UTC, 8 minutes after the run started (02:17:37); only baseline numbers existed then. Amendment 1 (10 → 6 seeds) was pushed before any seed finished. Run 4 was then paused. |
+| Run 4 | `PREDICTION.md` (written by the AI assistant, as the file states) was pushed at 02:26 UTC, 8 minutes after the run started (02:17:37); only baseline numbers existed then. Amendment 1 (10 → 6 seeds) was pushed before any seed finished. Run 4 was then paused and later run in full with seed 20261111 restarted; in seed 20261112 only the crashed arm C was rerun (README "Run 4 deviations"). |
 | Run 5 | `PREDICTION_run5.md` was committed locally at 02:50 UTC, before any result. It reached GitHub only at 05:09 UTC, **after seed 1 finished (04:23)**, because the relay waited for the user's approval. Seeds 2-6 are pre-registered on GitHub; seed 1 rests only on the local commit time. |
 | Run 5 | The design was cut before launch (E/E2 60 → 50, 10 → 8 generations) to fit the time. This happened before the pre-registration commit. |
 | Run 5 | Token cost was not a pre-registered endpoint, so the "B keeps cost at baseline" finding is exploratory. |
 | Run 5 README | Before pushing, I corrected two overstatements in my own draft: that every arm used the full-schema fix, and that the leakage prediction held. |
-| All | Per-candidate logs and caches for runs 4-5 stay on the box and are not on GitHub (size). The BIRD hand-label sheet from run 1 was never labelled. |
+| All | Run 4's per-candidate logs are on GitHub; its caches were not kept. Run 5's per-candidate logs and caches stay on the box and are not on GitHub (size). The BIRD hand-label sheet from run 1 was never labelled. |
 
 ---
 
@@ -581,8 +594,9 @@ scripts/run_v5_all.sh                                      # ~11 h on one A10
 RSI_HARNESS_KIND=agent .venv/bin/python -m rsi.pool runs_v5/s2026121? --seed-level
 .venv/bin/python scripts/plot_run5.py                      # figures/run5_headline.png
 
-# Run 4 (single-shot): resume after deleting runs_v4/s20261111/arm_*
-scripts/run_v4_all.sh
+# Run 4 (single-shot): one seed per call, then pool (run 4 is complete)
+scripts/run_v4.sh 20261111 4
+.venv/bin/python -m rsi.pool runs_v4/s* --seed-level
 
 # Runs 1-3: see README "Run order" (RSI_FROZEN / RSI_SPLITS / RSI_RUNS per run)
 ```
@@ -628,7 +642,8 @@ scripts/run_v4_all.sh
 - Found that about 50% of tuning-set passes in a naive Spider setup were false positives
   (empty-gold results), and fixed the evaluation.
 - Single-shot harness, 1.5B student: tuning-set gains of about +20 tasks did not transfer to
-  held-out databases.
+  held-out databases. A pre-registered 6-seed run (run 4) confirmed it: B vs A on held-out
+  Spider -4.3 tasks of 322 (p = 0.56), and random edits matched the 32B proposer.
 - Multi-step agent, 7B student, 6 seeds: self-improvement transferred, about +12 points on
   held-out Spider in 6 of 6 seeds. But a random-edit baseline matched the 32B LLM proposer,
   and RRSI-style regularization did not change accuracy. It did keep the harness 2.6× cheaper
@@ -638,8 +653,7 @@ scripts/run_v4_all.sh
 
 ## 15. Possible next steps
 
-1. Resume run 4, about 11 h for 6 seeds, to get the pre-registered single-shot result with the
-   same controls.
+1. Done: run 4 finished on 2026-11-03 (see 7.5).
 2. Run 5 with a stronger baseline (full schema from the start) to test whether anything beyond
    "finding missing defaults" transfers.
 3. Use a frontier proposer (Claude) to test whether the LLM can beat random search when its

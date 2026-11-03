@@ -1,0 +1,6 @@
+Noise floor: E passed across 2 runs = [45, 46]; spread 1; 1 tasks flipped
+Placebo deltas on E: [0, -4, -1, 0, -1, -1, -2, -1, -2, -2] -> Arm B keep threshold 2 tasks
+Baseline E: 46/100 = 46.0% | 0.97s/task
+Baseline E2: 43/100 = 43.0% | 1.03s/task
+Baseline H: 111/322 = 34.5% | 0.80s/task
+Baseline B: 56/398 = 14.1% | 0.90s/task

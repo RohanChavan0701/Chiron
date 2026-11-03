@@ -1,0 +1,87 @@
+# RUN 4 template (pre-registered design; see PREDICTION.md). One copy per seed is written by
+# scripts/run_v4.sh as frozen_v4_s<SEED>.yaml with `seed` and `proposer.seed` replaced.
+# Changes from run 3, each from the multi-reviewer critique (README "Run 4"):
+#  - E (100) and E2 (100 fresh tasks, same databases) from Spider TRAIN; H = every eligible
+#    Spider dev hard/extra task (fixed, ~322); B = every eligible BIRD simple/moderate task
+#    (fixed, ~398). E, E2 and H share hardness tiers.
+#  - Arm C: random-search control with Arm A's keep rule (rsi/edits.py).
+#  - Arm A keeps any +1 E gain (the paper's unregularized evolution). Arm B: cosine edit
+#    budget 3 -> 1, keep threshold from placebo edits, leak check, critic, pruning.
+#  - Free local 32B proposer and critic (same model, as in the paper).
+#  - gpu_lock: the student is never partly on the CPU (placement changed its outputs).
+#  - Spider's official result comparison; cache keyed on eval settings, seed and pool.
+
+seed: 20261114
+
+cache_key_v2: true
+
+student:
+  provider: ollama
+  model: qwen2.5:1.5b-instruct
+  base_url: http://localhost:11434
+  temperature: 0
+  seed: 20261102
+  num_ctx: 8192
+  num_predict: 512
+  request_timeout_s: 120
+  gpu_lock: true         # rsi/gpu.py: student always fully on the GPU
+
+proposer:
+  provider: ollama
+  model: qwen2.5:32b-instruct
+  base_url: http://localhost:11434
+  temperature: 0.7
+  seed: 20261114
+  num_ctx: 8192          # 12k+ does not fit on the A10 with this model; llm.py refuses truncated prompts
+  num_predict: 1536
+  gpu_lock: true
+
+critic:
+  provider: ollama
+  model: qwen2.5:32b-instruct
+  base_url: http://localhost:11434
+  temperature: 0
+  seed: 20261102
+  num_ctx: 8192
+  num_predict: 512
+  gpu_lock: true
+
+data:
+  spider_dir: data/spider
+  bird_dir: data/bird_minidev
+  bird_json: null
+
+splits:
+  design: v4
+  n_e: 100
+  n_e2: 100
+  max_tasks_per_db: 4     # per side (E and E2) per database
+  e_hardness: [hard, extra]
+  h_hardness: [hard, extra]
+  b_difficulty: [simple, moderate]
+  exclude_empty_gold: true
+
+eval:
+  verifier: spider_official
+  bird_include_evidence: true
+  keep_distinct: true
+  exec_timeout_s: 30
+  max_result_rows: 100000
+
+evolution:
+  arms: [A, B, C]
+  generations: 10
+  candidates_per_generation: 3
+  failures_shown: 8
+  show_gold_sql_to_proposer: false
+  show_edit_history: true
+  history_items: 12
+  unreg_keep_delta_tasks: 1     # Arms A and C
+  min_keep_delta_tasks: 2       # floor for Arm B's placebo threshold
+  placebo: true
+  placebo_alpha: 0.05
+  arm_b_budget: cosine
+  arm_b_max_fields: 3
+  arm_b_min_fields: 1
+  arm_c_max_fields: 3
+  prune_cost_ratio: 1.25

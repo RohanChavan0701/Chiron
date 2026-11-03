@@ -1,0 +1,14 @@
+{
+ "arm": "C",
+ "final_harness_id": "715be33b274e4823",
+ "E_base": 46,
+ "E_final": 49,
+ "n": 100,
+ "changed_from_baseline": [
+  "include_foreign_keys",
+  "fewshot_rule",
+  "max_retries",
+  "instructions_suffix"
+ ],
+ "keep_threshold": 1
+}

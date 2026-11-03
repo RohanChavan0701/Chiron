@@ -21,11 +21,11 @@ of the telemetry the whole loop watches.
 - **Eval = execution accuracy**: run generated + gold SQL against the Spider SQLite DB, compare
   RESULT SETS. Use Spider's eval logic for set comparison (row-order / duplicate normalization)
   or you'll get false mismatches. Don't string-compare query text.
-- Base agent = weaker/faster Gemini tier (so it genuinely struggles on hard queries).
+- Base agent = a small model that genuinely struggles on hard queries (see rules/02 for the current defaults).
 
 ## What to build (files in this dir)
 - `spider.py`  — load a Spider subset: schemas, questions (pooled by difficulty), gold SQL, SQLite DBs.
-- `agent.py`   — text-to-SQL agent; prompt includes `config.few_shot_examples`; calls Gemini.
+- `agent.py`   — text-to-SQL agent; prompt includes `config.few_shot_examples`; calls the student through an OpenAI-compatible client (MiniMax / Prime / OpenRouter / Ollama).
 - `evaluator.py` — execute generated + gold SQL, compare result sets -> accuracy + validity;
                    compute generated/required complexity (joins+nesting).
 - `feed.py`    — the change-point stream sampler (phase -> difficulty pool); replay mode.

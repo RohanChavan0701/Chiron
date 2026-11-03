@@ -1,0 +1,51 @@
+{
+ "reps": 2,
+ "passed": [
+  45,
+  46
+ ],
+ "spread_tasks": 1,
+ "flipping_tasks": [
+  "spider_train_4228"
+ ],
+ "student": {
+  "provider": "ollama",
+  "model": "qwen2.5:1.5b-instruct",
+  "base_url": "http://localhost:11434",
+  "temperature": 0,
+  "seed": 20261102,
+  "num_ctx": 8192,
+  "num_predict": 512,
+  "request_timeout_s": 120,
+  "gpu_lock": true
+ },
+ "placebo": {
+  "deltas_tasks": [
+   0,
+   -4,
+   -1,
+   0,
+   -1,
+   -1,
+   -2,
+   -1,
+   -2,
+   -2
+  ],
+  "harness_ids": [
+   "19e1915249101893",
+   "0cade2854888e549",
+   "a0471f08c3b2eb0e",
+   "90214b6cb02df2ef",
+   "1bc7d32b4ccb1ad4",
+   "b1845e7d41b67c17",
+   "f7c835f07086efa1",
+   "34c5bf8c5cdbd412",
+   "2dbc53bf538c7287",
+   "6826104b49cef7da"
+  ],
+  "k": 3,
+  "alpha": 0.05,
+  "threshold_tasks": 2
+ }
+}

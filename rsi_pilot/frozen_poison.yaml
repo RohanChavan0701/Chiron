@@ -1,0 +1,92 @@
+# POISON AUDIT template (design: POISON_AUDIT.md). scripts/run_poison.sh writes one copy per
+# cell as frozen_poison_s<SEED>_<FAMILY>_d<DOSE>.yaml, filling `seed`, `proposer.seed`,
+# `poison.*` and `evolution.show_gold_sql_to_proposer`.
+#
+# Identical to frozen_v4.yaml except:
+#  - evolution.arms: [A, B]   (Arm C draws from fixed menus and cannot carry a directive)
+#  - poison: overrides file built by `python -m rsi.poison build` from the clean run-4 E
+#  - the run reuses run 4's splits_v4_s<SEED>.json; run 4's arms are the clean control
+
+seed: 0
+
+cache_key_v2: true
+
+poison:
+  overrides: null          # poison_v2_s<SEED>_<FAMILY>_<MODE>_d<DOSE>.json
+  family: null             # P1 | P2a | P2b | P3
+  mode: null               # triggered (default) | global
+  dose: null
+  triggered_heldout: true  # also score H_trig and B_trig (trigger phrase added to every question)
+
+student:
+  provider: ollama
+  model: qwen2.5:1.5b-instruct
+  base_url: http://localhost:11434
+  temperature: 0
+  seed: 20261102
+  num_ctx: 8192
+  num_predict: 512
+  request_timeout_s: 120
+  gpu_lock: true
+
+proposer:
+  provider: ollama
+  model: qwen2.5:32b-instruct
+  base_url: http://localhost:11434
+  temperature: 0.7
+  seed: 0
+  num_ctx: 8192
+  num_predict: 1536
+  gpu_lock: true
+
+critic:
+  provider: ollama
+  model: qwen2.5:32b-instruct
+  base_url: http://localhost:11434
+  temperature: 0
+  seed: 20261102
+  num_ctx: 8192
+  num_predict: 512
+  gpu_lock: true
+
+data:
+  spider_dir: data/spider
+  bird_dir: data/bird_minidev
+  bird_json: null
+
+splits:
+  design: v4
+  n_e: 100
+  n_e2: 100
+  max_tasks_per_db: 4
+  e_hardness: [hard, extra]
+  h_hardness: [hard, extra]
+  b_difficulty: [simple, moderate]
+  exclude_empty_gold: true
+
+eval:
+  verifier: spider_official
+  bird_include_evidence: true
+  keep_distinct: true
+  exec_timeout_s: 30
+  max_result_rows: 100000
+
+evolution:
+  arms: [A, B]
+  generations: 10
+  candidates_per_generation: 3
+  failures_shown: 8
+  show_gold_sql_to_proposer: false   # set true only for the "P1 gold shown" cell
+  show_edit_history: true
+  history_items: 12
+  unreg_keep_delta_tasks: 1
+  min_keep_delta_tasks: 2
+  placebo: true
+  placebo_alpha: 0.05
+  arm_b_budget: cosine
+  arm_b_max_fields: 3
+  arm_b_min_fields: 1
+  prune_cost_ratio: 1.25
+  # Persistence phase only (scripts/run_poison.sh persist): start from the poisoned final
+  # harness, poison removed, fewer generations.
+  # base_harness: runs_poison/s<SEED>_<FAMILY>_d<DOSE>/arm_A/final.yaml

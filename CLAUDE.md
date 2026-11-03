@@ -1,9 +1,9 @@
-# CLAUDE.md — Agent Self-Improvement
+# CLAUDE.md — Chiron
 
 > Project context for AI coding assistants working in this repo.
 
-## What we're building (one sentence)
-A self-improvement layer for AI agents: it watches a **text-to-SQL agent** evaluated on **Spider**, detects when accuracy **drifts** as queries get harder, and makes the agent **learn from its own failures** (teacher-generated few-shot examples + knowledge-graph rules) to recover — no human in the loop.
+## What this is (one sentence)
+Runtime self-correction for a small language model: a harness watches a student on a stream of problems (text-to-SQL on Spider by default; coding, GSM8K and finance via adapters), a detector fires when windowed accuracy **drifts**, and a correction stage turns verified teacher repairs into few-shot memory so the same student recovers. Weights never change. A second line of work, `rsi_pilot/`, tests whether an LLM-driven harness-evolution loop transfers to held-out data (so far: tuning-set gains do not transfer).
 
 ## The loop (4 stages)
 ```
@@ -22,14 +22,18 @@ The growing `few_shot_examples` list **is** the agent learning. That feedback pa
 | Detector | `detector/` | `TelemetryRecord` | `DriftEvent` |
 | Correction / learning | `correction/` | `DriftEvent` + failing cases | `CorrectionAction` |
 | Viewer | `viewer/` | `events.jsonl` | (UI) |
+| Adapters | `adapters/` + `core/adapter.py` | domain data | `TaskAdapter` for harness |
+| RSI pilot | `rsi_pilot/` (standalone) | Spider dev + BIRD Mini-Dev | `runs*/results.md`, `audit.json` |
 
-Each directory has its own `CLAUDE.md` with the stage contract + implementation notes.
+Each stage directory has its own `CLAUDE.md` with the contract + implementation notes. `rsi_pilot/README.md` documents the pilot's design, leakage controls and all run results.
+
+Current plan and GPU work: `docs/DEV_PLAN.md`. Before launching or terminating any cloud instance, read `rsi_pilot/CLOUD_RUN.md`; its spending limits and termination rules are the author's and are not to be changed by an agent.
 
 ## Shared rules
 @.claude/rules/00-architecture.md
 @.claude/rules/01-contracts.md
 @.claude/rules/02-tech-decisions.md
-@.claude/rules/03-compliance.md
+@.claude/rules/03-provenance.md
 @.claude/rules/04-workflow.md
 
 ## First thing, every session

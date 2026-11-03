@@ -15,7 +15,7 @@ This is the continual-learning / memory heart of the project (your DER++ wheelho
 ## Locked decisions that constrain you
 - **LEARN FROM FAILURES — NOT model-swap** (rules/02). Do NOT "fix" drift by reverting to a bigger
   model. The agent must end BETTER than it started on the hard distribution because it LEARNED.
-- **Teacher model** = stronger Gemini tier, used to GENERATE corrected SQL for failing questions
+- **Teacher model** = a stronger model from the same provider as the student (default `MiniMax-M3`, see rules/02), used to GENERATE corrected SQL for failing questions
   (a teacher, not a permanent swap). The base agent stays the agent; it just gains examples.
 - **Anchor against forgetting**: keep good easy-query examples too, so injecting hard-query
   examples doesn't regress the easy bucket (this is the DER++/memory angle — make it real but

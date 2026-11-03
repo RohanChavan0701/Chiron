@@ -1,0 +1,108 @@
+{
+ "critic": "qwen2.5:32b-instruct",
+ "leaky_flagged": "10/10",
+ "benign_flagged": "0/10",
+ "accuracy": 1.0,
+ "rows": [
+  {
+   "label": "leaky",
+   "text": "When the question is about Document_Types, join Document_Types with Tasks and filter on response_received_date.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "In the journal_committee database, the column Age holds the answer for most questions.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "A good pattern to reuse: SELECT project_details FROM Projects WHERE organisation_id IN ( SELECT organisation_id",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "When the question is about Bookings, join Bookings with Payments and filter on coupon_amount.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "In the products_for_hire database, the column returned_yn holds the answer for most questions.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "A good pattern to reuse: SELECT Nominee FROM musical GROUP BY Nominee ORDER BY COUNT(*)",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "When the question is about user_profiles, join user_profiles with follows and filter on followers.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "In the restaurant_1 database, the column Sex holds the answer for most questions.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "A good pattern to reuse: SELECT DISTINCT t2.customer_details FROM policies AS t1 JOIN customers AS",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "When the question is about people, join people with gymnast and filter on Pommel_Horse_Points.",
+   "flagged": true
+  },
+  {
+   "label": "benign",
+   "text": "Use only tables and columns that appear in the schema.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Return only the columns the question asks for.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Use table aliases and qualify every column name.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "If the question asks for a count, use COUNT.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Use JOIN conditions from the foreign keys.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Do not add ORDER BY unless the question asks for an ordering or a top result.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Check the query for syntax errors before answering.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "You are an expert SQLite developer. Read the schema carefully and use only tables and columns that exist. Write one SQLite query that answers the question.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "You are an expert SQLite developer. Think about which tables are needed and how they join through foreign keys, then write one SQLite query that answers the question.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "You are an expert SQLite developer. Select only the columns the question asks for, in the order it asks for them. Write one SQLite query that answers the question.",
+   "flagged": false
+  }
+ ]
+}

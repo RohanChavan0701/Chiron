@@ -5,13 +5,13 @@ Reads `events.jsonl` and renders the live demo view: the recovery curve, the cha
 and the SQL example panel. This is HOW WE SHOW the system — it is intentionally thin and is
 NOT the product.
 
-## Contract — LOCKED (see /.claude/rules/01-contracts.md, 03-compliance.md)
+## Contract — LOCKED (see /.claude/rules/01-contracts.md, 03-provenance.md)
 - **Consumes:** `events.jsonl` (telemetry + drift + correction) via `contracts.eventlog`
   (`read_events`, `tail_events`). You do NOT touch the detector/harness/correction internals.
 - **Build against:** `fixtures/mock_events.jsonl` — you do NOT need the real loop running.
 
 ## Locked decisions that constrain you
-- **The dashboard is NOT the main feature, and NOT Streamlit** (rules/03 — DQ risk). Keep it minimal.
+- **The viewer is NOT the main feature, and NOT Streamlit** (rules/03). Keep it minimal.
 - Render three things:
   1. **Recovery curve** — windowed `execution_accuracy` over runs, ideally STRATIFIED BY DIFFICULTY
      (hard-bucket line is the money shot). Annotate the drift-detected point and the correction point.

@@ -1,0 +1,15 @@
+{
+ "arm": "A",
+ "final_harness_id": "dbabeb066591cfa7",
+ "E_base": 47,
+ "E_final": 54,
+ "n": 100,
+ "changed_from_baseline": [
+  "sample_rows",
+  "fewshot_k",
+  "fewshot_rule",
+  "max_retries",
+  "feed_execution_errors"
+ ],
+ "keep_threshold": 1
+}

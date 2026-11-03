@@ -42,14 +42,25 @@ That run: drift fired, ~15 teacher few-shots + anchors, a few KG rules. Reproduc
 
 Once memory is frozen and scored on problems **not** used to build it, lift often disappears. Small students hit a **capacity floor**; sometimes examples **hurt**. Details: [`docs/FINDINGS_CODING.md`](docs/FINDINGS_CODING.md).
 
-### Spider (historical)
+### Spider (early demo numbers)
 
 | Setup | Without | With | Δ |
 |---|---:|---:|---:|
 | Local 1.5B + MiniMax teacher | 0.100 | 0.333 | +0.233 |
-| Hackathon MiniMax student + teacher | 0.300 | 0.567 | +0.267 |
+| MiniMax student + teacher (original build) | 0.300 | 0.567 | +0.267 |
 
-More in [`docs/design.md`](docs/design.md). Treat as early demo numbers, not the final claim.
+More in [`docs/design.md`](docs/design.md). Same-distribution, 30 queries, no held-out split. Spider 1.0 is likely in the student's pretraining data. Do not cite these as a transfer claim; cite the pilot below.
+
+### Harness-evolution pilot (`rsi_pilot/`) — held-out transfer, null result
+
+A separate experiment asks whether an LLM proposer that edits the student's harness config (RRSI-style, arXiv 2609.24972) produces gains that survive on held-out Spider databases (H) and on BIRD Mini-Dev (B). Four runs, 1.5B student, 14B proposer, n=50 per set, pre-registered run 4.
+
+| Comparison (pooled, 200 tasks/set) | E (tuned on) | H (held-out Spider) | B (BIRD) |
+|---|---:|---:|---:|
+| Unconstrained vs baseline | +20 tasks, p=0.007 | −9, p=0.20 | +1, p=1.0 |
+| Regularized vs baseline | +19 tasks, p=0.014 | −2, p=0.86 | +1, p=1.0 |
+
+Both arms reliably improve the set they tune on and neither improves held-out data. Re-scoring on Spider's test-suite databases showed about half of run-1 tuning-set passes were false positives from empty gold results, fixed in run 2. Full design, leakage controls, per-run tables, and deviations: [`rsi_pilot/README.md`](rsi_pilot/README.md).
 
 ---
 
@@ -155,8 +166,10 @@ harness/       Student client, feeds, eval / sandbox
 detector/      Drift detection
 correction/    Teacher, few-shots, KG (graph / inject)
 viewer/        Live UI over the event log
+analysis/      Paired bootstrap CIs
 fixtures/      Problem subsets + mocks
-scripts/       Prime / OpenRouter entrypoints
+scripts/       Prime / OpenRouter entrypoints, held-out freezing, multi-seed eval
+rsi_pilot/     Standalone harness-evolution pilot (own venv, README, run logs)
 orchestrator.py
 ```
 
@@ -170,6 +183,10 @@ After coding, we pushed on:
 - **Finance / PRBench** — rubric-graded reasoning; frozen “broadcast” memory mostly null; **per-task teacher plans** looked stronger (see feature branches `feat/finance-*`, `feat/q1-self-plan`, and sibling work)
 
 If you’re reading this on **`main`**, you’re looking at the drift → teacher → few-shot harness. Newer claim-writing lives on other branches and in the findings docs. Prefer those over the README when the two disagree.
+
+## Origin
+
+The four-stage loop and orchestrator were built in a hackathon window starting 2026-07-01. The adapters, findings docs, and `rsi_pilot/` are follow-on work on the same codebase; the git log is the record of what landed when.
 
 ---
 

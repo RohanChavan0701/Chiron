@@ -1,6 +1,6 @@
 """Thin live viewer: recovery curve + channels + SQL example panel.
 
-NOT the product, NOT Streamlit (see rules/03-compliance.md). Keep minimal.
+NOT the product, NOT Streamlit (see rules/03-provenance.md). Keep minimal.
 
 Consumes events.jsonl ONLY, via contracts.eventlog. Builds against
 fixtures/mock_events.jsonl. Server-side windowing: this module precomputes the
