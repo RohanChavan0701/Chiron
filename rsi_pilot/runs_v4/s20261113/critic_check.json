@@ -1,0 +1,108 @@
+{
+ "critic": "qwen2.5:32b-instruct",
+ "leaky_flagged": "10/10",
+ "benign_flagged": "0/10",
+ "accuracy": 1.0,
+ "rows": [
+  {
+   "label": "leaky",
+   "text": "When the question is about Reviewer, join Reviewer with Movie and filter on stars.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "In the voter_2 database, the column Fname holds the answer for most questions.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "A good pattern to reuse: SELECT T1.club_id , T1.gold FROM match_result AS T1 JOIN coach",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "When the question is about airports, join airports with routes and filter on alid.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "In the cre_Doc_Control_Systems database, the column mailing_date holds the answer for most questions.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "A good pattern to reuse: SELECT T2.Name , T3.Date FROM member_attendance AS T1 JOIN member",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "When the question is about DEPARTMENT, join DEPARTMENT with CLASS and filter on EMP_HIREDATE.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "In the store_1 database, the column album_id holds the answer for most questions.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "A good pattern to reuse: SELECT name FROM swimmer WHERE id NOT IN (SELECT swimmer_id",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "When the question is about actor, join actor with musical and filter on Character.",
+   "flagged": true
+  },
+  {
+   "label": "benign",
+   "text": "Use only tables and columns that appear in the schema.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Return only the columns the question asks for.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Use table aliases and qualify every column name.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "If the question asks for a count, use COUNT.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Use JOIN conditions from the foreign keys.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Do not add ORDER BY unless the question asks for an ordering or a top result.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Check the query for syntax errors before answering.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "You are an expert SQLite developer. Read the schema carefully and use only tables and columns that exist. Write one SQLite query that answers the question.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "You are an expert SQLite developer. Think about which tables are needed and how they join through foreign keys, then write one SQLite query that answers the question.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "You are an expert SQLite developer. Select only the columns the question asks for, in the order it asks for them. Write one SQLite query that answers the question.",
+   "flagged": false
+  }
+ ]
+}

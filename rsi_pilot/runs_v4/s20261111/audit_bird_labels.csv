@@ -1,0 +1,75 @@
+harness,task_id,difficulty,question,evidence,gold_sql,pred_sql,label (correct|wrong_reason),notes
+arm_C,bird_1331,simple,What is the amount of the funds that the Vice President received?,'Vice President' is a position of Student Club; funds received refers to amount.,SELECT T2.amount FROM member AS T1 INNER JOIN income AS T2 ON T1.member_id = T2.link_to_member WHERE T1.position = 'Vice President',"SELECT SUM(CASE WHEN position = 'Vice President' THEN amount ELSE 0 END) AS total_funds
+FROM income
+JOIN member ON income.link_to_member = member.member_id
+WHERE position = 'Vice President'",,
+arm_B,bird_1378,simple,What is the highest amount of budget spend for an event?,highest amount of budget spend refers to MAX(spent),SELECT MAX(spent) FROM budget,"SELECT MAX(budget.spent) AS highest_budget_spend
+FROM budget
+JOIN event ON budget.link_to_event = event.event_id",,
+arm_B,bird_573,simple,Write the contents of comments with a score of 17.,score of 17 refers to Score = 17; contents of comments refers to Text,SELECT Text FROM comments WHERE Score = 17,SELECT Text FROM comments WHERE Score = 17,,
+arm_A,bird_739,moderate,What are the names of the superheroes with the power of death touch?,name of superheroes refers to refers to superhero_name; the power of death touch refers to power_name = 'Death Touch',SELECT T1.superhero_name FROM superhero AS T1 INNER JOIN hero_power AS T2 ON T1.id = T2.hero_id INNER JOIN superpower AS T3 ON T2.power_id = T3.id WHERE T3.power_name = 'Death Touch',SELECT T1.superhero_name FROM superhero AS T1 JOIN hero_power AS T2 ON T1.id  =  T2.hero_id JOIN superpower AS T3 ON T2.power_id  =  T3.id WHERE T3.power_name  =  'Death Touch',,
+arm_C,bird_1352,moderate,"For all the club members from ""Business"" major, how many of them wear medium size t-shirt?",'Business' is a major name; wear medium size t-shirt refers to t_shirt_size = 'Medium',SELECT COUNT(T1.member_id) FROM member AS T1 INNER JOIN major AS T2 ON T1.link_to_major = T2.major_id WHERE T2.major_name = 'Business' AND T1.t_shirt_size = 'Medium',"SELECT COUNT(member_id)
+FROM member
+JOIN major ON member.link_to_major = major.major_id
+WHERE major_name = 'Business' AND t_shirt_size = 'Medium'",,
+arm_B,bird_379,simple,What are the cards belong to duel deck a? List the ID.,duel deck a refers to duelDeck = a;,SELECT id FROM cards WHERE duelDeck = 'a',SELECT id FROM cards WHERE duelDeck = 'a',,
+arm_C,bird_704,simple,What is the excerpt post ID and wiki post ID of the tag named sample?,tag named sample refers to TagName = 'sample';,"SELECT ExcerptPostId, WikiPostId FROM tags WHERE TagName = 'sample'","SELECT ExcerptPostId, WikiPostId
+FROM tags
+WHERE TagName = 'sample'",,
+arm_A,bird_531,simple,"Which user has a higher reputation, Harlan or Jarrod Dixon?","""Harlan"" and ""Jarrod Dixon"" are both DisplayName; highest reputation refers to Max(Reputation)","SELECT DisplayName FROM users WHERE DisplayName IN ('Harlan', 'Jarrod Dixon') AND Reputation = ( SELECT MAX(Reputation) FROM users WHERE DisplayName IN ('Harlan', 'Jarrod Dixon') )",SELECT DisplayName FROM users WHERE Reputation = (SELECT MAX(Reputation) FROM users WHERE DisplayName = 'Harlan') OR DisplayName = 'Jarrod Dixon' ORDER BY Reputation DESC LIMIT 1,,
+arm_A,bird_797,moderate,Which superheroes have blue eyes with brown hair?,which superheroes refers to superhero_name; blue eyes refers to color = 'Blue' and color.id = eye_colour_id; brown hair refers to color = 'Brown' and color.id = hair_colour_id;,SELECT T1.superhero_name FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id INNER JOIN colour AS T3 ON T1.hair_colour_id = T3.id WHERE T2.colour = 'Blue' AND T3.colour = 'Brown',SELECT superhero_name FROM superhero WHERE eye_colour_id = (SELECT id FROM colour WHERE colour = 'Blue') AND hair_colour_id = (SELECT id FROM colour WHERE colour = 'Brown'),,
+arm_A,bird_1515,simple,What segment did the customer have at 2012/8/23 21:20:00?,'2012/8/23' can be represented by '2012-08-23',SELECT T2.Segment FROM transactions_1k AS T1 INNER JOIN customers AS T2 ON T1.CustomerID = T2.CustomerID WHERE T1.date = '2012-08-23' AND T1.time = '21:20:00',SELECT Segment FROM customers WHERE CustomerID  =  (SELECT CustomerID FROM transactions_1k WHERE Date  =  '2012-08-23' AND Time  =  '21:20:00'),,
+arm_A,bird_1357,simple,State the date Connor Hilton paid his/her dues.,"Connor Hilton is the full name; full name refers to first_name, last_name; date the dues was paid refers to date_received where source = 'Dues';",SELECT T2.date_received FROM member AS T1 INNER JOIN income AS T2 ON T1.member_id = T2.link_to_member WHERE T1.first_name = 'Connor' AND T1.last_name = 'Hilton' AND T2.source = 'Dues',SELECT T1.date_received FROM income AS T1 JOIN member AS T2 ON T1.link_to_member  =  T2.member_id WHERE T2.first_name  =  'Connor' AND T2.last_name  =  'Hilton' AND T1.source  =  'Dues',,
+arm_C,bird_1380,simple,What is the total amount of money spent for food?,total amount of money spent refers to SUM(spent); spent for food refers to category = 'Food',SELECT SUM(spent) FROM budget WHERE category = 'Food',"SELECT SUM(spent) AS total_spent_for_food
+FROM budget
+WHERE category = 'Food'",,
+arm_C,bird_1381,moderate,List the name of students that have attended more than 7 events.,"name of students means the full name; full name refers to first_name, last_name; attended more than 7 events refers to COUNT(link_to_event) > 7","SELECT T1.first_name, T1.last_name FROM member AS T1 INNER JOIN attendance AS T2 ON T1.member_id = T2.link_to_member GROUP BY T2.link_to_member HAVING COUNT(T2.link_to_event) > 7","SELECT 
+    first_name, 
+    last_name 
+FROM 
+    member 
+JOIN 
+    attendance 
+ON 
+    member.member_id = attendance.link_to_member 
+GROUP BY 
+    first_name, 
+    last_name 
+HAVING 
+    COUNT(attendance.link_to_event) > 7",,
+arm_B,bird_1344,simple,What was the notes of the fundraising on 2019/9/14?,fundraising on 2019/9/14 refers to source = 'Fundraising' where date_received = '2019-09-14',SELECT notes FROM income WHERE source = 'Fundraising' AND date_received = '2019-09-14',"SELECT notes
+FROM income
+WHERE date_received = '2019-09-14' AND source = 'Fundraising'",,
+arm_A,bird_678,simple,Which post by Harvey Motulsky has the most views? Please give the id and title of this post.,DisplayName = 'Harvey Motulsky'; the most views refer to MAX(ViewCount);,"SELECT T2.Id, T2.Title FROM users AS T1 INNER JOIN posts AS T2 ON T1.Id = T2.OwnerUserId WHERE T1.DisplayName = 'Harvey Motulsky' ORDER BY T2.ViewCount DESC LIMIT 1","SELECT posts.Id, posts.Title FROM posts 
+JOIN users ON posts.OwnerUserId = users.Id 
+WHERE users.DisplayName = 'Harvey Motulsky' 
+ORDER BY posts.ViewCount DESC LIMIT 1",,
+arm_B,bird_1484,simple,"How many more ""discount"" gas stations does the Czech Republic have compared to Slovakia?","Czech Republic can be represented as the Country value in gasstations table is 'CZE'; Slovakia can be represented as the Country value in the gasstations table is 'SVK';  Computation of more ""discount"" gas stations= Total no. of discount gas stations in Czech Republic - Total no. of discount gas stations in Slovakia","SELECT SUM(IIF(Country = 'CZE', 1, 0)) - SUM(IIF(Country = 'SVK', 1, 0)) FROM gasstations WHERE Segment = 'Discount'","SELECT 
+    (SELECT COUNT(*) 
+     FROM gasstations 
+     WHERE Segment = 'Discount' AND Country = 'CZE') 
+- (SELECT COUNT(*) 
+     FROM gasstations 
+     WHERE Segment = 'Discount' AND Country = 'SVK') AS MoreDiscountGasStations",,
+arm_B,bird_687,simple,How many comments were added to the post with the highest score?,the highest score refers to MAX(Score);,SELECT COUNT(T2.Id) FROM posts AS T1 INNER JOIN comments AS T2 ON T1.Id = T2.PostId GROUP BY T1.Id ORDER BY T1.Score DESC LIMIT 1,"SELECT COUNT(DISTINCT c.Id) AS CommentCount
+FROM comments c
+JOIN posts p ON c.PostId = p.Id
+WHERE p.Score = (SELECT MAX(Score) FROM posts)",,
+arm_A,bird_532,simple,Please list the display names of all the users whose accounts were created in the year 2011.,account created in the year 2011 refers to year(CreationDate) = 2011,"SELECT DisplayName FROM users WHERE STRFTIME('%Y', CreationDate) = '2011'","SELECT DisplayName FROM users WHERE strftime('%Y', CreationDate) = '2011'",,
+arm_C,bird_785,simple,Describe the names of neutral alignment superheroes.,names of superheroes refers to superhero_name; neutral alignment refers to alignment = 'Neutral';,SELECT T1.superhero_name FROM superhero AS T1 INNER JOIN alignment AS T2 ON T1.alignment_id = T2.id WHERE T2.alignment = 'Neutral',SELECT superhero_name FROM superhero WHERE alignment_id = (SELECT id FROM alignment WHERE alignment = 'Neutral'),,
+arm_B,bird_1381,moderate,List the name of students that have attended more than 7 events.,"name of students means the full name; full name refers to first_name, last_name; attended more than 7 events refers to COUNT(link_to_event) > 7","SELECT T1.first_name, T1.last_name FROM member AS T1 INNER JOIN attendance AS T2 ON T1.member_id = T2.link_to_member GROUP BY T2.link_to_member HAVING COUNT(T2.link_to_event) > 7","SELECT 
+    member.first_name, 
+    member.last_name
+FROM 
+    member
+WHERE 
+    member.member_id IN (
+        SELECT 
+            attendance.link_to_member
+        FROM 
+            attendance
+        GROUP BY 
+            attendance.link_to_member
+        HAVING 
+            COUNT(attendance.link_to_event) > 7
+    )",,

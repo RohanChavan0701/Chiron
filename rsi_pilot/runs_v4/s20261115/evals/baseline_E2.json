@@ -1,0 +1,2014 @@
+{
+ "split": "E2",
+ "harness_id": "9884a86dd3450126",
+ "n": 100,
+ "passed": 47,
+ "accuracy": 0.47,
+ "vector": {
+  "spider_train_1029": false,
+  "spider_train_1033": true,
+  "spider_train_1036": true,
+  "spider_train_1051": false,
+  "spider_train_1282": true,
+  "spider_train_1283": true,
+  "spider_train_1289": false,
+  "spider_train_149": true,
+  "spider_train_150": true,
+  "spider_train_1521": false,
+  "spider_train_1523": true,
+  "spider_train_1527": false,
+  "spider_train_1535": false,
+  "spider_train_1556": true,
+  "spider_train_1563": true,
+  "spider_train_160": false,
+  "spider_train_1621": true,
+  "spider_train_1622": true,
+  "spider_train_172": false,
+  "spider_train_1755": false,
+  "spider_train_1762": true,
+  "spider_train_1770": false,
+  "spider_train_1771": false,
+  "spider_train_1873": true,
+  "spider_train_1876": true,
+  "spider_train_1877": true,
+  "spider_train_1878": false,
+  "spider_train_1962": false,
+  "spider_train_1966": false,
+  "spider_train_1975": false,
+  "spider_train_2117": false,
+  "spider_train_2122": false,
+  "spider_train_2128": false,
+  "spider_train_262": false,
+  "spider_train_264": false,
+  "spider_train_265": true,
+  "spider_train_2651": false,
+  "spider_train_2652": true,
+  "spider_train_270": false,
+  "spider_train_282": true,
+  "spider_train_2836": false,
+  "spider_train_2839": true,
+  "spider_train_2840": false,
+  "spider_train_2841": true,
+  "spider_train_289": false,
+  "spider_train_299": false,
+  "spider_train_4139": true,
+  "spider_train_4146": true,
+  "spider_train_4149": false,
+  "spider_train_4157": true,
+  "spider_train_4321": false,
+  "spider_train_4324": false,
+  "spider_train_4334": false,
+  "spider_train_4350": true,
+  "spider_train_4609": true,
+  "spider_train_4611": true,
+  "spider_train_4612": true,
+  "spider_train_4614": true,
+  "spider_train_5184": false,
+  "spider_train_5185": false,
+  "spider_train_547": false,
+  "spider_train_5548": true,
+  "spider_train_5568": true,
+  "spider_train_5574": false,
+  "spider_train_5593": false,
+  "spider_train_5643": true,
+  "spider_train_5649": false,
+  "spider_train_5835": false,
+  "spider_train_5842": false,
+  "spider_train_5843": false,
+  "spider_train_590": true,
+  "spider_train_6240": false,
+  "spider_train_6250": true,
+  "spider_train_6262": false,
+  "spider_train_6263": false,
+  "spider_train_6316": false,
+  "spider_train_6317": false,
+  "spider_train_632": false,
+  "spider_train_6328": false,
+  "spider_train_6329": false,
+  "spider_train_634": true,
+  "spider_train_6401": true,
+  "spider_train_6456": true,
+  "spider_train_6462": true,
+  "spider_train_6463": true,
+  "spider_train_656": false,
+  "spider_train_660": true,
+  "spider_train_6607": false,
+  "spider_train_661": true,
+  "spider_train_6614": true,
+  "spider_train_6618": true,
+  "spider_train_6620": true,
+  "spider_train_6972": false,
+  "spider_train_6973": false,
+  "spider_train_6987": false,
+  "spider_train_6997": false,
+  "spider_train_758": true,
+  "spider_train_769": true,
+  "spider_train_773": true,
+  "spider_train_782": true
+ },
+ "prompt_tokens": 40717,
+ "completion_tokens": 6008,
+ "student_seconds": 100.83,
+ "records": [
+  {
+   "task_id": "spider_train_1029",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT phone.Hardware_Model_name, phone.Company_name\nFROM phone\nJOIN chip_model ON phone.chip_model = chip_model.Model_name\nWHERE (phone.Date LIKE '%2002%' OR chip_model.RAM_MiB > 32)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT phone.Hardware_Model_name, phone.Company_name\nFROM phone\nJOIN chip_model ON phone.chip_model = chip_model.Model_name\nWHERE (phone.Date LIKE '%2002%' OR chip_model.RAM_MiB > 32)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 291,
+   "completion_tokens": 57,
+   "student_seconds": 0.938
+  },
+  {
+   "task_id": "spider_train_1033",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT Company_name, COUNT(*) AS phone_models\nFROM phone\nGROUP BY Company_name\nORDER BY phone_models ASC\nLIMIT 1",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Company_name, COUNT(*) AS phone_models\nFROM phone\nGROUP BY Company_name\nORDER BY phone_models ASC\nLIMIT 1",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 289,
+   "completion_tokens": 33,
+   "student_seconds": 0.386
+  },
+  {
+   "task_id": "spider_train_1036",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT p.Hardware_Model_name\nFROM phone p\nJOIN chip_model cm ON p.chip_model = cm.Model_name\nWHERE cm.Launch_year = 2002\nORDER BY cm.RAM_MiB DESC\nLIMIT 1",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT p.Hardware_Model_name\nFROM phone p\nJOIN chip_model cm ON p.chip_model = cm.Model_name\nWHERE cm.Launch_year = 2002\nORDER BY cm.RAM_MiB DESC\nLIMIT 1",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 281,
+   "completion_tokens": 56,
+   "student_seconds": 0.244
+  },
+  {
+   "task_id": "spider_train_1051",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT s1.Graphics_mode, s1.Pixels\nFROM screen_mode s1\nJOIN phone p1 ON s1.Graphics_mode = p1.screen_mode\nJOIN chip_model cm ON p1.chip_model = cm.Model_name\nWHERE p1.Accreditation_type = 'Full' OR p1.Accreditation_type = 'Provisional'",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT s1.Graphics_mode, s1.Pixels\nFROM screen_mode s1\nJOIN phone p1 ON s1.Graphics_mode = p1.screen_mode\nJOIN chip_model cm ON p1.chip_model = cm.Model_name\nWHERE p1.Accreditation_type = 'Full' OR p1.Accreditation_type = 'Provisional'",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 284,
+   "completion_tokens": 76,
+   "student_seconds": 0.698
+  },
+  {
+   "task_id": "spider_train_1282",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT stadium.id, stadium.name\nFROM stadium\nJOIN game ON stadium.id = game.stadium_id\nJOIN injury_accident ON game.id = injury_accident.game_id\nGROUP BY stadium.id, stadium.name\nORDER BY COUNT(injury_accident.id) DESC\nLIMIT 1",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT stadium.id, stadium.name\nFROM stadium\nJOIN game ON stadium.id = game.stadium_id\nJOIN injury_accident ON game.id = injury_accident.game_id\nGROUP BY stadium.id, stadium.name\nORDER BY COUNT(injury_accident.id) DESC\nLIMIT 1",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 252,
+   "completion_tokens": 63,
+   "student_seconds": 0.96
+  },
+  {
+   "task_id": "spider_train_1283",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT s.id, s.name\nFROM stadium s\nJOIN game g ON s.id = g.stadium_id\nJOIN injury_accident ia ON g.id = ia.game_id\nGROUP BY s.id, s.name\nORDER BY COUNT(ia.id) DESC\nLIMIT 1",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT s.id, s.name\nFROM stadium s\nJOIN game g ON s.id = g.stadium_id\nJOIN injury_accident ia ON g.id = ia.game_id\nGROUP BY s.id, s.name\nORDER BY COUNT(ia.id) DESC\nLIMIT 1",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 253,
+   "completion_tokens": 62,
+   "student_seconds": 1.076
+  },
+  {
+   "task_id": "spider_train_1289",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT s.name, s.average_attendance, s.total_attendance\nFROM stadium s\nJOIN game g ON s.id = g.stadium_id\nLEFT JOIN injury_accident ia ON g.id = ia.game_id\nWHERE ia.id IS NULL",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT s.name, s.average_attendance, s.total_attendance\nFROM stadium s\nJOIN game g ON s.id = g.stadium_id\nLEFT JOIN injury_accident ia ON g.id = ia.game_id\nWHERE ia.id IS NULL",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 252,
+   "completion_tokens": 55,
+   "student_seconds": 0.993
+  },
+  {
+   "task_id": "spider_train_149",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT AVG(bikes_available) AS average_bike_availability\nFROM status\nWHERE station_id IN (\n    SELECT id\n    FROM station\n    WHERE city != 'Palo Alto'\n)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT AVG(bikes_available) AS average_bike_availability\nFROM status\nWHERE station_id IN (\n    SELECT id\n    FROM station\n    WHERE city != 'Palo Alto'\n)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 390,
+   "completion_tokens": 44,
+   "student_seconds": 0.947
+  },
+  {
+   "task_id": "spider_train_150",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT AVG(bikes_available) AS average_bike_availability\nFROM status\nWHERE station_id IN (\n    SELECT id\n    FROM station\n    WHERE city != 'Palo Alto'\n)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT AVG(bikes_available) AS average_bike_availability\nFROM status\nWHERE station_id IN (\n    SELECT id\n    FROM station\n    WHERE city != 'Palo Alto'\n)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 389,
+   "completion_tokens": 44,
+   "student_seconds": 0.862
+  },
+  {
+   "task_id": "spider_train_1521",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT T1.Customer_Details\nFROM Customers AS T1\nJOIN Policies AS T2 ON T1.Customer_ID = T2.Customer_ID\nJOIN Claim_Headers AS T3 ON T2.Policy_ID = T3.Policy_ID\nJOIN Claims_Processing AS T4 ON T3.Claim_Header_ID = T4.Claim_ID\nJOIN Claims_Processing_Stages AS T5 ON T4.Claim_Processing_ID = T5.Claim_Stage_ID\nJOIN Staff AS T6 ON T4.Staff_ID = T6.Staff_ID\nJOIN Claims_Documents AS T7 ON T4.Claim_ID = T7.Claim_ID\nWHERE T7.Document_Type_Code = 'PAID'\nGROUP BY T1.Customer_ID\nORDER BY SUM(T7.Amount_Piad) LIMIT 1",
+   "pred_error": "no such column: T7.Amount_Piad",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT T1.Customer_Details\nFROM Customers AS T1\nJOIN Policies AS T2 ON T1.Customer_ID = T2.Customer_ID\nJOIN Claim_Headers AS T3 ON T2.Policy_ID = T3.Policy_ID\nJOIN Claims_Processing AS T4 ON T3.Claim_Header_ID = T4.Claim_ID\nJOIN Claims_Processing_Stages AS T5 ON T4.Claim_Processing_ID = T5.Claim_Stage_ID\nJOIN Staff AS T6 ON T4.Staff_ID = T6.Staff_ID\nJOIN Claims_Documents AS T7 ON T4.Claim_ID = T7.Claim_ID\nWHERE T7.Document_Type_Code = 'PAID'\nGROUP BY T1.Customer_ID\nORDER BY SUM(T7.Amount_Piad) LIMIT 1",
+     "error": "no such column: T7.Amount_Piad"
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 505,
+   "completion_tokens": 170,
+   "student_seconds": 1.314
+  },
+  {
+   "task_id": "spider_train_1523",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT DISTINCT c.Customer_Details\nFROM Customers c\nLEFT JOIN Policies p ON c.Customer_ID = p.Customer_ID\nWHERE p.Customer_ID IS NULL",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT DISTINCT c.Customer_Details\nFROM Customers c\nLEFT JOIN Policies p ON c.Customer_ID = p.Customer_ID\nWHERE p.Customer_ID IS NULL",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 497,
+   "completion_tokens": 35,
+   "student_seconds": 1.235
+  },
+  {
+   "task_id": "spider_train_1527",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT T2.Claim_Status_Name\nFROM Claims_Processing AS T1\nJOIN Claims_Processing_Stages AS T2 ON T1.Claim_Stage_ID = T2.Claim_Stage_ID\nJOIN Claim_Headers AS T3 ON T1.Claim_ID = T3.Claim_Header_ID\nWHERE T3.Claim_Status_Code = 'P'\nGROUP BY T2.Claim_Status_Name\nORDER BY COUNT(T1.Claim_ID) DESC\nLIMIT 1",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT T2.Claim_Status_Name\nFROM Claims_Processing AS T1\nJOIN Claims_Processing_Stages AS T2 ON T1.Claim_Stage_ID = T2.Claim_Stage_ID\nJOIN Claim_Headers AS T3 ON T1.Claim_ID = T3.Claim_Header_ID\nWHERE T3.Claim_Status_Code = 'P'\nGROUP BY T2.Claim_Status_Name\nORDER BY COUNT(T1.Claim_ID) DESC\nLIMIT 1",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 503,
+   "completion_tokens": 103,
+   "student_seconds": 1.464
+  },
+  {
+   "task_id": "spider_train_1535",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT Customer_Details, Staff_Details FROM Customers\nUNION ALL\nSELECT Customer_Details, Staff_Details FROM Staff",
+   "pred_error": "no such column: Customer_Details",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Customer_Details, Staff_Details FROM Customers\nUNION ALL\nSELECT Customer_Details, Staff_Details FROM Staff",
+     "error": "no such column: Customer_Details"
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 497,
+   "completion_tokens": 27,
+   "student_seconds": 1.402
+  },
+  {
+   "task_id": "spider_train_1556",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT A.account_name, A.other_account_details\nFROM Accounts A\nJOIN Customers C ON A.customer_id = C.customer_id\nWHERE C.customer_first_name = 'Meaghan' AND C.customer_last_name = 'Keeling'",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT A.account_name, A.other_account_details\nFROM Accounts A\nJOIN Customers C ON A.customer_id = C.customer_id\nWHERE C.customer_first_name = 'Meaghan' AND C.customer_last_name = 'Keeling'",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 875,
+   "completion_tokens": 51,
+   "student_seconds": 0.922
+  },
+  {
+   "task_id": "spider_train_1563",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT DISTINCT c.customer_id\nFROM Customers c\nLEFT JOIN Accounts a ON c.customer_id = a.customer_id\nWHERE a.account_id IS NULL",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT DISTINCT c.customer_id\nFROM Customers c\nLEFT JOIN Accounts a ON c.customer_id = a.customer_id\nWHERE a.account_id IS NULL",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 866,
+   "completion_tokens": 35,
+   "student_seconds": 0.921
+  },
+  {
+   "task_id": "spider_train_160",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT DISTINCT DATE(w.date), w.zip_code\nFROM weather w\nJOIN station s ON w.zip_code = s.zip_code\nWHERE w.min_dew_point_f < (SELECT MIN(min_dew_point_f) FROM weather WHERE zip_code = 94107)\nORDER BY w.date",
+   "pred_error": "no such column: s.zip_code",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT DISTINCT DATE(w.date), w.zip_code\nFROM weather w\nJOIN station s ON w.zip_code = s.zip_code\nWHERE w.min_dew_point_f < (SELECT MIN(min_dew_point_f) FROM weather WHERE zip_code = 94107)\nORDER BY w.date",
+     "error": "no such column: s.zip_code"
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 405,
+   "completion_tokens": 66,
+   "student_seconds": 0.777
+  },
+  {
+   "task_id": "spider_train_1621",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT \n    P.product_name,\n    COUNT(O.order_id) AS number_of_customers\nFROM \n    Products P\nJOIN \n    Order_Items O ON P.product_id = O.product_id\nJOIN \n    Orders O2 ON O.order_id = O2.order_id\nJOIN \n    Customers C ON O2.customer_id = C.customer_id\nGROUP BY \n    P.product_name",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT \n    P.product_name,\n    COUNT(O.order_id) AS number_of_customers\nFROM \n    Products P\nJOIN \n    Order_Items O ON P.product_id = O.product_id\nJOIN \n    Orders O2 ON O.order_id = O2.order_id\nJOIN \n    Customers C ON O2.customer_id = C.customer_id\nGROUP BY \n    P.product_name",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 872,
+   "completion_tokens": 84,
+   "student_seconds": 1.018
+  },
+  {
+   "task_id": "spider_train_1622",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT \n    P.product_name,\n    COUNT(O.order_id) AS number_of_customers\nFROM \n    Products P\nJOIN \n    Order_Items O ON P.product_id = O.product_id\nJOIN \n    Orders O2 ON O.order_id = O2.order_id\nJOIN \n    Customers C ON O2.customer_id = C.customer_id\nGROUP BY \n    P.product_name",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT \n    P.product_name,\n    COUNT(O.order_id) AS number_of_customers\nFROM \n    Products P\nJOIN \n    Order_Items O ON P.product_id = O.product_id\nJOIN \n    Orders O2 ON O.order_id = O2.order_id\nJOIN \n    Customers C ON O2.customer_id = C.customer_id\nGROUP BY \n    P.product_name",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 878,
+   "completion_tokens": 84,
+   "student_seconds": 1.143
+  },
+  {
+   "task_id": "spider_train_172",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT DISTINCT s.name\nFROM station s\nJOIN status st ON s.id = st.station_id\nWHERE st.bikes_available > 10 AND s.city != 'San Jose'",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT DISTINCT s.name\nFROM station s\nJOIN status st ON s.id = st.station_id\nWHERE st.bikes_available > 10 AND s.city != 'San Jose'",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 398,
+   "completion_tokens": 42,
+   "student_seconds": 1.179
+  },
+  {
+   "task_id": "spider_train_1755",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT SUM(Total_Points) AS Total_Points\nFROM gymnast\nWHERE Age = (\n    SELECT MIN(Age)\n    FROM people\n)",
+   "pred_error": "no such column: Age",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT SUM(Total_Points) AS Total_Points\nFROM gymnast\nWHERE Age = (\n    SELECT MIN(Age)\n    FROM people\n)",
+     "error": "no such column: Age"
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 210,
+   "completion_tokens": 36,
+   "student_seconds": 1.051
+  },
+  {
+   "task_id": "spider_train_1762",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT Hometown FROM people WHERE People_ID IN (\n    SELECT Gymnast_ID FROM gymnast GROUP BY Gymnast_ID ORDER BY SUM(Total_Points) DESC LIMIT 1\n)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Hometown FROM people WHERE People_ID IN (\n    SELECT Gymnast_ID FROM gymnast GROUP BY Gymnast_ID ORDER BY SUM(Total_Points) DESC LIMIT 1\n)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 207,
+   "completion_tokens": 44,
+   "student_seconds": 0.874
+  },
+  {
+   "task_id": "spider_train_1770",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT Hometown FROM people WHERE Age < 20 OR Age > 23",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Hometown FROM people WHERE Age < 20 OR Age > 23",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 216,
+   "completion_tokens": 23,
+   "student_seconds": 0.628
+  },
+  {
+   "task_id": "spider_train_1771",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT DISTINCT T1.Hometown FROM people AS T1 JOIN gymnast AS T2 ON T1.People_ID = T2.Gymnast_ID WHERE T1.Age < 20 OR T1.Age > 23",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT DISTINCT T1.Hometown FROM people AS T1 JOIN gymnast AS T2 ON T1.People_ID = T2.Gymnast_ID WHERE T1.Age < 20 OR T1.Age > 23",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 218,
+   "completion_tokens": 53,
+   "student_seconds": 0.661
+  },
+  {
+   "task_id": "spider_train_1873",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT Reign FROM wrestler GROUP BY Reign ORDER BY COUNT(*) DESC LIMIT 1",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Reign FROM wrestler GROUP BY Reign ORDER BY COUNT(*) DESC LIMIT 1",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 191,
+   "completion_tokens": 21,
+   "student_seconds": 0.603
+  },
+  {
+   "task_id": "spider_train_1876",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT Name FROM wrestler WHERE Wrestler_ID NOT IN (\n    SELECT Wrestler_ID FROM Elimination\n)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Name FROM wrestler WHERE Wrestler_ID NOT IN (\n    SELECT Wrestler_ID FROM Elimination\n)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 193,
+   "completion_tokens": 26,
+   "student_seconds": 0.53
+  },
+  {
+   "task_id": "spider_train_1877",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT Name FROM wrestler WHERE Wrestler_ID NOT IN (\n    SELECT Wrestler_ID FROM Elimination\n)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Name FROM wrestler WHERE Wrestler_ID NOT IN (\n    SELECT Wrestler_ID FROM Elimination\n)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 194,
+   "completion_tokens": 26,
+   "student_seconds": 0.538
+  },
+  {
+   "task_id": "spider_train_1878",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT DISTINCT T1.Team, T2.Team\nFROM Elimination AS T1\nJOIN Elimination AS T2 ON T1.Wrestler_ID = T2.Wrestler_ID\nWHERE T1.Eliminated_By = 'Orton' AND T2.Eliminated_By = 'Benjamin'",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT DISTINCT T1.Team, T2.Team\nFROM Elimination AS T1\nJOIN Elimination AS T2 ON T1.Wrestler_ID = T2.Wrestler_ID\nWHERE T1.Eliminated_By = 'Orton' AND T2.Eliminated_By = 'Benjamin'",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 203,
+   "completion_tokens": 67,
+   "student_seconds": 0.595
+  },
+  {
+   "task_id": "spider_train_1962",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT Customers.customer_id, SUM(Payments.amount_paid) AS total_amount_paid\nFROM Payments\nJOIN Bookings ON Payments.booking_id = Bookings.booking_id\nJOIN Customers ON Bookings.customer_id = Customers.customer_id\nGROUP BY Customers.customer_id\nORDER BY total_amount_paid DESC",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Customers.customer_id, SUM(Payments.amount_paid) AS total_amount_paid\nFROM Payments\nJOIN Bookings ON Payments.booking_id = Bookings.booking_id\nJOIN Customers ON Bookings.customer_id = Customers.customer_id\nGROUP BY Customers.customer_id\nORDER BY total_amount_paid DESC",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 732,
+   "completion_tokens": 63,
+   "student_seconds": 0.771
+  },
+  {
+   "task_id": "spider_train_1966",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT \n    Bookings.booking_start_date, \n    Bookings.booking_end_date\nFROM \n    Bookings\nJOIN \n    Products_for_Hire ON Bookings.booking_id = Products_for_Hire.booking_id\nJOIN \n    Products_Booked ON Bookings.booking_id = Products_Booked.booking_id\nJOIN \n    View_Product_Availability ON Bookings.booking_id = View_Product_Availability.booking_id\nWHERE \n    Products_for_Hire.product_name = 'Book collection A'",
+   "pred_error": "no such column: Products_for_Hire.booking_id",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT \n    Bookings.booking_start_date, \n    Bookings.booking_end_date\nFROM \n    Bookings\nJOIN \n    Products_for_Hire ON Bookings.booking_id = Products_for_Hire.booking_id\nJOIN \n    Products_Booked ON Bookings.booking_id = Products_Booked.booking_id\nJOIN \n    View_Product_Availability ON Bookings.booking_id = View_Product_Availability.booking_id\nWHERE \n    Products_for_Hire.product_name = 'Book collection A'",
+     "error": "no such column: Products_for_Hire.booking_id"
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 736,
+   "completion_tokens": 105,
+   "student_seconds": 1.098
+  },
+  {
+   "task_id": "spider_train_1975",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT D.COUPON_AMOUNT\nFROM DISCOUNT_COUPONS D\nJOIN CUSTOMERS C ON D.COUPON_ID = C.COUPON_ID\nWHERE C.GOOD_OR_BAD_CUSTOMER IN ('G', 'B')",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT D.COUPON_AMOUNT\nFROM DISCOUNT_COUPONS D\nJOIN CUSTOMERS C ON D.COUPON_ID = C.COUPON_ID\nWHERE C.GOOD_OR_BAD_CUSTOMER IN ('G', 'B')",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 730,
+   "completion_tokens": 53,
+   "student_seconds": 1.211
+  },
+  {
+   "task_id": "spider_train_2117",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT \n    R.shipping_agent_name, \n    COUNT(D.document_id) AS document_count\nFROM \n    Documents D\nJOIN \n    Ref_Document_Types T ON D.document_type_code = T.document_type_code\nJOIN \n    Ref_Shipping_Agents S ON D.shipping_agent_code = S.shipping_agent_code\nJOIN \n    Documents_Mailed M ON D.document_id = M.document_id\nJOIN \n    Addresses A ON M.mailed_to_address_id = A.address_id\nJOIN \n    Employees E ON M.employee_id = E.employee_id\nJOIN \n    Roles R ON E.role_code = R.role_code\nGROUP BY \n    R.role_code, S.shipping_agent_code\nORDER BY \n    document_count DESC",
+   "pred_error": "no such column: R.shipping_agent_name",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT \n    R.shipping_agent_name, \n    COUNT(D.document_id) AS document_count\nFROM \n    Documents D\nJOIN \n    Ref_Document_Types T ON D.document_type_code = T.document_type_code\nJOIN \n    Ref_Shipping_Agents S ON D.shipping_agent_code = S.shipping_agent_code\nJOIN \n    Documents_Mailed M ON D.document_id = M.document_id\nJOIN \n    Addresses A ON M.mailed_to_address_id = A.address_id\nJOIN \n    Employees E ON M.employee_id = E.employee_id\nJOIN \n    Roles R ON E.role_code = R.role_code\nGROUP BY \n    R.role_code, S.shipping_agent_code\nORDER BY \n    document_count DESC",
+     "error": "no such column: R.shipping_agent_name"
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 704,
+   "completion_tokens": 158,
+   "student_seconds": 1.595
+  },
+  {
+   "task_id": "spider_train_2122",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT DISTINCT D.document_id\nFROM Documents D\nJOIN Documents_Mailed DM ON D.document_id = DM.document_id\nJOIN Addresses A ON DM.mailed_to_address_id = A.address_id\nJOIN Draft_Copies DC ON D.document_id = DC.document_id\nJOIN Document_Drafts DD ON DC.draft_number = DD.draft_number\nJOIN Ref_Document_Status DS ON D.document_status_code = DS.document_status_code\nJOIN Ref_Document_Types DT ON D.document_type_code = DT.document_type_code\nJOIN Ref_Shipping_Agents SA ON D.shipping_agent_code = SA.shipping_agent_code\nWHERE DS.document_status_code = 'DONE' AND DT.document_type_code = 'PAPER' AND SA.shipping_agent_name = 'USPS'",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT DISTINCT D.document_id\nFROM Documents D\nJOIN Documents_Mailed DM ON D.document_id = DM.document_id\nJOIN Addresses A ON DM.mailed_to_address_id = A.address_id\nJOIN Draft_Copies DC ON D.document_id = DC.document_id\nJOIN Document_Drafts DD ON DC.draft_number = DD.draft_number\nJOIN Ref_Document_Status DS ON D.document_status_code = DS.document_status_code\nJOIN Ref_Document_Types DT ON D.document_type_code = DT.document_type_code\nJOIN Ref_Shipping_Agents SA ON D.shipping_agent_code = SA.shipping_agent_code\nWHERE DS.document_status_code = 'DONE' AND DT.document_type_code = 'PAPER' AND SA.shipping_agent_name = 'USPS'",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 709,
+   "completion_tokens": 162,
+   "student_seconds": 2.001
+  },
+  {
+   "task_id": "spider_train_2128",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT DISTINCT e.employee_name\nFROM Employees e\nWHERE e.employee_id NOT IN (\n    SELECT eh.employee_id\n    FROM Employees eh\n    JOIN Circulation_History ch ON eh.employee_id = ch.employee_id\n    WHERE ch.document_id, ch.draft_number, ch.copy_number IN (\n        SELECT dc.document_id, dc.draft_number, dc.copy_number\n        FROM Document_Drafts dc\n        JOIN Documents d ON dc.document_id = d.document_id\n        WHERE d.document_status_code = 'A' -- Assuming 'A' is the status for active documents\n    )\n)",
+   "pred_error": "near \",\": syntax error",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT DISTINCT e.employee_name\nFROM Employees e\nWHERE e.employee_id NOT IN (\n    SELECT eh.employee_id\n    FROM Employees eh\n    JOIN Circulation_History ch ON eh.employee_id = ch.employee_id\n    WHERE ch.document_id, ch.draft_number, ch.copy_number IN (\n        SELECT dc.document_id, dc.draft_number, dc.copy_number\n        FROM Document_Drafts dc\n        JOIN Documents d ON dc.document_id = d.document_id\n        WHERE d.document_status_code = 'A' -- Assuming 'A' is the status for active documents\n    )\n)",
+     "error": "near \",\": syntax error"
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 706,
+   "completion_tokens": 126,
+   "student_seconds": 2.083
+  },
+  {
+   "task_id": "spider_train_262",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT Nominee\nFROM actor\nWHERE Nominee IN (\n    SELECT Nominee\n    FROM actor\n    GROUP BY Nominee\n    ORDER BY COUNT(*) DESC\n    LIMIT 1\n)",
+   "pred_error": "no such column: Nominee",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Nominee\nFROM actor\nWHERE Nominee IN (\n    SELECT Nominee\n    FROM actor\n    GROUP BY Nominee\n    ORDER BY COUNT(*) DESC\n    LIMIT 1\n)",
+     "error": "no such column: Nominee"
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 185,
+   "completion_tokens": 45,
+   "student_seconds": 2.066
+  },
+  {
+   "task_id": "spider_train_264",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT Result, COUNT(*) AS Count\nFROM musical\nGROUP BY Result\nORDER BY Count DESC\nLIMIT 1",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Result, COUNT(*) AS Count\nFROM musical\nGROUP BY Result\nORDER BY Count DESC\nLIMIT 1",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 181,
+   "completion_tokens": 29,
+   "student_seconds": 1.527
+  },
+  {
+   "task_id": "spider_train_265",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT Result\nFROM musical\nGROUP BY Result\nORDER BY COUNT(*) DESC\nLIMIT 1",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Result\nFROM musical\nGROUP BY Result\nORDER BY COUNT(*) DESC\nLIMIT 1",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 181,
+   "completion_tokens": 25,
+   "student_seconds": 0.959
+  },
+  {
+   "task_id": "spider_train_2651",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT Rent_Arrears.council_tax_id\nFROM Rent_Arrears\nWHERE Rent_Arrears.cmi_cross_ref_id NOT IN (\n    SELECT Rent_Arrears.cmi_cross_ref_id\n    FROM Rent_Arrears\n    WHERE Rent_Arrears.cmi_cross_ref_id IN (\n        SELECT Rent_Arrears.cmi_cross_ref_id\n        FROM Rent_Arrears\n        WHERE Rent_Arrears.cmi_cross_ref_id IN (\n            SELECT Rent_Arrears.cmi_cross_ref_id\n            FROM Rent_Arrears\n            WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                SELECT Rent_Arrears.cmi_cross_ref_id\n                FROM Rent_Arrears\n                WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                    SELECT Rent_Arrears.cmi_cross_ref_id\n                    FROM Rent_Arrears\n                    WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                        SELECT Rent_Arrears.cmi_cross_ref_id\n                        FROM Rent_Arrears\n                        WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                            SELECT Rent_Arrears.cmi_cross_ref_id\n                            FROM Rent_Arrears\n                            WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                                SELECT Rent_Arrears.cmi_cross_ref_id\n                                FROM Rent_Arrears\n                                WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                                    SELECT Rent_Arrears.cmi_cross_ref_id\n                                    FROM Rent_Arrears\n                                    WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                                        SELECT Rent_Arrears.cmi_cross_ref_id\n                                        FROM Rent_Arrears\n                                        WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                                            SELECT Rent_Arrears.cmi_cross_ref_id\n                                            FROM Rent_Arrears\n                                            WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                                                SELECT Rent_Arrears.cmi_cross_ref_id\n                                                FROM Rent_Arrears\n                                                WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                                                    SELECT Rent_Arrears.cmi_cross_ref_id\n                                                    FROM Rent_Arrears\n                                                    WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                                                        SELECT Rent_Arrears.cmi_cross_ref_id\n                                                        FROM Rent_Arrears",
+   "pred_error": "parser stack overflow",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Rent_Arrears.council_tax_id\nFROM Rent_Arrears\nWHERE Rent_Arrears.cmi_cross_ref_id NOT IN (\n    SELECT Rent_Arrears.cmi_cross_ref_id\n    FROM Rent_Arrears\n    WHERE Rent_Arrears.cmi_cross_ref_id IN (\n        SELECT Rent_Arrears.cmi_cross_ref_id\n        FROM Rent_Arrears\n        WHERE Rent_Arrears.cmi_cross_ref_id IN (\n            SELECT Rent_Arrears.cmi_cross_ref_id\n            FROM Rent_Arrears\n            WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                SELECT Rent_Arrears.cmi_cross_ref_id\n                FROM Rent_Arrears\n                WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                    SELECT Rent_Arrears.cmi_cross_ref_id\n                    FROM Rent_Arrears\n                    WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                        SELECT Rent_Arrears.cmi_cross_ref_id\n                        FROM Rent_Arrears\n                        WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                            SELECT Rent_Arrears.cmi_cross_ref_id\n                            FROM Rent_Arrears\n                            WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                                SELECT Rent_Arrears.cmi_cross_ref_id\n                                FROM Rent_Arrears\n                                WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                                    SELECT Rent_Arrears.cmi_cross_ref_id\n                                    FROM Rent_Arrears\n                                    WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                                        SELECT Rent_Arrears.cmi_cross_ref_id\n                                        FROM Rent_Arrears\n                                        WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                                            SELECT Rent_Arrears.cmi_cross_ref_id\n                                            FROM Rent_Arrears\n                                            WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                                                SELECT Rent_Arrears.cmi_cross_ref_id\n                                                FROM Rent_Arrears\n                                                WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                                                    SELECT Rent_Arrears.cmi_cross_ref_id\n                                                    FROM Rent_Arrears\n                                                    WHERE Rent_Arrears.cmi_cross_ref_id IN (\n                                                        SELECT Rent_Arrears.cmi_cross_ref_id\n                                                        FROM Rent_Arrears",
+     "error": "parser stack overflow"
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 515,
+   "completion_tokens": 512,
+   "student_seconds": 2.54
+  },
+  {
+   "task_id": "spider_train_2652",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT DISTINCT electoral_register_id\nFROM Electoral_Register\nWHERE cmi_cross_ref_id IN (\n    SELECT cmi_cross_ref_id\n    FROM CMI_Cross_References\n    WHERE source_system_code IN ('Electoral', 'Tax')\n)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT DISTINCT electoral_register_id\nFROM Electoral_Register\nWHERE cmi_cross_ref_id IN (\n    SELECT cmi_cross_ref_id\n    FROM CMI_Cross_References\n    WHERE source_system_code IN ('Electoral', 'Tax')\n)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 510,
+   "completion_tokens": 54,
+   "student_seconds": 2.581
+  },
+  {
+   "task_id": "spider_train_270",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT Nominee\nFROM musical\nWHERE Result = 'Nominated' AND Category IN ('Tony Award', 'Drama Desk Award')\nGROUP BY Nominee\nHAVING COUNT(DISTINCT Result) = 2",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Nominee\nFROM musical\nWHERE Result = 'Nominated' AND Category IN ('Tony Award', 'Drama Desk Award')\nGROUP BY Nominee\nHAVING COUNT(DISTINCT Result) = 2",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 192,
+   "completion_tokens": 49,
+   "student_seconds": 2.672
+  },
+  {
+   "task_id": "spider_train_282",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT name FROM user_profiles WHERE email LIKE '%superstar%' OR email LIKE '%edu%'",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT name FROM user_profiles WHERE email LIKE '%superstar%' OR email LIKE '%edu%'",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 291,
+   "completion_tokens": 24,
+   "student_seconds": 2.677
+  },
+  {
+   "task_id": "spider_train_2836",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT COUNT(R2.ResID) AS Sandwich_Restaurant_Count\nFROM Restaurant_Type R1\nJOIN Restaurant_Type R2 ON R1.ResTypeID = R2.ResTypeID\nJOIN Type_Of_Restaurant R3 ON R1.ResTypeID = R3.ResTypeID\nJOIN Restaurant R ON R.ResID = R3.ResID\nJOIN Visits_Restaurant V ON R.ResID = V.ResID\nWHERE R1.ResTypeName = 'Sandwich'",
+   "pred_error": "no such column: R2.ResID",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT COUNT(R2.ResID) AS Sandwich_Restaurant_Count\nFROM Restaurant_Type R1\nJOIN Restaurant_Type R2 ON R1.ResTypeID = R2.ResTypeID\nJOIN Type_Of_Restaurant R3 ON R1.ResTypeID = R3.ResTypeID\nJOIN Restaurant R ON R.ResID = R3.ResID\nJOIN Visits_Restaurant V ON R.ResID = V.ResID\nWHERE R1.ResTypeName = 'Sandwich'",
+     "error": "no such column: R2.ResID"
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 306,
+   "completion_tokens": 99,
+   "student_seconds": 0.98
+  },
+  {
+   "task_id": "spider_train_2839",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT Time FROM Visits_Restaurant WHERE ResID = (SELECT ResID FROM Restaurant WHERE ResName = 'Subway') AND StuID = (SELECT StuID FROM Student WHERE Fname = 'Linda' AND LName = 'Smith')",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Time FROM Visits_Restaurant WHERE ResID = (SELECT ResID FROM Restaurant WHERE ResName = 'Subway') AND StuID = (SELECT StuID FROM Student WHERE Fname = 'Linda' AND LName = 'Smith')",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 304,
+   "completion_tokens": 58,
+   "student_seconds": 0.984
+  },
+  {
+   "task_id": "spider_train_2840",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT R.ResName, SUM(V.Time) AS TotalSpent\nFROM Restaurant R\nJOIN Type_Of_Restaurant TR ON R.ResID = TR.ResID\nJOIN Restaurant_Type RT ON TR.ResTypeID = RT.ResTypeID\nJOIN Visits_Restaurant VR ON R.ResID = VR.ResID\nGROUP BY R.ResName\nORDER BY TotalSpent ASC",
+   "pred_error": "no such column: V.Time",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT R.ResName, SUM(V.Time) AS TotalSpent\nFROM Restaurant R\nJOIN Type_Of_Restaurant TR ON R.ResID = TR.ResID\nJOIN Restaurant_Type RT ON TR.ResTypeID = RT.ResTypeID\nJOIN Visits_Restaurant VR ON R.ResID = VR.ResID\nGROUP BY R.ResName\nORDER BY TotalSpent ASC",
+     "error": "no such column: V.Time"
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 321,
+   "completion_tokens": 81,
+   "student_seconds": 1.103
+  },
+  {
+   "task_id": "spider_train_2841",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT T1.Fname, T1.LName FROM Student AS T1 JOIN Visits_Restaurant AS T2 ON T1.StuID = T2.StuID GROUP BY T1.StuID ORDER BY COUNT(T2.ResID) DESC LIMIT 1",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT T1.Fname, T1.LName FROM Student AS T1 JOIN Visits_Restaurant AS T2 ON T1.StuID = T2.StuID GROUP BY T1.StuID ORDER BY COUNT(T2.ResID) DESC LIMIT 1",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 313,
+   "completion_tokens": 61,
+   "student_seconds": 1.245
+  },
+  {
+   "task_id": "spider_train_289",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT DISTINCT T1.id\nFROM tweets AS T1\nJOIN follows AS T2 ON T1.uid = T2.f1\nJOIN follows AS T3 ON T1.uid = T3.f2\nWHERE T2.f1 = 1 OR T3.f1 = 1",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT DISTINCT T1.id\nFROM tweets AS T1\nJOIN follows AS T2 ON T1.uid = T2.f1\nJOIN follows AS T3 ON T1.uid = T3.f2\nWHERE T2.f1 = 1 OR T3.f1 = 1",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 288,
+   "completion_tokens": 64,
+   "student_seconds": 1.101
+  },
+  {
+   "task_id": "spider_train_299",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT AVG(followers) AS average_followers\nFROM user_profiles\nWHERE uid IN (\n    SELECT f2\n    FROM follows\n    GROUP BY f2\n    HAVING COUNT(f2) > 0\n)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT AVG(followers) AS average_followers\nFROM user_profiles\nWHERE uid IN (\n    SELECT f2\n    FROM follows\n    GROUP BY f2\n    HAVING COUNT(f2) > 0\n)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 289,
+   "completion_tokens": 51,
+   "student_seconds": 1.074
+  },
+  {
+   "task_id": "spider_train_4139",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT Year\nFROM film_market_estimation\nJOIN market ON film_market_estimation.Market_ID = market.Market_ID\nWHERE Country = 'Japan'\nORDER BY Year DESC",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Year\nFROM film_market_estimation\nJOIN market ON film_market_estimation.Market_ID = market.Market_ID\nWHERE Country = 'Japan'\nORDER BY Year DESC",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 236,
+   "completion_tokens": 41,
+   "student_seconds": 0.917
+  },
+  {
+   "task_id": "spider_train_4146",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT Title FROM film WHERE Film_ID NOT IN (\n    SELECT Film_ID FROM film_market_estimation\n)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Title FROM film WHERE Film_ID NOT IN (\n    SELECT Film_ID FROM film_market_estimation\n)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 230,
+   "completion_tokens": 26,
+   "student_seconds": 0.775
+  },
+  {
+   "task_id": "spider_train_4149",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT DISTINCT T1.Studio FROM film AS T1 JOIN film_market_estimation AS T2 ON T1.Film_ID = T2.Film_ID WHERE T1.Studio IN (SELECT T3.Studio FROM film AS T3 JOIN film_market_estimation AS T4 ON T3.Film_ID = T4.Film_ID WHERE T4.Director = 'Nicholas Meyer' OR T4.Director = 'Walter Hill')",
+   "pred_error": "no such column: T4.Director",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT DISTINCT T1.Studio FROM film AS T1 JOIN film_market_estimation AS T2 ON T1.Film_ID = T2.Film_ID WHERE T1.Studio IN (SELECT T3.Studio FROM film AS T3 JOIN film_market_estimation AS T4 ON T3.Film_ID = T4.Film_ID WHERE T4.Director = 'Nicholas Meyer' OR T4.Director = 'Walter Hill')",
+     "error": "no such column: T4.Director"
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 235,
+   "completion_tokens": 95,
+   "student_seconds": 0.896
+  },
+  {
+   "task_id": "spider_train_4157",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT Title FROM film \nWHERE Film_ID = (\n    SELECT Film_ID FROM film_market_estimation \n    WHERE High_Estimate = (\n        SELECT MAX(High_Estimate) FROM film_market_estimation\n    )\n)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Title FROM film \nWHERE Film_ID = (\n    SELECT Film_ID FROM film_market_estimation \n    WHERE High_Estimate = (\n        SELECT MAX(High_Estimate) FROM film_market_estimation\n    )\n)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 229,
+   "completion_tokens": 51,
+   "student_seconds": 0.896
+  },
+  {
+   "task_id": "spider_train_4321",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT DISTINCT grant_amount\nFROM Grants\nWHERE grant_start_date < '1986-08-26 20:49:27' AND grant_end_date > '1989-03-16 18:27:16'",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT DISTINCT grant_amount\nFROM Grants\nWHERE grant_start_date < '1986-08-26 20:49:27' AND grant_end_date > '1989-03-16 18:27:16'",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 860,
+   "completion_tokens": 65,
+   "student_seconds": 1.003
+  },
+  {
+   "task_id": "spider_train_4324",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT SUM(grant_amount) AS TotalGrantAmount\nFROM Grants\nJOIN Organisations ON Grants.organisation_id = Organisations.organisation_id\nWHERE Organisations.organisation_type = 'Research'",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT SUM(grant_amount) AS TotalGrantAmount\nFROM Grants\nJOIN Organisations ON Grants.organisation_id = Organisations.organisation_id\nWHERE Organisations.organisation_type = 'Research'",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 815,
+   "completion_tokens": 44,
+   "student_seconds": 1.076
+  },
+  {
+   "task_id": "spider_train_4334",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT DISTINCT D.sent_date\nFROM Documents D\nJOIN Grants G ON D.grant_id = G.grant_id\nJOIN Organisations O ON G.organisation_id = O.organisation_id\nWHERE G.grant_amount > 5000\nAND O.organisation_type = (SELECT organisation_type FROM Organisation_Types WHERE organisation_type_description = 'Description of Organisation Type')",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT DISTINCT D.sent_date\nFROM Documents D\nJOIN Grants G ON D.grant_id = G.grant_id\nJOIN Organisations O ON G.organisation_id = O.organisation_id\nWHERE G.grant_amount > 5000\nAND O.organisation_type = (SELECT organisation_type FROM Organisation_Types WHERE organisation_type_description = 'Description of Organisation Type')",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 828,
+   "completion_tokens": 81,
+   "student_seconds": 1.022
+  },
+  {
+   "task_id": "spider_train_4350",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT project_id, COUNT(staff_id) AS staff_count\nFROM Project_Staff\nGROUP BY project_id\nORDER BY staff_count ASC",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT project_id, COUNT(staff_id) AS staff_count\nFROM Project_Staff\nGROUP BY project_id\nORDER BY staff_count ASC",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 822,
+   "completion_tokens": 34,
+   "student_seconds": 0.955
+  },
+  {
+   "task_id": "spider_train_4609",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT artwork.Name\nFROM artwork\nJOIN nomination ON artwork.Artwork_ID = nomination.Artwork_ID\nJOIN festival_detail ON nomination.Festival_ID = festival_detail.Festival_ID\nORDER BY festival_detail.Year ASC",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT artwork.Name\nFROM artwork\nJOIN nomination ON artwork.Artwork_ID = nomination.Artwork_ID\nJOIN festival_detail ON nomination.Festival_ID = festival_detail.Festival_ID\nORDER BY festival_detail.Year ASC",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 225,
+   "completion_tokens": 47,
+   "student_seconds": 0.873
+  },
+  {
+   "task_id": "spider_train_4611",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT f.Festival_ID, f.Festival_Name\nFROM festival_detail f\nJOIN nomination n ON f.Festival_ID = n.Festival_ID\nGROUP BY f.Festival_ID, f.Festival_Name\nHAVING COUNT(n.Artwork_ID) >= 2",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT f.Festival_ID, f.Festival_Name\nFROM festival_detail f\nJOIN nomination n ON f.Festival_ID = n.Festival_ID\nGROUP BY f.Festival_ID, f.Festival_Name\nHAVING COUNT(n.Artwork_ID) >= 2",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 225,
+   "completion_tokens": 59,
+   "student_seconds": 0.938
+  },
+  {
+   "task_id": "spider_train_4612",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT f.Festival_ID, f.Festival_Name, COUNT(n.Artwork_ID) \nFROM festival_detail f \nJOIN nomination n ON f.Festival_ID = n.Festival_ID \nGROUP BY f.Festival_ID, f.Festival_Name",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT f.Festival_ID, f.Festival_Name, COUNT(n.Artwork_ID) \nFROM festival_detail f \nJOIN nomination n ON f.Festival_ID = n.Festival_ID \nGROUP BY f.Festival_ID, f.Festival_Name",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 226,
+   "completion_tokens": 54,
+   "student_seconds": 0.826
+  },
+  {
+   "task_id": "spider_train_4614",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT Type FROM artwork GROUP BY Type ORDER BY COUNT(*) DESC LIMIT 1",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Type FROM artwork GROUP BY Type ORDER BY COUNT(*) DESC LIMIT 1",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 217,
+   "completion_tokens": 21,
+   "student_seconds": 0.772
+  },
+  {
+   "task_id": "spider_train_5184",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT COUNT(DISTINCT B1.Firstname, B1.Lastname)\nFROM Band B1\nJOIN Instruments I ON B1.Id = I.BandmateId\nJOIN Songs S ON I.SongId = S.SongId\nJOIN Performance P ON S.SongId = P.SongId\nWHERE S.Title = 'Flash'",
+   "pred_error": "wrong number of arguments to function COUNT()",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT COUNT(DISTINCT B1.Firstname, B1.Lastname)\nFROM Band B1\nJOIN Instruments I ON B1.Id = I.BandmateId\nJOIN Songs S ON I.SongId = S.SongId\nJOIN Performance P ON S.SongId = P.SongId\nWHERE S.Title = 'Flash'",
+     "error": "wrong number of arguments to function COUNT()"
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 438,
+   "completion_tokens": 75,
+   "student_seconds": 0.879
+  },
+  {
+   "task_id": "spider_train_5185",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT COUNT(DISTINCT B1.Firstname, B1.Lastname)\nFROM Band B1\nJOIN Instruments I ON B1.Id = I.BandmateId\nJOIN Songs S ON I.SongId = S.SongId\nJOIN Tracklists TL ON S.SongId = TL.SongId\nJOIN Performance P ON TL.AlbumId = P.AlbumId\nJOIN Songs S2 ON P.Bandmate = S2.SongId\nWHERE S.Title = 'Flash'",
+   "pred_error": "wrong number of arguments to function COUNT()",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT COUNT(DISTINCT B1.Firstname, B1.Lastname)\nFROM Band B1\nJOIN Instruments I ON B1.Id = I.BandmateId\nJOIN Songs S ON I.SongId = S.SongId\nJOIN Tracklists TL ON S.SongId = TL.SongId\nJOIN Performance P ON TL.AlbumId = P.AlbumId\nJOIN Songs S2 ON P.Bandmate = S2.SongId\nWHERE S.Title = 'Flash'",
+     "error": "wrong number of arguments to function COUNT()"
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 438,
+   "completion_tokens": 106,
+   "student_seconds": 1.069
+  },
+  {
+   "task_id": "spider_train_547",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT \n    c.first_name, \n    c.last_name, \n    SUM(il.unit_price * il.quantity) AS total_gross_sales\nFROM \n    customers c\nJOIN \n    invoices i ON c.id = i.customer_id\nJOIN \n    invoice_lines il ON i.id = il.invoice_id\nJOIN \n    tracks t ON il.track_id = t.id\nJOIN \n    albums a ON t.album_id = a.id\nJOIN \n    artists ar ON a.artist_id = ar.id\nGROUP BY \n    c.id, c.first_name, c.last_name\nORDER BY \n    total_gross_sales DESC\nLIMIT 10",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT \n    c.first_name, \n    c.last_name, \n    SUM(il.unit_price * il.quantity) AS total_gross_sales\nFROM \n    customers c\nJOIN \n    invoices i ON c.id = i.customer_id\nJOIN \n    invoice_lines il ON i.id = il.invoice_id\nJOIN \n    tracks t ON il.track_id = t.id\nJOIN \n    albums a ON t.album_id = a.id\nJOIN \n    artists ar ON a.artist_id = ar.id\nGROUP BY \n    c.id, c.first_name, c.last_name\nORDER BY \n    total_gross_sales DESC\nLIMIT 10",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 934,
+   "completion_tokens": 136,
+   "student_seconds": 1.417
+  },
+  {
+   "task_id": "spider_train_5548",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT P.product_id, R.color_description\nFROM Products P\nJOIN Ref_Colors R ON P.color_code = R.color_code\nJOIN Product_Characteristics PC ON P.product_id = PC.product_id\nJOIN Characteristics C ON PC.characteristic_id = C.characteristic_id\nGROUP BY P.product_id, R.color_description\nHAVING COUNT(PC.product_id) >= 2",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT P.product_id, R.color_description\nFROM Products P\nJOIN Ref_Colors R ON P.color_code = R.color_code\nJOIN Product_Characteristics PC ON P.product_id = PC.product_id\nJOIN Characteristics C ON PC.characteristic_id = C.characteristic_id\nGROUP BY P.product_id, R.color_description\nHAVING COUNT(PC.product_id) >= 2",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 479,
+   "completion_tokens": 81,
+   "student_seconds": 1.679
+  },
+  {
+   "task_id": "spider_train_5568",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT P.product_name\nFROM Products P\nJOIN Ref_Colors C ON P.color_code = C.color_code\nJOIN Product_Characteristics PC ON P.product_id = PC.product_id\nJOIN Characteristics CH ON PC.characteristic_id = CH.characteristic_id\nWHERE C.color_description = 'red' AND CH.characteristic_name = 'fast'",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT P.product_name\nFROM Products P\nJOIN Ref_Colors C ON P.color_code = C.color_code\nJOIN Product_Characteristics PC ON P.product_id = PC.product_id\nJOIN Characteristics CH ON PC.characteristic_id = CH.characteristic_id\nWHERE C.color_description = 'red' AND CH.characteristic_name = 'fast'",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 485,
+   "completion_tokens": 73,
+   "student_seconds": 1.678
+  },
+  {
+   "task_id": "spider_train_5574",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT COUNT(DISTINCT product_id)\nFROM Products\nJOIN Ref_Colors ON Products.color_code = Ref_Colors.color_code\nJOIN Characteristics ON Products.product_id = Characteristic.product_id\nWHERE Ref_Colors.color_description = 'red' AND Characteristics.characteristic_name = 'slow'",
+   "pred_error": "no such column: Characteristic.product_id",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT COUNT(DISTINCT product_id)\nFROM Products\nJOIN Ref_Colors ON Products.color_code = Ref_Colors.color_code\nJOIN Characteristics ON Products.product_id = Characteristic.product_id\nWHERE Ref_Colors.color_description = 'red' AND Characteristics.characteristic_name = 'slow'",
+     "error": "no such column: Characteristic.product_id"
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 486,
+   "completion_tokens": 63,
+   "student_seconds": 1.508
+  },
+  {
+   "task_id": "spider_train_5593",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT color_description\nFROM Ref_Colors\nWHERE color_code = (\n    SELECT color_code\n    FROM Products\n    GROUP BY color_code\n    ORDER BY COUNT(*) DESC\n    LIMIT 1\n)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT color_description\nFROM Ref_Colors\nWHERE color_code = (\n    SELECT color_code\n    FROM Products\n    GROUP BY color_code\n    ORDER BY COUNT(*) DESC\n    LIMIT 1\n)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 474,
+   "completion_tokens": 47,
+   "student_seconds": 1.125
+  },
+  {
+   "task_id": "spider_train_5643",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT Railway_ID, Builder FROM railway \nWHERE Railway_ID IN (\n    SELECT Railway_ID FROM train \n    GROUP BY Railway_ID \n    ORDER BY COUNT(Railway_ID) DESC \n    LIMIT 1\n)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Railway_ID, Builder FROM railway \nWHERE Railway_ID IN (\n    SELECT Railway_ID FROM train \n    GROUP BY Railway_ID \n    ORDER BY COUNT(Railway_ID) DESC \n    LIMIT 1\n)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 310,
+   "completion_tokens": 48,
+   "student_seconds": 0.98
+  },
+  {
+   "task_id": "spider_train_5649",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT DISTINCT m1.Country, m2.Country\nFROM manager m1\nJOIN manager m2 ON m1.Manager_ID = m2.Manager_ID\nWHERE m1.Age > 50 AND m2.Age < 46",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT DISTINCT m1.Country, m2.Country\nFROM manager m1\nJOIN manager m2 ON m1.Manager_ID = m2.Manager_ID\nWHERE m1.Age > 50 AND m2.Age < 46",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 316,
+   "completion_tokens": 52,
+   "student_seconds": 0.885
+  },
+  {
+   "task_id": "spider_train_5835",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT s.Submission_ID, s.Scores, s.Author, s.College\nFROM submission s\nJOIN acceptance a ON s.Submission_ID = a.Submission_ID\nWHERE a.Result = 'Accepted'\nORDER BY s.Scores DESC\nLIMIT 1",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT s.Submission_ID, s.Scores, s.Author, s.College\nFROM submission s\nJOIN acceptance a ON s.Submission_ID = a.Submission_ID\nWHERE a.Result = 'Accepted'\nORDER BY s.Scores DESC\nLIMIT 1",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 211,
+   "completion_tokens": 58,
+   "student_seconds": 0.863
+  },
+  {
+   "task_id": "spider_train_5842",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT DISTINCT Author\nFROM submission\nWHERE Submission_ID NOT IN (\n    SELECT Submission_ID\n    FROM submission\n    INNER JOIN acceptance ON submission.Submission_ID = acceptance.Submission_ID\n    INNER JOIN workshop ON acceptance.Workshop_ID = workshop.Workshop_ID\n)",
+   "pred_error": "ambiguous column name: Submission_ID",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT DISTINCT Author\nFROM submission\nWHERE Submission_ID NOT IN (\n    SELECT Submission_ID\n    FROM submission\n    INNER JOIN acceptance ON submission.Submission_ID = acceptance.Submission_ID\n    INNER JOIN workshop ON acceptance.Workshop_ID = workshop.Workshop_ID\n)",
+     "error": "ambiguous column name: Submission_ID"
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 208,
+   "completion_tokens": 58,
+   "student_seconds": 0.907
+  },
+  {
+   "task_id": "spider_train_5843",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT Author FROM submission WHERE Submission_ID NOT IN (\n    SELECT Submission_ID FROM submission\n)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Author FROM submission WHERE Submission_ID NOT IN (\n    SELECT Submission_ID FROM submission\n)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 205,
+   "completion_tokens": 23,
+   "student_seconds": 0.801
+  },
+  {
+   "task_id": "spider_train_590",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT e.first_name, e.last_name\nFROM employees e\nJOIN employees r ON e.reports_to = r.id\nWHERE r.first_name = 'Nancy' AND r.last_name = 'Edwards'",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT e.first_name, e.last_name\nFROM employees e\nJOIN employees r ON e.reports_to = r.id\nWHERE r.first_name = 'Nancy' AND r.last_name = 'Edwards'",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 926,
+   "completion_tokens": 48,
+   "student_seconds": 0.798
+  },
+  {
+   "task_id": "spider_train_6240",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT T2.Rank FROM Ship AS T1\nJOIN captain AS T2 ON T1.Ship_ID = T2.Ship_ID\nWHERE T1.Class = 'Third-rate ship of the line' AND T2.Captain_ID IS NULL",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT T2.Rank FROM Ship AS T1\nJOIN captain AS T2 ON T1.Ship_ID = T2.Ship_ID\nWHERE T1.Class = 'Third-rate ship of the line' AND T2.Captain_ID IS NULL",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 180,
+   "completion_tokens": 55,
+   "student_seconds": 0.793
+  },
+  {
+   "task_id": "spider_train_6250",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT Flag FROM Ship WHERE Flag IN (\n    SELECT Flag FROM Ship\n) GROUP BY Flag ORDER BY COUNT(*) DESC LIMIT 1",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Flag FROM Ship WHERE Flag IN (\n    SELECT Flag FROM Ship\n) GROUP BY Flag ORDER BY COUNT(*) DESC LIMIT 1",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 173,
+   "completion_tokens": 32,
+   "student_seconds": 0.686
+  },
+  {
+   "task_id": "spider_train_6262",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT S.Name\nFROM Ship S\nJOIN captain C ON S.Ship_ID = C.Ship_ID\nWHERE C.age = (SELECT MIN(age) FROM captain)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT S.Name\nFROM Ship S\nJOIN captain C ON S.Ship_ID = C.Ship_ID\nWHERE C.age = (SELECT MIN(age) FROM captain)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 178,
+   "completion_tokens": 37,
+   "student_seconds": 0.742
+  },
+  {
+   "task_id": "spider_train_6263",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT S.Name\nFROM Ship S\nJOIN captain C ON S.Ship_ID = C.Ship_ID\nWHERE C.age = (SELECT MIN(age) FROM captain)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT S.Name\nFROM Ship S\nJOIN captain C ON S.Ship_ID = C.Ship_ID\nWHERE C.age = (SELECT MIN(age) FROM captain)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 178,
+   "completion_tokens": 37,
+   "student_seconds": 0.682
+  },
+  {
+   "task_id": "spider_train_6316",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT T2.party_email\nFROM Party_Forms AS T1\nJOIN Parties AS T2 ON T1.party_id = T2.party_id\nWHERE T1.form_status_code = 'F'\nGROUP BY T2.party_email\nORDER BY COUNT(T1.form_id) DESC\nLIMIT 1",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT T2.party_email\nFROM Party_Forms AS T1\nJOIN Parties AS T2 ON T1.party_id = T2.party_id\nWHERE T1.form_status_code = 'F'\nGROUP BY T2.party_email\nORDER BY COUNT(T1.form_id) DESC\nLIMIT 1",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 810,
+   "completion_tokens": 66,
+   "student_seconds": 0.728
+  },
+  {
+   "task_id": "spider_train_6317",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT T2.party_email\nFROM Party_Forms AS T1\nJOIN Parties AS T2 ON T1.party_id = T2.party_id\nWHERE T1.form_status_code = (SELECT form_status_code FROM Party_Forms GROUP BY form_status_code ORDER BY COUNT(form_id) DESC LIMIT 1)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT T2.party_email\nFROM Party_Forms AS T1\nJOIN Parties AS T2 ON T1.party_id = T2.party_id\nWHERE T1.form_status_code = (SELECT form_status_code FROM Party_Forms GROUP BY form_status_code ORDER BY COUNT(form_id) DESC LIMIT 1)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 817,
+   "completion_tokens": 67,
+   "student_seconds": 0.876
+  },
+  {
+   "task_id": "spider_train_632",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT tracks.name\nFROM tracks\nJOIN media_types ON tracks.media_type_id = media_types.id\nJOIN genres ON tracks.genre_id = genres.id\nWHERE genres.name = 'Rock' AND media_types.name = 'MPEG'",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT tracks.name\nFROM tracks\nJOIN media_types ON tracks.media_type_id = media_types.id\nJOIN genres ON tracks.genre_id = genres.id\nWHERE genres.name = 'Rock' AND media_types.name = 'MPEG'",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 930,
+   "completion_tokens": 51,
+   "student_seconds": 0.947
+  },
+  {
+   "task_id": "spider_train_6328",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT service_name FROM Services WHERE service_id NOT IN (\n    SELECT service_id FROM Party_Services\n)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT service_name FROM Services WHERE service_id NOT IN (\n    SELECT service_id FROM Party_Services\n)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 809,
+   "completion_tokens": 26,
+   "student_seconds": 0.914
+  },
+  {
+   "task_id": "spider_train_6329",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT DISTINCT service_name FROM Services WHERE service_id NOT IN (\n    SELECT service_id FROM Party_Services\n)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT DISTINCT service_name FROM Services WHERE service_id NOT IN (\n    SELECT service_id FROM Party_Services\n)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 811,
+   "completion_tokens": 27,
+   "student_seconds": 0.748
+  },
+  {
+   "task_id": "spider_train_634",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT tracks.name\nFROM tracks\nJOIN genres ON tracks.genre_id = genres.id\nWHERE genres.name IN ('Rock', 'Jazz')",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT tracks.name\nFROM tracks\nJOIN genres ON tracks.genre_id = genres.id\nWHERE genres.name IN ('Rock', 'Jazz')",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 924,
+   "completion_tokens": 33,
+   "student_seconds": 0.617
+  },
+  {
+   "task_id": "spider_train_6401",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT Document_Type_Code, Document_Name, Document_Description\nFROM Documents\nWHERE Document_Name = 'Noel CV' OR Document_Name = 'King Book'",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Document_Type_Code, Document_Name, Document_Description\nFROM Documents\nWHERE Document_Name = 'Noel CV' OR Document_Name = 'King Book'",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 448,
+   "completion_tokens": 36,
+   "student_seconds": 0.549
+  },
+  {
+   "task_id": "spider_train_6456",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT Budget_Type_Code\nFROM Documents_with_Expenses\nGROUP BY Budget_Type_Code\nORDER BY COUNT(*) DESC\nLIMIT 1",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Budget_Type_Code\nFROM Documents_with_Expenses\nGROUP BY Budget_Type_Code\nORDER BY COUNT(*) DESC\nLIMIT 1",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 434,
+   "completion_tokens": 33,
+   "student_seconds": 0.573
+  },
+  {
+   "task_id": "spider_train_6462",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT D.Document_ID\nFROM Documents D\nJOIN Documents_with_Expenses DE ON D.Document_ID = DE.Document_ID\nWHERE D.Document_Name LIKE '%s%'",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT D.Document_ID\nFROM Documents D\nJOIN Documents_with_Expenses DE ON D.Document_ID = DE.Document_ID\nWHERE D.Document_Name LIKE '%s%'",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 437,
+   "completion_tokens": 38,
+   "student_seconds": 0.619
+  },
+  {
+   "task_id": "spider_train_6463",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT COUNT(DISTINCT Document_ID)\nFROM Documents\nWHERE Document_ID NOT IN (\n    SELECT Document_ID\n    FROM Documents_with_Expenses\n)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT COUNT(DISTINCT Document_ID)\nFROM Documents\nWHERE Document_ID NOT IN (\n    SELECT Document_ID\n    FROM Documents_with_Expenses\n)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 429,
+   "completion_tokens": 36,
+   "student_seconds": 0.61
+  },
+  {
+   "task_id": "spider_train_656",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT Name, MAX(Age) AS Most_Common_Age\nFROM editor\nGROUP BY Name\nORDER BY Most_Common_Age DESC\nLIMIT 1",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Name, MAX(Age) AS Most_Common_Age\nFROM editor\nGROUP BY Name\nORDER BY Most_Common_Age DESC\nLIMIT 1",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 194,
+   "completion_tokens": 37,
+   "student_seconds": 0.618
+  },
+  {
+   "task_id": "spider_train_660",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT e.Name, e.Age, j.Theme\nFROM editor e\nJOIN journal_committee jc ON e.Editor_ID = jc.Editor_ID\nJOIN journal j ON jc.Journal_ID = j.Journal_ID\nORDER BY j.Theme ASC",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT e.Name, e.Age, j.Theme\nFROM editor e\nJOIN journal_committee jc ON e.Editor_ID = jc.Editor_ID\nJOIN journal j ON jc.Journal_ID = j.Journal_ID\nORDER BY j.Theme ASC",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 211,
+   "completion_tokens": 53,
+   "student_seconds": 0.7
+  },
+  {
+   "task_id": "spider_train_6607",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT Location FROM station WHERE Station_ID NOT IN (\n    SELECT Station_ID FROM train_station WHERE Train_ID IN (\n        SELECT Train_ID FROM train\n    ) AND Number_of_Platforms >= 15\n)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Location FROM station WHERE Station_ID NOT IN (\n    SELECT Station_ID FROM train_station WHERE Train_ID IN (\n        SELECT Train_ID FROM train\n    ) AND Number_of_Platforms >= 15\n)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 235,
+   "completion_tokens": 48,
+   "student_seconds": 0.744
+  },
+  {
+   "task_id": "spider_train_661",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT e.Name\nFROM editor e\nJOIN journal_committee jc ON e.Editor_ID = jc.Editor_ID\nJOIN journal j ON jc.Journal_ID = j.Journal_ID\nWHERE j.Sales > 3000",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT e.Name\nFROM editor e\nJOIN journal_committee jc ON e.Editor_ID = jc.Editor_ID\nJOIN journal j ON jc.Journal_ID = j.Journal_ID\nWHERE j.Sales > 3000",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 207,
+   "completion_tokens": 55,
+   "student_seconds": 0.825
+  },
+  {
+   "task_id": "spider_train_6614",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT train.Name, train.Time FROM train\nJOIN train_station ON train.Train_ID = train_station.Train_ID\nJOIN station ON train_station.Station_ID = station.Station_ID\nWHERE station.Location = 'London'\nORDER BY train.Time DESC",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT train.Name, train.Time FROM train\nJOIN train_station ON train.Train_ID = train_station.Train_ID\nJOIN station ON train_station.Station_ID = station.Station_ID\nWHERE station.Location = 'London'\nORDER BY train.Time DESC",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 234,
+   "completion_tokens": 56,
+   "student_seconds": 0.901
+  },
+  {
+   "task_id": "spider_train_6618",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT Name FROM station WHERE Station_ID NOT IN (\n    SELECT Station_ID FROM train_station\n)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Name FROM station WHERE Station_ID NOT IN (\n    SELECT Station_ID FROM train_station\n)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 224,
+   "completion_tokens": 24,
+   "student_seconds": 0.777
+  },
+  {
+   "task_id": "spider_train_6620",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT T1.Name\nFROM train AS T1\nJOIN train_station AS T2 ON T1.Train_ID = T2.Train_ID\nJOIN station AS T3 ON T2.Station_ID = T3.Station_ID\nWHERE T3.Location != 'London'",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT T1.Name\nFROM train AS T1\nJOIN train_station AS T2 ON T1.Train_ID = T2.Train_ID\nJOIN station AS T3 ON T2.Station_ID = T3.Station_ID\nWHERE T3.Location != 'London'",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 233,
+   "completion_tokens": 61,
+   "student_seconds": 0.829
+  },
+  {
+   "task_id": "spider_train_6972",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT Publisher, COUNT(*) AS Book_Count\nFROM book_club\nGROUP BY Publisher\nORDER BY Book_Count DESC\nLIMIT 1",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Publisher, COUNT(*) AS Book_Count\nFROM book_club\nGROUP BY Publisher\nORDER BY Book_Count DESC\nLIMIT 1",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 267,
+   "completion_tokens": 33,
+   "student_seconds": 0.741
+  },
+  {
+   "task_id": "spider_train_6973",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT Publisher FROM book_club ORDER BY COUNT(*) DESC LIMIT 1",
+   "pred_error": "misuse of aggregate: COUNT()",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Publisher FROM book_club ORDER BY COUNT(*) DESC LIMIT 1",
+     "error": "misuse of aggregate: COUNT()"
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 267,
+   "completion_tokens": 20,
+   "student_seconds": 0.59
+  },
+  {
+   "task_id": "spider_train_6987",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT movie.Title, movie.Director FROM movie\nJOIN movie AS m2 ON movie.movie_id = m2.movie_id\nJOIN book_club AS bc ON movie.movie_id = bc.movie_id\nWHERE movie.Year <= 2000\nORDER BY movie.Gross_worldwide DESC\nLIMIT 1",
+   "pred_error": "no such column: bc.movie_id",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT movie.Title, movie.Director FROM movie\nJOIN movie AS m2 ON movie.movie_id = m2.movie_id\nJOIN book_club AS bc ON movie.movie_id = bc.movie_id\nWHERE movie.Year <= 2000\nORDER BY movie.Gross_worldwide DESC\nLIMIT 1",
+     "error": "no such column: bc.movie_id"
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 283,
+   "completion_tokens": 68,
+   "student_seconds": 0.768
+  },
+  {
+   "task_id": "spider_train_6997",
+   "pass": false,
+   "pass_other_verifier": false,
+   "pred_sql": "SELECT T1.Title, T2.Book_Title FROM movie AS T1 JOIN movie_company AS T2 ON T1.movie_id = T2.movie_id WHERE T2.Incorporated_in LIKE '%China%'",
+   "pred_error": "no such table: movie_company",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT T1.Title, T2.Book_Title FROM movie AS T1 JOIN movie_company AS T2 ON T1.movie_id = T2.movie_id WHERE T2.Incorporated_in LIKE '%China%'",
+     "error": "no such table: movie_company"
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 272,
+   "completion_tokens": 47,
+   "student_seconds": 0.713
+  },
+  {
+   "task_id": "spider_train_758",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT t.Name, t.Location, t.Year_Opened\nFROM track t\nWHERE t.Seating > (SELECT AVG(Seating) FROM track)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT t.Name, t.Location, t.Year_Opened\nFROM track t\nWHERE t.Seating > (SELECT AVG(Seating) FROM track)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 172,
+   "completion_tokens": 36,
+   "student_seconds": 0.744
+  },
+  {
+   "task_id": "spider_train_769",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT Class FROM race GROUP BY Class ORDER BY COUNT(*) DESC LIMIT 1",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT Class FROM race GROUP BY Class ORDER BY COUNT(*) DESC LIMIT 1",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 164,
+   "completion_tokens": 21,
+   "student_seconds": 0.748
+  },
+  {
+   "task_id": "spider_train_773",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT t.Name\nFROM track t\nWHERE NOT EXISTS (\n    SELECT 1\n    FROM race r\n    WHERE r.Track_ID = t.Track_ID AND r.Class = 'GT'\n)",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT t.Name\nFROM track t\nWHERE NOT EXISTS (\n    SELECT 1\n    FROM race r\n    WHERE r.Track_ID = t.Track_ID AND r.Class = 'GT'\n)",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 167,
+   "completion_tokens": 44,
+   "student_seconds": 0.65
+  },
+  {
+   "task_id": "spider_train_782",
+   "pass": true,
+   "pass_other_verifier": true,
+   "pred_sql": "SELECT t.Name FROM track t\nJOIN race r ON t.Track_ID = r.Track_ID\nGROUP BY t.Name\nORDER BY COUNT(r.Race_ID) DESC\nLIMIT 1",
+   "pred_error": "",
+   "gold_empty": false,
+   "n_attempts": 1,
+   "attempts": [
+    {
+     "sql": "SELECT t.Name FROM track t\nJOIN race r ON t.Track_ID = r.Track_ID\nGROUP BY t.Name\nORDER BY COUNT(r.Race_ID) DESC\nLIMIT 1",
+     "error": ""
+    }
+   ],
+   "fewshot_ids": [],
+   "prompt_tokens": 169,
+   "completion_tokens": 43,
+   "student_seconds": 0.629
+  }
+ ]
+}

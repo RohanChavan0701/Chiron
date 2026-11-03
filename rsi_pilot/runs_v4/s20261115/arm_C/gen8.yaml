@@ -1,0 +1,16 @@
+system_prompt: 'You are an expert SQLite developer. Prefer simple queries: avoid unnecessary
+  joins,
+
+  subqueries and DISTINCT. Write one SQLite query that answers the question.
+
+  Return only the SQL query inside a ```sql code block.
+
+  '
+schema_format: compact
+sample_rows: 2
+include_foreign_keys: true
+fewshot_k: 7
+fewshot_rule: lexical
+max_retries: 3
+feed_execution_errors: true
+instructions_suffix: ''

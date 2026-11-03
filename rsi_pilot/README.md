@@ -279,6 +279,101 @@ improved/regressed tasks; runs share models and task pools, so they are not full
 - *Evolution often does nothing useful.* One of three replicates found no edit worth keeping in
   either arm, and the critic rejected 0 candidates across all replicates.
 
+## Run 4: pre-registered, six seeds, random-search control
+
+Design, analysis plan and predictions are in `PREDICTION.md`, committed before any run-4
+result existed. Three arms per seed: A (LLM proposer, greedy keep), B (RRSI-lite: edit
+budget, placebo-calibrated keep threshold, critic, leak check, pruning) and C (random edits,
+same keep rule as A). E (100 tasks) is the tuning set; E2 (100 fresh tasks from the same
+pool) measures selection noise; H (322 Spider dev hard/extra) and B (398 BIRD Mini-Dev) are
+held out. 10 generations x 3 candidates per arm. Unit of analysis is the seed; test is the
+exact two-sided Wilcoxon signed-rank across seeds; secondaries Holm-corrected. Six seeds
+(20261111 to 20261116) per amendment 1. Output: `runs_v4/pooled_seed_level.md` from
+`python -m rsi.pool runs_v4/s* --seed-level`.
+
+**Primary endpoint (B vs A on H): null.** Per-seed net tasks -25, -1, -7, +3, -3, +7; mean
+-4.3 tasks of 322, 95% CI [-13.7, +2.7], p = 0.56. Arm B is not better than Arm A on held-out
+Spider; if anything it is slightly behind.
+
+| Endpoint | Set | Mean | 95% CI (seeds) | +/- seeds | p | p (Holm) |
+|---|---|---|---|---|---|---|
+| **B vs A (primary)** | H | -4.3 tasks | [-13.7, +2.7] | 2/4 | 0.562 | - |
+| A vs baseline | H | +4.0 tasks | [-1.5, +8.8] | 4/1 | 0.188 | 1.000 |
+| B vs baseline | H | -0.3 tasks | [-6.5, +4.3] | 3/1 | 0.875 | 1.000 |
+| A vs C | E | +1.7 tasks | [-1.5, +4.7] | 4/2 | 0.438 | 1.000 |
+| A vs C | H | -0.5 tasks | [-10.8, +9.5] | 4/2 | 1.000 | 1.000 |
+| B vs A | B | +2.5 tasks | [-1.2, +6.5] | 3/3 | 0.438 | 1.000 |
+| gap A (E gain - E2 gain) | E-E2 | +7.5 pp | [+1.7, +14.3] | 5/0 | 0.062 | 0.500 |
+| gap B | E-E2 | +4.3 pp | [+0.8, +9.3] | 4/0 | 0.125 | 0.875 |
+| gap C | E-E2 | +5.0 pp | [-1.2, +13.3] | 4/2 | 0.312 | 1.000 |
+
+Mean gain over baseline in net tasks (passed by arm minus passed by baseline), predicted vs
+observed:
+
+| Arm | E (of 100) | E2 (of 100) | H (of 322) | B (of 398) |
+|---|---|---|---|---|
+| A, predicted / observed | +8 / +8.8 | +2 / +1.3 | -2 / +4.0 | 0 / -2.8 |
+| B, predicted / observed | +4 / +4.2 | +2 / -0.2 | +1 / -0.3 | +1 / -0.3 |
+| C, predicted / observed | +6 / +7.2 | +1 / +2.2 | -1 / +4.5 | 0 / -0.5 |
+
+Per seed, tasks passed (baseline / A / B / C):
+
+| Seed | E | E2 | H | B |
+|---|---|---|---|---|
+| 20261111 | 33/47/35/40 | 34/34/34/35 | 108/119/94/101 | 55/55/53/58 |
+| 20261112 | 46/50/46/49 | 36/37/36/37 | 108/109/108/106 | 56/52/56/54 |
+| 20261113 | 47/54/50/51 | 44/46/44/45 | 111/119/112/134 | 56/49/59/49 |
+| 20261114 | 46/46/51/48 | 43/43/43/45 | 111/111/114/109 | 56/56/53/63 |
+| 20261115 | 40/57/55/61 | 47/42/46/44 | 111/122/119/114 | 54/55/54/54 |
+| 20261116 | 45/56/45/51 | 42/52/42/53 | 108/101/108/120 | 55/48/55/51 |
+
+**Predictions.**
+
+1. *Primary: B about 3 tasks ahead of A on H, not significant.* **Partly held.** Not
+   significant, as predicted, but the sign was wrong: B is 4.3 tasks behind A on average.
+2. *Selection gap significant for A (Holm p < 0.05), smaller for B.* **Did not hold.** A's gap
+   is positive in 5 of 6 seeds (one seed is 0) and averages +7.5 pp, but p = 0.062 raw and 0.50
+   after Holm. With one zero seed only five seeds enter the test, whose smallest possible p is
+   0.0625, so this endpoint could not reach significance. B's gap is smaller (+4.3 pp), as
+   predicted.
+3. *A >= C on E by a couple of tasks, no different on H.* **Held.** A is +1.7 tasks over C on E
+   and -0.5 on H, neither significant. The 32B LLM proposer adds nothing measurable over random
+   edits plus best-of-3 selection in this 9-knob space.
+4. *Neither arm's mean held-out gain exceeds 1% of the set (3.2 tasks on H, 4.0 on B).*
+   **Did not hold for A**, whose mean H gain is +4.0 tasks (+1.2%), not significant (p = 0.19)
+   and matched by random search (C: +4.5). Held for B on both sets and for A on BIRD.
+
+**What run 4 shows.**
+
+- *Tuning-set gains are mostly selection.* Every arm gains on E (+4 to +9 tasks) and keeps
+  little of it on fresh E2 tasks from the same pool (-0.2 to +2.2). This is the run 2-3 finding,
+  now with a direct measurement of the gap.
+- *No held-out transfer, and no benefit from regularization.* Neither arm moves held-out Spider
+  or BIRD beyond noise. RRSI-lite's checks make Arm B change less (two of six seeds keep the
+  baseline harness unchanged) but do not make it transfer better.
+- *The LLM proposer is no better than random search.* Arm C matches Arm A on every set.
+- Run 2's B-over-A result (+18% on H) is now contradicted by a pre-registered six-seed test.
+
+### Run 4 deviations
+
+- **Six seeds instead of ten** (amendment 1, written before any seed finished).
+- **Seed 20261111 restarted from scratch.** Its first attempt on the author's original
+  instance stopped after 8 minutes, before any evolution result.
+- **Seed 20261112, arm C rerun.** Arm C crashed in generation 8 when the local Ollama server
+  returned one HTTP 500 to a student call (the only 500 in the run; Ollama logged no error). The
+  pre-registered rule is to rerun a crashed seed from scratch; instead only arm C was rerun from
+  scratch with the same seed and settings, and the finished A and B arms were kept, because arms
+  are independent processes and A and B had completed normally. The crashed arm's files and the
+  Ollama log excerpt are in `runs_v4/s20261112/logs/crash_C_1138/`. The rerun was decided before
+  any seed-20261112 result was read.
+- **Hardware.** Seeds ran two per instance on three Lambda 1x A10 instances in parallel, with
+  the same Ollama version (0.40.13) and model digests as the original instance, from the working
+  branch shipped as a git bundle. Instance spend: about $17.40 (ledger `cloud/ledger.jsonl`).
+- **Student determinism.** Baseline repeats on E differed by 0 to 2 tasks (spread 2, 0, 0, 1,
+  0, 1 by seed), and baseline H counts vary from 108 to 111 across seeds on the same 322 tasks.
+  The placebo-calibrated threshold for Arm B absorbs this; Arm A's and C's keep threshold of 1
+  task does not, which is part of why their E gains do not carry over to E2.
+
 ## Poisoning audit (implemented, not run)
 
 `POISON_AUDIT.md` specifies a test of whether a triggered directive carried by a few E tasks is
