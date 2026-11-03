@@ -106,12 +106,26 @@ class OllamaLLM:
                 "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
                 "options": {"temperature": c["temperature"], "seed": c["seed"], "num_ctx": c["num_ctx"],
                             "num_predict": min(max_tokens, c.get("num_predict", 4096))}}
+        if c.get("gpu_lock"):
+            body["keep_alive"] = 0
         req = urllib.request.Request(c["base_url"].rstrip("/") + "/api/chat", data=json.dumps(body).encode(),
                                      headers={"Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=600) as r:
-            out = json.loads(r.read())
+
+        def call():
+            with urllib.request.urlopen(req, timeout=600) as r:
+                return json.loads(r.read())
+
+        if c.get("gpu_lock"):
+            from rsi.gpu import big_model_call
+            out = big_model_call(c["base_url"], call)
+        else:
+            out = call()
         if out.get("done_reason") == "length":
             raise RuntimeError("proposer/critic hit num_predict; raise it in frozen.yaml")
+        # Ollama silently drops the start of a prompt that does not fit in num_ctx.
+        if out.get("prompt_eval_count", 0) + body["options"]["num_predict"] > c["num_ctx"]:
+            raise RuntimeError(f"prompt ({out.get('prompt_eval_count')} tokens) + num_predict may exceed "
+                               f"num_ctx {c['num_ctx']}; the prompt could have been truncated")
         return LLMReply(strip_think(out["message"]["content"] or ""), out.get("prompt_eval_count", 0),
                         out.get("eval_count", 0), out.get("model", c["model"]))
 

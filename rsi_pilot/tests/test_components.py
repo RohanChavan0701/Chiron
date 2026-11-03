@@ -62,8 +62,13 @@ def test_bootstrap_ci_brackets_delta():
 
 
 def test_transfer_ratio_none_when_e_gain_small():
-    assert stats.transfer_ratio(0.04, 0.02, 0.04) is None
-    assert stats.transfer_ratio(0.04, 0.08, 0.04) == pytest.approx(0.5)
+    assert stats.transfer_ratio(0.04, 0.02, 1) is None
+    assert stats.transfer_ratio(0.04, 0.08, 4) == pytest.approx(0.5)
+
+
+def test_transfer_ratio_accepts_exactly_two_tasks():
+    # 0.44 - 0.40 < 2/50 in floating point; the integer check must still accept it
+    assert stats.transfer_ratio(0.02, 0.44 - 0.40, 2) == pytest.approx(0.5)
 
 
 # --- harness --------------------------------------------------------------
@@ -245,3 +250,75 @@ def test_pool_sign_test_and_table(tmp_path):
         (tmp_path / name / "results.json").write_text(json.dumps(r))
     md = pool([tmp_path / "r1", tmp_path / "r2"])
     assert "| arm_B vs arm_A | H | 6 | 2 | +4 |" in md
+
+
+def _mkdb(path, rows):
+    import sqlite3
+    c = sqlite3.connect(path)
+    c.execute("create table t(x int)")
+    c.executemany("insert into t values (?)", [(r,) for r in rows])
+    c.commit(); c.close()
+
+
+def test_testsuite_pass_none_when_gold_fails_everywhere(tmp_path):
+    from rsi.audit import testsuite_pass
+    d = tmp_path / "db1"; d.mkdir()
+    _mkdb(str(d / "a.sqlite"), [1, 2])
+    # gold references a missing table on every test database: nothing was checked
+    assert testsuite_pass(tmp_path, "db1", "select y from missing", "select x from t", True, 5) is None
+    assert testsuite_pass(tmp_path, "db1", "select x from t", "select x from t", True, 5) is True
+    assert testsuite_pass(tmp_path, "db1", "select x from t", "select 1", True, 5) is False
+    assert testsuite_pass(tmp_path, "nodb", "select x from t", "select x from t", True, 5) is None
+
+
+# ---- run 4 ----
+
+def test_random_edit_is_valid_and_bounded():
+    import random as _r
+    from rsi.edits import random_edit
+    from rsi.harness import diff_fields
+    base = validate(load_yaml(ROOT / "harness.yaml"))
+    rng = _r.Random(0)
+    for _ in range(200):
+        e = random_edit(base, rng, 3)
+        new = validate({**base, **e})
+        assert 1 <= len(diff_fields(base, new)) <= 3
+
+
+def test_cosine_budget_anneals_from_max_to_min():
+    from rsi.edits import cosine_budget
+    b = [cosine_budget(g, 10, 3, 1) for g in range(1, 11)]
+    assert b[0] == 3 and b[-1] == 1 and b == sorted(b, reverse=True)
+
+
+def test_placebo_threshold():
+    from rsi.edits import placebo_threshold
+    # all placebo deltas 0: the best of 3 never reaches +1, so the floor applies
+    assert placebo_threshold([0] * 10, 3, 0.05, 2) == 2
+    # placebo deltas reach +4: best-of-3 reaches 4 with p = 1 - 0.9^3 > 0.05, so t = 5
+    assert placebo_threshold([-3, -2, -1, 0, 0, 1, 1, 2, 3, 4], 3, 0.05, 2) == 5
+
+
+def test_splits_v4_disjoint_and_fixed_heldout(dbs):
+    from rsi.splits import make_splits_v4
+    dev = [Task(f"spider_dev_{i}", "spider_dev", f"dev{i % 2}", dbs["held"], "q", "SELECT 1", "", "hard")
+           for i in range(10)]
+    train = [Task(f"spider_train_{i}", "spider_train", f"tr{i % 5}", dbs["train"], f"q{i}", "SELECT 1", "", "extra")
+             for i in range(40)]
+    bird = [Task(f"bird_{i}", "bird", "b", dbs["bird"], "q", "SELECT 1", "", "simple") for i in range(7)]
+    cfg = {"seed": 1, "eval": {"exec_timeout_s": 5, "max_result_rows": 10},
+           "splits": {"n_e": 8, "n_e2": 8, "max_tasks_per_db": 2, "e_hardness": ["hard", "extra"],
+                      "h_hardness": ["hard", "extra"], "b_difficulty": ["simple"], "exclude_empty_gold": True}}
+    a = make_splits_v4(dev, train, bird, cfg)
+    assert len(a["E"]) == 8 and len(a["E2"]) == 8 and not set(a["E"]) & set(a["E2"])
+    assert len(a["H"]) == 10 and len(a["B"]) == 7
+    b = make_splits_v4(dev, train, bird, {**cfg, "seed": 2})
+    assert a["H"] == b["H"] and a["B"] == b["B"]          # held-out sets do not depend on the seed
+
+
+def test_wilcoxon_and_holm():
+    from rsi.pool import holm, wilcoxon_exact
+    assert wilcoxon_exact([3] * 10) == pytest.approx(2 / 1024)
+    assert wilcoxon_exact([0, 0, 0]) == 1.0
+    assert wilcoxon_exact([1, -1, 2, -2]) == 1.0
+    assert holm({"a": 0.01, "b": 0.04, "c": 0.03}) == {"a": 0.03, "c": 0.06, "b": 0.06}

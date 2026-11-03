@@ -11,7 +11,15 @@ A candidate is kept only if it beats the current harness on E by at least the
 keep threshold: max(min_keep_delta_tasks, noise spread + 1), where the noise
 spread comes from runs/noise_floor.json (baseline run 3x on E).
 
-CLI: python -m rsi.evolve --arm A   (and --arm B, can run in parallel)
+Run 4 (`evolution.arms: [A, B, C]`):
+C (random search, the selection control): no LLM. Each candidate is a random valid
+  edit from rsi/edits.py; same keep rule as A. Tests whether A's tuning-set gain is
+  more than best-of-N selection.
+A keeps any edit that improves E by `unreg_keep_delta_tasks` (the paper's
+  unregularized baseline). B keeps an edit only if it beats the placebo threshold
+  (rsi.baseline) and uses a cosine edit budget (`arm_b_budget: cosine`).
+
+CLI: python -m rsi.evolve --arm A   (B and C can run in parallel)
 """
 from __future__ import annotations
 
@@ -23,6 +31,7 @@ import time
 import yaml
 
 from rsi.config import RUNS, ROOT, append_jsonl, dump_yaml, load_yaml
+from rsi.edits import cosine_budget, random_edit
 from rsi.harness import EDITABLE_FIELDS, HarnessError, diff_fields, harness_id, validate
 from rsi.leakcheck import LeakChecker
 from rsi.llm import make_llm, parse_json
@@ -123,13 +132,30 @@ def prune_decision(e_with: int, e_without: int, tok_with: int, tok_without: int,
     return False, "keeps_its_weight"
 
 
-def keep_threshold(cfg: dict, runs_dir=RUNS) -> int:
-    base = cfg["evolution"]["min_keep_delta_tasks"]
+def keep_threshold(cfg: dict, runs_dir=RUNS, arm: str = "B") -> int:
+    ev = cfg["evolution"]
+    if arm in ("A", "C") and "unreg_keep_delta_tasks" in ev:
+        return ev["unreg_keep_delta_tasks"]
+    base = ev["min_keep_delta_tasks"]
     nf = runs_dir / "noise_floor.json"
     if nf.exists():
-        spread = json.loads(nf.read_text())["spread_tasks"]
-        return max(base, spread + 1)
+        d = json.loads(nf.read_text())
+        if "placebo" in d:
+            return max(base, d["placebo"]["threshold_tasks"])
+        return max(base, d["spread_tasks"] + 1)
+    if ev.get("arm_b_budget") == "cosine":
+        raise FileNotFoundError("run 4 needs noise_floor.json with placebo results; run rsi.baseline first")
     return base
+
+
+def max_fields_for(ev: dict, arm: str, g: int) -> int | None:
+    if arm == "B":
+        if ev.get("arm_b_budget") == "cosine":
+            return cosine_budget(g, ev["generations"], ev["arm_b_max_fields"], ev["arm_b_min_fields"])
+        return ev["arm_b_max_fields"] if g < ev["arm_b_late_from_generation"] else ev["arm_b_max_fields_late"]
+    if arm == "C":
+        return ev.get("arm_c_max_fields", 3)
+    return None
 
 
 def run_arm(ctx: Context, arm: str, llm, critic=None) -> dict:
@@ -140,36 +166,44 @@ def run_arm(ctx: Context, arm: str, llm, critic=None) -> dict:
     out_dir.mkdir(parents=True, exist_ok=True)
     log = out_dir / "log.jsonl"
     rng = random.Random(f"{ctx.cfg['seed']}-{arm}")
-    threshold = keep_threshold(ctx.cfg, ctx.runs_dir)
+    threshold = keep_threshold(ctx.cfg, ctx.runs_dir, arm)
     critic = critic or llm
 
     base = validate(load_yaml(ROOT / "harness.yaml"))
     cur = dict(base)
     cur_res = evaluate(ctx, cur, "E", purpose=f"evolve_{arm}")
     leak = LeakChecker(ctx.tasks["E"])
+    # Run 4: also log (never act on) edits that name held-out identifiers, so the audit can
+    # report them. Acting on them would feed held-out information into selection.
+    hleak = (LeakChecker([t for s in ("H", "B") for t in ctx.tasks[s]], ngram=10**6)
+             if "E2" in ctx.tasks else None)
     append_jsonl(log, {"event": "start", "arm": arm, "time": time.time(), "keep_threshold": threshold,
                        "harness_id": harness_id(cur), "E_passed": cur_res["passed"],
-                       "proposer": ctx.cfg["proposer"].get("model"),
-                       "critic": (ctx.cfg.get("critic") or ctx.cfg["proposer"]).get("model")})
+                       "proposer": None if arm == "C" else ctx.cfg["proposer"].get("model"),
+                       "critic": (ctx.cfg.get("critic") or ctx.cfg["proposer"]).get("model") if arm == "B" else None})
 
     for g in range(1, ev["generations"] + 1):
-        if arm == "B":
-            max_fields = ev["arm_b_max_fields"] if g < ev["arm_b_late_from_generation"] else ev["arm_b_max_fields_late"]
+        max_fields = max_fields_for(ev, arm, g)
+        if arm == "C":
+            cands = [{"edits": random_edit(cur, rng, max_fields), "rationale": "random"}
+                     for _ in range(ev["candidates_per_generation"])]
+            append_jsonl(log, {"event": "proposals", "gen": g, "n": len(cands), "proposer_model": "random"})
         else:
-            max_fields = None
-        traces = failure_traces(ctx, cur_res, ev["failures_shown"], rng, ev["show_gold_sql_to_proposer"])
-        history = edit_history(log) if ev.get("show_edit_history", False) else None
-        prompt = proposer_prompt(cur, cur_res, traces, ev["candidates_per_generation"], max_fields, history)
-        reply = llm(PROPOSER_SYSTEM, prompt)
-        try:
-            cands = parse_json(reply.text)
-            if isinstance(cands, dict):
-                cands = [cands]
-        except ValueError as e:
-            cands = []
-            append_jsonl(log, {"event": "proposer_parse_error", "gen": g, "error": str(e), "reply": reply.text})
-        append_jsonl(log, {"event": "proposals", "gen": g, "n": len(cands), "proposer_model": reply.model,
-                           "proposer_tokens": [reply.input_tokens, reply.output_tokens]})
+            traces = failure_traces(ctx, cur_res, ev["failures_shown"], rng, ev["show_gold_sql_to_proposer"])
+            history = (edit_history(log, ev.get("history_items", 20)) if ev.get("show_edit_history", False)
+                       else None)
+            prompt = proposer_prompt(cur, cur_res, traces, ev["candidates_per_generation"], max_fields, history)
+            reply = llm(PROPOSER_SYSTEM, prompt)
+            try:
+                cands = parse_json(reply.text)
+                if isinstance(cands, dict):
+                    cands = [cands]
+            except ValueError as e:
+                cands = []
+                append_jsonl(log, {"event": "proposer_parse_error", "gen": g, "error": str(e), "reply": reply.text})
+            append_jsonl(log, {"event": "proposals", "gen": g, "n": len(cands), "proposer_model": reply.model,
+                               "proposer_tokens": [reply.input_tokens, reply.output_tokens],
+                               "max_fields": max_fields})
 
         scored = []
         for ci, c in enumerate(cands[: ev["candidates_per_generation"]]):
@@ -188,6 +222,8 @@ def run_arm(ctx: Context, arm: str, llm, critic=None) -> dict:
                 rec.update(decision="rejected_noop"); append_jsonl(log, rec); continue
             problems = leak.check(cur, new)
             rec["leak_problems"] = problems
+            if hleak is not None:
+                rec["heldout_name_hits"] = hleak.check(cur, new)
             if arm == "B":
                 if len(changed) > max_fields:
                     rec.update(decision="rejected_too_many_fields", max_fields=max_fields); append_jsonl(log, rec); continue
@@ -245,12 +281,12 @@ def run_arm(ctx: Context, arm: str, llm, critic=None) -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--arm", required=True, choices=["A", "B"])
+    ap.add_argument("--arm", required=True, choices=["A", "B", "C"])
     ap.add_argument("--workers", type=int, default=1)
     args = ap.parse_args()
     ctx = load_context(workers=args.workers)
-    llm = make_llm(ctx.cfg["proposer"])
-    critic = make_llm(ctx.cfg["critic"]) if ctx.cfg.get("critic") else None
+    llm = None if args.arm == "C" else make_llm(ctx.cfg["proposer"])
+    critic = make_llm(ctx.cfg["critic"]) if (ctx.cfg.get("critic") and args.arm == "B") else None
     s = run_arm(ctx, args.arm, llm, critic)
     print(json.dumps(s, indent=1))
 

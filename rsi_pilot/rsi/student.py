@@ -43,8 +43,16 @@ class OllamaStudent:
             headers={"Content-Type": "application/json"},
         )
         t0 = time.monotonic()
-        with urllib.request.urlopen(req, timeout=c["request_timeout_s"]) as r:
-            out = json.loads(r.read())
+
+        def call():
+            with urllib.request.urlopen(req, timeout=c["request_timeout_s"]) as r:
+                return json.loads(r.read())
+
+        if c.get("gpu_lock"):
+            from rsi.gpu import student_call
+            out = student_call(c["base_url"], c["model"], call)
+        else:
+            out = call()
         return Completion(
             text=out["message"]["content"],
             prompt_tokens=out.get("prompt_eval_count", 0),

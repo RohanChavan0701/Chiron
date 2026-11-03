@@ -22,23 +22,29 @@ import re
 from pathlib import Path
 
 from rsi.config import RUNS, ROOT, load_yaml
-from rsi.runner import ARMS, evaluate, load_context
-from rsi.sqlexec import compare, execute, strip_distinct
+from rsi.runner import arms_of, evaluate, load_context
+from rsi.sqlexec import compare_with, execute, strip_distinct
 
 
-def testsuite_pass(ts_dir: Path, db_id: str, gold: str, pred: str, keep_distinct: bool, timeout: float) -> bool | None:
+def testsuite_pass(ts_dir: Path, db_id: str, gold: str, pred: str, keep_distinct: bool, timeout: float,
+                   verifier: str = "spider_official") -> bool | None:
+    """True/False from the test-suite databases, or None if nothing could be checked
+    (no test databases, or the gold query failed on every one of them).
+
+    Uses the same checker (`verifier`) that scored the run, so a disagreement between
+    checkers is not counted as a test-suite false positive."""
     dbs = sorted((ts_dir / db_id).glob("*.sqlite"))
-    if not dbs:
-        return None
     if not keep_distinct:
         gold, pred = strip_distinct(gold), strip_distinct(pred)
+    checked = 0
     for db in dbs:
         g, p = execute(str(db), gold, timeout), execute(str(db), pred, timeout)
         if not g.ok:
             continue  # gold fails on this test db; skip it rather than penalize the prediction
-        if not p.ok or not compare(g.rows, p.rows, gold):
+        checked += 1
+        if not p.ok or not compare_with(verifier, g.rows, p.rows, gold):
             return False
-    return True
+    return True if checked else None
 
 
 def main() -> None:
@@ -49,7 +55,7 @@ def main() -> None:
     ctx = load_context()
     ev = ctx.cfg["eval"]
     harnesses = {"baseline": load_yaml(ROOT / "harness.yaml")}
-    for a in ARMS:
+    for a in arms_of(ctx.cfg):
         p = RUNS / f"arm_{a}" / "final.yaml"
         if p.exists():
             harnesses[f"arm_{a}"] = load_yaml(p)
@@ -59,16 +65,17 @@ def main() -> None:
     report, label_rows = {}, []
     rng = random.Random(ctx.cfg["seed"])
     for name, h in harnesses.items():
-        for split in ("E", "H", "B"):
+        for split in ctx.tasks:
             res = evaluate(ctx, h, split, purpose="audit")
             passes = [r for r in res["records"] if r["pass"]]
             rep = {"passes": len(passes),
                    "gold_empty_passes": sum(r["gold_empty"] for r in passes),
                    "verifier_disagreements": sum(r["pass"] != r.get("pass_other_verifier", r["pass"]) for r in res["records"]),
                    "order_by_or_limit_passes": sum(bool(re.search(r"\b(order\s+by|limit)\b", tasks[r["task_id"]].gold_sql, re.I)) for r in passes)}
-            if split in ("E", "H") and ts_dir:
+            if split in ("E", "E2", "H") and ts_dir:
                 verdicts = [testsuite_pass(ts_dir, tasks[r["task_id"]].db_id, tasks[r["task_id"]].gold_sql,
-                                           r["pred_sql"], ev["keep_distinct"], ev["exec_timeout_s"]) for r in passes]
+                                           r["pred_sql"], ev["keep_distinct"], ev["exec_timeout_s"], ev["verifier"])
+                            for r in passes]
                 checked = [v for v in verdicts if v is not None]
                 rep["testsuite_checked"] = len(checked)
                 rep["testsuite_false_positives"] = sum(1 for v in checked if v is False)

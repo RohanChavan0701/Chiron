@@ -35,9 +35,12 @@ def paired_bootstrap_ci(base: dict[str, bool], new: dict[str, bool], iters: int 
     return stats[int(alpha / 2 * iters)], stats[int((1 - alpha / 2) * iters) - 1]
 
 
-def transfer_ratio(gain_heldout: float, gain_e: float, min_gain_e: float) -> float | None:
-    """Held-out gain / E gain. None when E gain is too small for the ratio to mean anything."""
-    if gain_e < min_gain_e:
+def transfer_ratio(gain_heldout: float, gain_e: float, gain_e_tasks: int,
+                   min_gain_e_tasks: int = 2) -> float | None:
+    """Held-out gain / E gain. None when the E gain, counted in whole tasks, is too small for
+    the ratio to mean anything. The check uses integer task counts: comparing float
+    accuracies (0.44 - 0.40 < 2/50) wrongly rejected an E gain of exactly 2 tasks."""
+    if gain_e_tasks < min_gain_e_tasks:
         return None
     return gain_heldout / gain_e
 

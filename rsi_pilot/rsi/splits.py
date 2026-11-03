@@ -106,6 +106,70 @@ def make_splits(spider_dev: list[Task], bird: list[Task], cfg: dict, bird_fallba
     }
 
 
+def make_splits_v4(spider_dev: list[Task], spider_train: list[Task], bird: list[Task], cfg: dict) -> dict:
+    """Run-4 design (fixes from the multi-reviewer critique).
+
+    E and E2 come from Spider TRAIN databases, so H can be every eligible Spider dev task
+    (one fixed, large held-out set shared by all seeds). E2 holds fresh tasks from E's
+    databases: it measures in-distribution gain without the selection on E.
+    B is every eligible BIRD Mini-Dev task in the listed tiers (fixed across seeds).
+    Only the E/E2 draw depends on the seed. E, E2 and H use the same hardness tiers.
+    """
+    s = cfg["splits"]
+    rng = random.Random(cfg["seed"])
+    keep = (lambda t: gold_nonempty(t, cfg)) if s.get("exclude_empty_gold") else (lambda t: True)
+    tiers = set(s["e_hardness"])
+    if set(s["h_hardness"]) != tiers:
+        raise ValueError("v4 design: E and H must use the same hardness tiers")
+    bird_dbs = {t.db_id for t in bird}
+    dev_dbs = {t.db_id for t in spider_dev}
+
+    H = sorted((t for t in spider_dev if t.difficulty in tiers and keep(t)), key=lambda t: t.task_id)
+    B = sorted((t for t in bird if t.difficulty in s["b_difficulty"] and keep(t)), key=lambda t: t.task_id)
+
+    by_db = defaultdict(list)
+    for t in spider_train:
+        if t.difficulty in tiers and t.db_id not in bird_dbs and t.db_id not in dev_dbs:
+            by_db[t.db_id].append(t)
+    n_e, n_e2, cap = s["n_e"], s["n_e2"], s["max_tasks_per_db"]
+    dbs = sorted(by_db)
+    rng.shuffle(dbs)
+    E, E2, used = [], [], []
+    for db in dbs:
+        if len(E) >= n_e and len(E2) >= n_e2:
+            break
+        ts = [t for t in sorted(by_db[db], key=lambda t: t.task_id) if keep(t)]
+        rng.shuffle(ts)
+        if len(ts) < 2:
+            continue
+        take_e = min(cap, n_e - len(E), len(ts) // 2)
+        take_e2 = min(cap, n_e2 - len(E2), len(ts) - take_e)
+        if take_e <= 0 and take_e2 <= 0:
+            continue
+        E += ts[:take_e]
+        E2 += ts[take_e:take_e + take_e2]
+        used.append(db)
+    if len(E) < n_e or len(E2) < n_e2:
+        raise RuntimeError(f"v4 split: E {len(E)}/{n_e}, E2 {len(E2)}/{n_e2}")
+    E = sorted(E, key=lambda t: t.task_id)
+    E2 = sorted(E2, key=lambda t: t.task_id)
+    assert not ({t.task_id for t in E} & {t.task_id for t in E2})
+    assert not ({t.db_id for t in E} & {t.db_id for t in H})
+    return {
+        "design": "v4",
+        "seed": cfg["seed"],
+        "n_per_split": {"E": len(E), "E2": len(E2), "H": len(H), "B": len(B)},
+        "bird_tiers": s["b_difficulty"],
+        "exclude_empty_gold": bool(s.get("exclude_empty_gold")),
+        "E_dbs": sorted({t.db_id for t in E}),
+        "H_dbs": sorted({t.db_id for t in H}),
+        "E": [t.task_id for t in E],
+        "E2": [t.task_id for t in E2],
+        "H": [t.task_id for t in H],
+        "B": [t.task_id for t in B],
+    }
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(SPLITS))
@@ -115,11 +179,16 @@ def main() -> None:
     cfg = frozen()
     dev = load_spider(resolve(cfg["data"]["spider_dir"]), "dev")
     bird = load_bird(resolve(cfg["data"]["bird_dir"]), cfg["data"].get("bird_json"))
-    sp = make_splits(dev, bird, cfg, args.bird_fallback)
+    if cfg["splits"].get("design") == "v4":
+        train = load_spider(resolve(cfg["data"]["spider_dir"]), "train")
+        sp = make_splits_v4(dev, train, bird, cfg)
+    else:
+        sp = make_splits(dev, bird, cfg, args.bird_fallback)
     with open(args.out, "w") as f:
         json.dump(sp, f, indent=1)
     print(f"E: {len(sp['E'])} tasks on {len(sp['E_dbs'])} dbs | H: {len(sp['H'])} on {len(sp['H_dbs'])} dbs "
-          f"| B: {len(sp['B'])} ({sp['bird_tiers']}) -> {args.out}")
+          f"| B: {len(sp['B'])} ({sp['bird_tiers']})"
+          + (f" | E2: {len(sp['E2'])}" if "E2" in sp else "") + f" -> {args.out}")
 
 
 if __name__ == "__main__":

@@ -108,3 +108,27 @@ def test_heldout_and_audit_end_to_end(ctx, monkeypatch, tasks, dbs, tmp_path, ca
     rep = json.loads((ctx.runs_dir / "audit.json").read_text())
     assert rep["arm_A/H"]["testsuite_checked"] == 6 and rep["arm_A/H"]["testsuite_false_positives"] == 0
     assert (ctx.runs_dir / "audit_bird_labels.csv").exists()
+
+
+def test_arm_c_random_search_and_three_arm_guard(ctx):
+    ctx.cfg["evolution"].update(arms=["A", "B", "C"], unreg_keep_delta_tasks=1)
+    s = run_arm(ctx, "C", None)
+    log = [json.loads(l) for l in (ctx.runs_dir / "arm_C" / "log.jsonl").read_text().splitlines()]
+    cands = [r for r in log if r.get("event") == "candidate"]
+    assert len(cands) == 9 and all(r["decision"] == "scored" for r in cands)
+    assert s["keep_threshold"] == 1
+    run_arm(ctx, "A", FakeLLM())
+    final_a = load_yaml(ctx.runs_dir / "arm_A" / "final.yaml")
+    with pytest.raises(PermissionError):      # B not finished yet
+        evaluate(ctx, final_a, "H")
+    run_arm(ctx, "B", FakeLLM())
+    assert evaluate(ctx, final_a, "H")["passed"] == 6
+
+
+def test_cache_key_v2_depends_on_seed_and_eval(ctx):
+    k1 = ctx.cache_key
+    assert k1 == ctx.student_key                 # runs 1-3 layout unchanged
+    ctx.cfg["cache_key_v2"] = True
+    k2 = ctx.cache_key
+    ctx.cfg["seed"] += 1
+    assert k2 != k1 and ctx.cache_key != k2

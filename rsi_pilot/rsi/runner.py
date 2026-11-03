@@ -1,6 +1,6 @@
 """Evaluate a harness on a split. Results are cached per (harness, student config, task).
 
-Held-out guard: H and B may be run with the baseline harness at any time (the
+Held-out guard: H, B and E2 (run 4) may be run with the baseline harness at any time (the
 baseline is never tuned), but any other harness on H or B requires both arms'
 final harnesses to exist, i.e. evolution is finished. Every H/B evaluation is
 appended to runs/heldout_access.jsonl so leakage is auditable.
@@ -24,6 +24,12 @@ from rsi.harness import harness_id, run_task, validate
 from rsi.student import Completion, make_student
 
 ARMS = ("A", "B")
+GUARDED_SPLITS = ("H", "B", "E2")
+
+
+def arms_of(cfg: dict) -> tuple[str, ...]:
+    """Arms in this run: ("A", "B") for runs 1-3; run 4 adds the random-search control C."""
+    return tuple(cfg.get("evolution", {}).get("arms", ARMS))
 
 
 @dataclass
@@ -35,10 +41,22 @@ class Context:
     student: Callable[[list[dict]], Completion]
     runs_dir: Path = RUNS
     workers: int = 1
+    pool_fingerprint: str = ""
 
     @property
     def student_key(self) -> str:
         return stable_hash(self.cfg["student"])
+
+    @property
+    def cache_key(self) -> str:
+        """Everything besides the harness that decides a task's result. Runs 1-3 keyed the
+        cache on the student config only; run 4 (`cache_key_v2: true`) also keys on the eval
+        settings, the seed (it picks the fixed few-shot examples) and the few-shot pool, so a
+        cache reused across seeds or settings cannot return stale results."""
+        if not self.cfg.get("cache_key_v2"):
+            return self.student_key
+        return self.student_key + "_" + stable_hash({"eval": self.cfg["eval"], "seed": self.cfg["seed"],
+                                                     "pool": self.pool_fingerprint})
 
 
 def pool_without(train: list[Task], forbidden: set[str]) -> list[Task]:
@@ -52,25 +70,33 @@ def load_context(splits_path: str | Path = SPLITS, workers: int = 1) -> Context:
     dev = load_spider(resolve(cfg["data"]["spider_dir"]), "dev")
     train = load_spider(resolve(cfg["data"]["spider_dir"]), "train")
     bird = load_bird(resolve(cfg["data"]["bird_dir"]), cfg["data"].get("bird_json"))
-    tasks = {"E": tasks_from_split(sp["E"], dev), "H": tasks_from_split(sp["H"], dev),
-             "B": tasks_from_split(sp["B"], bird)}
     # Exclude every database from Spider dev and BIRD Mini-Dev, not only those in the
     # sampled splits. Spider train and BIRD Mini-Dev both contain `formula_1`, so its
     # 80 train examples are dropped from the few-shot pool.
     forbidden = {t.db_id for t in dev} | {t.db_id for t in bird}
-    pool = FewShotPool(pool_without(train, forbidden), forbidden, cfg["seed"])
-    return Context(cfg, sp, tasks, pool, make_student(cfg["student"]), workers=workers)
+    if sp.get("design") == "v4":
+        # E and E2 come from Spider train: their databases leave the few-shot pool too.
+        tasks = {"E": tasks_from_split(sp["E"], train), "E2": tasks_from_split(sp["E2"], train),
+                 "H": tasks_from_split(sp["H"], dev), "B": tasks_from_split(sp["B"], bird)}
+        forbidden |= {t.db_id for t in tasks["E"]} | {t.db_id for t in tasks["E2"]}
+    else:
+        tasks = {"E": tasks_from_split(sp["E"], dev), "H": tasks_from_split(sp["H"], dev),
+                 "B": tasks_from_split(sp["B"], bird)}
+    pool_tasks = pool_without(train, forbidden)
+    pool = FewShotPool(pool_tasks, forbidden, cfg["seed"])
+    fp = stable_hash(sorted(t.task_id for t in pool_tasks))
+    return Context(cfg, sp, tasks, pool, make_student(cfg["student"]), workers=workers, pool_fingerprint=fp)
 
 
 def _guard_heldout(ctx: Context, split: str, h: dict, purpose: str) -> None:
-    if split not in ("H", "B"):
+    if split not in GUARDED_SPLITS:
         return
     baseline = validate(load_yaml(ROOT / "harness.yaml"))
     is_baseline = harness_id(h) == harness_id(baseline)
-    finals = [ctx.runs_dir / f"arm_{a}" / "final.yaml" for a in ARMS]
+    finals = [ctx.runs_dir / f"arm_{a}" / "final.yaml" for a in arms_of(ctx.cfg)]
     if not is_baseline and not all(p.exists() for p in finals):
         raise PermissionError(
-            f"Refusing to run a non-baseline harness on held-out split {split} before both arms "
+            f"Refusing to run a non-baseline harness on held-out split {split} before every arm "
             f"have final.yaml. This would leak held-out information into evolution.")
     append_jsonl(ctx.runs_dir / "heldout_access.jsonl",
                  {"time": time.time(), "split": split, "harness_id": harness_id(h),
@@ -81,7 +107,7 @@ def evaluate(ctx: Context, h: dict, split: str, use_cache: bool = True, purpose:
     validate(h)
     _guard_heldout(ctx, split, h, purpose)
     hid = harness_id(h)
-    cache_dir = ctx.runs_dir / "cache" / ctx.student_key / hid
+    cache_dir = ctx.runs_dir / "cache" / ctx.cache_key / hid
     cache_dir.mkdir(parents=True, exist_ok=True)
     tasks = ctx.tasks[split]
 
@@ -120,7 +146,7 @@ def summarize(recs: list[dict], split: str, hid: str) -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--split", required=True, choices=["E", "H", "B"])
+    ap.add_argument("--split", required=True, choices=["E", "E2", "H", "B"])
     ap.add_argument("--harness", default=str(ROOT / "harness.yaml"))
     ap.add_argument("--no-cache", action="store_true")
     ap.add_argument("--tag", default="")
