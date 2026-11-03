@@ -7,7 +7,7 @@
 - `docs/superpowers/plans/2026-07-20-rsi-mem-phase0-1.md` (coding G0.1 / G1.1 / G0.2 work order)
 - `docs/RSI_MEM_V2_FINANCE.md` + `docs/superpowers/plans/2026-07-20-finance-phase0.md` (commit `f2713e4`)
 
-**Product brief (older, still useful):** `docs/FABLE_HANDOFF.md`
+**Product brief (older, still useful):** `docs/history/FABLE_HANDOFF.md`
 
 ---
 

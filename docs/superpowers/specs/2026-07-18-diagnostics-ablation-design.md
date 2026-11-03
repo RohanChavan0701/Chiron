@@ -3,7 +3,7 @@
 **Date:** 2026-07-18
 **Status:** Approved (pending spec review)
 **Owner:** Rohan Chavan
-**Context:** `docs/FABLE_HANDOFF.md` §6C reported a null result — the hard-curriculum
+**Context:** `docs/history/FABLE_HANDOFF.md` §6C reported a null result — the hard-curriculum
 eval gave Δ = +0.000 self-lift on held-out hard problems (student WITHOUT 0.111 vs
 WITH 0.111) and a −0.889 gap to the unaided teacher. Before building new learning
 mechanisms (failure-conditioned ICL, retrieval rewrite, LoRA), this milestone

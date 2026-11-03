@@ -2,7 +2,7 @@
 
 **Updated:** 2026-07-19
 **Scope:** everything measured on the coding adapter to date. Numbers are from
-real runs; nulls are reported as nulls. Sources: `docs/FABLE_HANDOFF.md` §6,
+real runs; nulls are reported as nulls. Sources: `docs/history/FABLE_HANDOFF.md` §6,
 `docs/superpowers/specs/2026-07-18-diagnostics-ablation-design.md` (results
 section), `runs/*.log`.
 

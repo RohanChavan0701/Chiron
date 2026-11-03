@@ -7,7 +7,7 @@
 loop runs mechanically but showed (a) student capacity is a hard precondition,
 (b) teacher-verified memory is not automatically useful to the student. B1
 ports the self-improvement spine to multi-step episodes with both lessons
-baked in, per the long-horizon direction in `docs/FABLE_HANDOFF.md` §9.
+baked in, per the long-horizon direction in `docs/history/FABLE_HANDOFF.md` §9.
 
 ## Goal
 

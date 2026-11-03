@@ -6,7 +6,7 @@
 **Files touched:**
 
 _Created:_
-- `docs/plans/006-first-integration-checkpoint.md` (this file)
+- `docs/history/plans/006-first-integration-checkpoint.md` (this file)
 - `correction/tests/test_correction.py` (new — contract-path unit tests)
 - `correction/tests/fixtures/failing_cases.jsonl` (new — standalone failing-case bundle for the correction CLI)
 
