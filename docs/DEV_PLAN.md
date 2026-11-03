@@ -91,7 +91,7 @@ second Ollama server on port 11435 with `OLLAMA_NUM_PARALLEL=8` (`PROJECT_REPORT
 | Test-suite endpoint | Pre-register the test-suite-corrected held-out comparison that looked different in run 4's exploratory audit (`docs/PROJECT_NOTES.md` 8.1). Can be computed from existing run 4 and 5 outputs if the audit data is there; otherwise re-score. | None to little |
 | Run 5 with a stronger baseline | Full schema up front from the start, to test whether anything beyond "finding missing defaults" transfers. | About 11 h on one A10 |
 | Frontier proposer | Same arms with a frontier-model proposer, to test whether a better proposer beats random search. | API cost |
-| Archive arm (E1) | Top-k harness archive and CMP-style selection on a held-back slice of E. | Same as a run-4 seed per arm |
+| Run 6 (E1), archive arm | Top-k harness archive (propose from any) and CMP-style selection on a held-back slice of E; tests whether the HGM argument explains the transfer gap. | Same as a run-4 seed per arm |
 | E3 | GRPO on the correction stage's verified pairs for the 1.5B student, against few-shot memory on the same held-out set. | One A10, hours per run |
 
 ## What the author decides (collected so nothing is assumed)
