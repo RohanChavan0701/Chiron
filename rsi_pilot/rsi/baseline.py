@@ -19,8 +19,8 @@ from __future__ import annotations
 import argparse
 import json
 
-from rsi.config import RUNS, ROOT, load_yaml
-from rsi.edits import PLACEBO_PROMPTS, placebo_threshold
+from rsi.config import BASELINE, RUNS, ROOT, load_yaml
+from rsi.edits import placebo_prompts, placebo_threshold
 from rsi.harness import diff_fields
 from rsi.runner import evaluate, load_context
 
@@ -31,7 +31,7 @@ def main() -> None:
     ap.add_argument("--workers", type=int, default=1)
     args = ap.parse_args()
     ctx = load_context(workers=args.workers)
-    h = load_yaml(ROOT / "harness.yaml")
+    h = load_yaml(BASELINE)
 
     reps = [evaluate(ctx, h, "E", use_cache=False, purpose=f"noise_rep{i}") for i in range(args.reps)]
     passed = [r["passed"] for r in reps]
@@ -42,7 +42,7 @@ def main() -> None:
     if ev.get("placebo"):
         base_e = reps[-1]["passed"]
         deltas, ids = [], []
-        for i, prompt in enumerate(PLACEBO_PROMPTS):
+        for i, prompt in enumerate(placebo_prompts()):
             ph = {**h, "system_prompt": prompt}
             if not diff_fields(h, ph):
                 continue

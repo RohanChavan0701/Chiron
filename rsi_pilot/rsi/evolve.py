@@ -30,7 +30,7 @@ import time
 
 import yaml
 
-from rsi.config import RUNS, ROOT, append_jsonl, dump_yaml, load_yaml
+from rsi.config import BASELINE, HARNESS_KIND, RUNS, ROOT, append_jsonl, dump_yaml, load_yaml
 from rsi.edits import cosine_budget, random_edit
 from rsi.harness import EDITABLE_FIELDS, HarnessError, diff_fields, harness_id, validate
 from rsi.leakcheck import LeakChecker
@@ -40,6 +40,15 @@ from rsi.schema import serialize
 
 PROPOSER_SYSTEM = """You improve the harness of a small text-to-SQL model (a 1.5B-parameter student).
 The model is frozen; you may only change harness configuration fields.
+Propose edits that would help on unseen databases and questions, not just the failures shown.
+Return only JSON."""
+
+if HARNESS_KIND == "agent":
+    # Run 5. Prompts for the sql kind stay byte-identical to runs 1-4.
+    PROPOSER_SYSTEM = """You improve the harness of a small SQL agent (a local 7B-parameter student) that
+explores a database with tools (list_tables, describe, run_sql) and then submits one SQL query.
+The model is frozen; you may only change harness fields: its prompts, tool guide, a rules
+memory shown before every task, and loop settings.
 Propose edits that would help on unseen databases and questions, not just the failures shown.
 Return only JSON."""
 
@@ -65,6 +74,9 @@ def failure_traces(ctx: Context, res: dict, k: int, rng: random.Random, show_gol
              f"Model SQL (final attempt): {r['pred_sql']}\n"
              f"Outcome: {'execution error: ' + r['pred_error'] if r['pred_error'] else 'ran but returned the wrong result'}\n"
              f"Attempts used: {r['n_attempts']}")
+        if HARNESS_KIND == "agent":
+            steps = "; ".join(f"{a['tool']}({(a['arg'] or '')[:80]})" for a in r["attempts"])
+            s += f"\nAgent steps ({r.get('ended', '?')}): {steps}"
         if show_gold:
             s += f"\nGold SQL: {t.gold_sql}"
         out.append(s)
@@ -169,7 +181,7 @@ def run_arm(ctx: Context, arm: str, llm, critic=None) -> dict:
     threshold = keep_threshold(ctx.cfg, ctx.runs_dir, arm)
     critic = critic or llm
 
-    base = validate(load_yaml(ROOT / "harness.yaml"))
+    base = validate(load_yaml(BASELINE))
     cur = dict(base)
     cur_res = evaluate(ctx, cur, "E", purpose=f"evolve_{arm}")
     leak = LeakChecker(ctx.tasks["E"])
