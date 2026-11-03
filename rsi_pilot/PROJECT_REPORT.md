@@ -634,7 +634,7 @@ scripts/run_v4.sh 20261111 4
 
 ---
 
-## 14. Honest one-line claims (for a CV or write-up)
+## 14. One-line claims
 
 - Built a pre-registered, leakage-controlled evaluation harness for self-improving LLM agents.
   It has database-disjoint held-out sets, a held-out access guard, a random-search control, a

@@ -1,6 +1,6 @@
 # Design decisions
 
-Interview-oriented notes on why this system is built the way it is.
+Notes on why this system is built the way it is.
 
 ## Problem
 

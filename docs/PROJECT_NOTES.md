@@ -20,7 +20,7 @@ Contents
 11. Tests and verification
 12. Known inconsistencies in the repo
 13. Open items
-14. How to describe this work (resume and interviews)
+14. Key findings
 
 ---
 
@@ -589,33 +589,49 @@ Run 5's per-seed outputs without caches and `evals/` are also committed in the r
 
 ---
 
-## 14. How to describe this work (resume and interviews)
+## 14. Key findings
 
-What is substantive, stated without overclaiming:
+All numbers below are from committed outputs (`rsi_pilot/runs_v4/pooled_seed_level.md`,
+`rsi_pilot/runs_v5/seed_level.md`, `rsi_pilot/README.md`, `cloud/ledger.jsonl`).
 
-1. A pre-registered, six-seed controlled experiment that overturned the project's own earlier
-   positive result (run 2's +18% became -4.3 tasks, p = 0.56).
-2. A second pre-registered experiment (run 5, multi-step agent) where self-improvement did
-   transfer (about +12 points on held-out Spider, 6 of 6 seeds), so the pair shows when it works
-   (missing general information in the baseline) and when it is noise.
-3. A direct measurement of selection noise in LLM self-improvement loops: +4 to +9 tasks on the
-   tuning set, -0.2 to +2.2 on fresh tasks from the same pool, and harmless prompt rewordings
-   that gain up to +8.
-4. A random-search control that matched a 32B LLM proposer on every set, in both runs.
-5. Guarded GPU orchestration: spend ledger, on-instance auto-terminate, crash recovery; 18
-   arm-runs on three A10s for $17.43.
+### 14.1 Summary
 
-Draft bullets:
+Pre-registered, leakage-controlled experiments on whether LLM-driven self-improvement of an agent
+harness transfers to unseen data: it does not when the baseline has little headroom, it does
+(+12 points) when the baseline is missing general information, and in both cases random edits
+match a 32B LLM proposer.
 
-- Designed and pre-registered a 6-seed controlled experiment testing whether LLM-driven harness
-  self-improvement transfers to held-out text-to-SQL (Spider, BIRD); showed tuning-set gains of
-  +4 to +9 tasks largely vanish on fresh same-distribution tasks and overturned an earlier
-  positive result (p = 0.56).
-- Added a random-search control that matched a 32B LLM proposer on every set, showing the gains
-  come from best-of-N selection rather than proposer quality.
-- Built guarded GPU orchestration on Lambda Cloud (spend ledger, on-instance auto-terminate,
-  crash recovery); ran 18 arm-runs across 3 A10s for $17.
+### 14.2 Findings
 
-Do not claim: that the method improves models, that it is novel enough for a paper alone, or
-any Spider number without the contamination caveat (Spider 1.0 is likely in the student's
-pretraining data; BIRD and test-suite numbers are the stronger evidence).
+1. **Two pre-registered, six-seed experiments with opposite outcomes, both reported.**
+   - Run 4 (single-shot harness, 1.5B student): no transfer. B vs A on held-out Spider -4.3
+     tasks of 322, p = 0.56; it overturned the project's own earlier positive result (run 2's
+     +18%, p = 0.049 uncorrected).
+   - Run 5 (multi-step SQL agent, 7B student): transfer. Both LLM arms gained about +12 points
+     (+23.5 and +24.0 tasks of 200) on held-out Spider, positive in 6 of 6 seeds.
+   - Together they show when self-improvement works (the baseline lacked general information,
+     e.g. the full schema) and when its gains are selection noise.
+2. **A random-search control that matched the 32B LLM proposer in both runs.** Run 4: A vs C
+   +1.7 tasks on the tuning set, -0.5 on held-out. Run 5: C gained +24.8 on held-out Spider, A vs
+   C -1.3 (p = 0.53).
+3. **Direct measurements of selection noise.** Run 4: +4 to +9 tasks of 100 on the tuning set,
+   -0.2 to +2.2 on fresh tasks from the same pool; meaning-preserving prompt rewordings moved the
+   tuning score by up to +8.
+4. **Regularization kept the harness cheap without changing accuracy** (run 5, exploratory):
+   1,918 tokens per held-out task for the RRSI-style arm against 4,969 for the unregularized arm
+   (2.6x), at the same accuracy.
+5. **Evaluation integrity work.** About half of run 1's tuning-set passes were false positives
+   under Spider's test suites (empty gold results), fixed from run 2 on; a held-out access guard
+   and log; database-disjoint splits; critic calibration (20/20 on planted edits).
+6. **Infrastructure findings.** Ollama placed the 1.5B student partly on the CPU while a 32B
+   model was resident, which changed greedy outputs (36 vs 39 of 100); fixed with a GPU lock.
+   Guarded Lambda orchestration: spend ledger, on-instance auto-terminate, crash recovery; run 4's
+   18 arm-runs on three parallel A10s for $17.43, about $48.60 of Lambda spend in total.
+
+### 14.3 What these results do not show
+
+- That the LLM proposer causes the run-5 gains: random edits did as well.
+- That regularization improves accuracy: it did not in either run (its cost saving is
+  exploratory).
+- Any Spider number without the contamination caveat (Spider 1.0 is likely in the students'
+  pretraining data; BIRD and test-suite numbers are the stronger evidence).
