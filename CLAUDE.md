@@ -27,6 +27,8 @@ The growing `few_shot_examples` list **is** the agent learning. That feedback pa
 
 Each stage directory has its own `CLAUDE.md` with the contract + implementation notes. `rsi_pilot/README.md` documents the pilot's design, leakage controls and all run results.
 
+Current plan and GPU work: `docs/DEV_PLAN.md`. Before launching or terminating any cloud instance, read `rsi_pilot/CLOUD_RUN.md`; its spending limits and termination rules are the author's and are not to be changed by an agent.
+
 ## Shared rules
 @.claude/rules/00-architecture.md
 @.claude/rules/01-contracts.md

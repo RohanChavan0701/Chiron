@@ -1,67 +1,113 @@
-# Running run 4 on a Lambda instance launched by an agent session
+# Lambda instance runbook (for a local Claude Code session)
 
-Status: plan only. Nothing here has been run, and the Lambda API details marked "verify" were not
-checked against Lambda's docs (docs.lambda.ai was not reachable from the session that wrote this).
+Read with `docs/DEV_PLAN.md`, which says what to run and when. This file says how to run it on a
+Lambda A10 without exceeding the author's limits. Lambda API details marked **verify** were not
+checked against Lambda's docs when this was written; check them before the first call.
 
-## Guardrails (set by the author, 2026-11-03)
+## Guardrails (set by the author, 2026-11-03; do not change without the author)
 
-- **Instance:** one A10 (1x A10 type; confirm the exact type name from the instance-types endpoint).
-- **Time cap:** 48 hours wall clock from launch.
-- **Spend cap:** $50. Effective cap = min(48 h, 5000 / live `price_cents_per_hour` hours), using the
-  price the API reports at launch, not a remembered price.
-- **Scope:** the agent terminates only instances it launched, matched by the instance id recorded
-  in `cloud/ledger.jsonl` at launch, never by name or type alone. Instances already in the account
-  (e.g. the author's own A10) are never touched.
-- **Name prefix:** `chiron-run4-` for anything the agent launches.
-- **Termination:** at job completion or at the cap, whichever is first. Termination must not depend
-  on one session staying alive: schedule a one-shot terminate at `terminate_by` when launching, and
-  check on each session wake as well.
-- **One at a time:** no second launch while the ledger has an instance not marked terminated.
+- **One instance at a time, type 1x A10.** Confirm the type name from the instance-types listing.
+- **Per launch: 48 hours and $50, whichever comes first.** Cap hours = min(48, 5000 / live
+  `price_cents_per_hour`), using the price the API reports at launch, not a remembered price.
+  Each new launch needs the author's go-ahead; budgets do not roll over.
+- **Terminate only what this process launched**, matched by the instance id in
+  `rsi_pilot/cloud/ledger.jsonl`. Never terminate by name, type or "the only A10". Anything else
+  in the account is not yours.
+- **Name prefix `chiron-`** on every launch (e.g. `chiron-run4-a`).
+- **Terminate at job end or at the cap**, and the cap must hold even if the laptop sleeps (see
+  Watchdog).
+- **The API key never appears** in chat, logs, commits, command lines visible in `ps`, or files
+  in the repo. Read it from `LAMBDA_API_KEY` in the environment.
 
 ## Ledger (`rsi_pilot/cloud/ledger.jsonl`, committed)
 
-One line per event: `launch` (id, type, region, price_cents_per_hour, launched_at, terminate_by,
-cap_reason), `check` (time, status, est_spend), `terminate` (time, reason, est_spend). Estimated
-spend = hours since launch x launch price. The author can audit spend from git history alone.
+Append one JSON line per event and commit it:
 
-## Job on the instance
+- `launch`: id, name, type, region, price_cents_per_hour, launched_at (UTC), terminate_by,
+  cap_hours, approved_by_author (the message or date of approval)
+- `check`: time, status, hours_elapsed, est_spend_usd, job_state
+- `terminate`: time, reason (`job_done` | `cap` | `error` | `author`), est_spend_usd
 
-Run 4 seeds in pre-registered order, one at a time, pushing results after each seed so a cap hit
-loses at most the seed in progress:
+Estimated spend = hours since launch x launch price. Before any launch, the ledger must show no
+instance without a `terminate` line.
+
+## Lambda API (verify every item before first use)
+
+- Base URL: `https://cloud.lambda.ai/api/v1` (older: `cloud.lambdalabs.com`). Auth with the key
+  as a bearer token or basic-auth user; check which.
+- List types and prices: `GET /instance-types` (look for `price_cents_per_hour` and regions with
+  capacity).
+- Launch: `POST /instance-operations/launch` with region, instance type, SSH key names, name,
+  optional filesystem names. Check the exact field names and whether a startup script is
+  accepted.
+- Instances: `GET /instances`, `GET /instances/{id}` (status, IP).
+- Terminate: `POST /instance-operations/terminate` with a list of ids.
+- **Billing:** confirm whether an OS shutdown stops billing or only the terminate call does.
+  Until confirmed, assume only terminate does.
+
+Write a small `rsi_pilot/cloud/lambda.py` (stdlib `urllib`, key from env) with `types`,
+`launch`, `status`, `terminate`, each appending to the ledger. `terminate` refuses any id not in
+the ledger. Unit-test the refusal and the cap arithmetic without network.
+
+## Watchdog (the cap must not depend on the laptop)
+
+A local session can stop at any time (laptop sleep, closed terminal), so the termination at
+`terminate_by` needs a second path. Options, in order of preference; the author picks one before
+the first launch:
+
+1. **On-instance self-terminate.** At bootstrap, copy the key to `/root/.lambda_key` (mode 600,
+   never in the repo) and install a systemd timer or `at` job that calls the terminate endpoint
+   for this instance's own id at `terminate_by`, and also when the job script exits. Risk: the
+   account key sits on the instance for up to 48 hours. The instance is yours and ephemeral.
+2. **Cloud scheduled task.** A Claude cloud session scheduled for `terminate_by` that calls
+   terminate. Requires the cloud environment to allow `cloud.lambda.ai` and hold the key as a
+   secret.
+3. **Laptop only, kept awake** (`caffeinate -dims` on macOS) with a local `at`/`launchd` job.
+   Weakest; a lid close or reboot defeats it.
+
+Whichever is chosen, the local session also checks status on every wake and terminates past the
+cap.
+
+## Bootstrap (on the instance, over SSH, inside `tmux`)
 
 ```bash
-cd rsi_pilot && for s in 20261111 20261112 20261113; do scripts/run_v4.sh $s 4 && <push runs_v4/s$s>; done
+tmux new -s chiron
+git clone https://github.com/RohanChavan0701/Chiron.git && cd Chiron
+git checkout <working branch>
+cd rsi_pilot && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+curl -fsSL https://ollama.com/install.sh | sh          # verify current install method
+ollama pull qwen2.5:1.5b-instruct && ollama pull qwen2.5:32b-instruct   # ~20 GB for 32B
+.venv/bin/python -m pytest -q                          # 66 pass, no models needed
 ```
 
-Throughput is unknown (3 arms in parallel, 1.5B student and 32B proposer/critic on one 24 GB card).
-Expect 48 hours to cover two seeds, possibly three. Time seed 1 and decide before seed 3 starts.
-E2 (poison audit) does not fit in this budget; it needs these three seeds as its clean control.
+Data (not in git): `rsi_pilot/data/spider/` (dev.json, train_spider.json, tables.json,
+database/), `rsi_pilot/data/bird_minidev/` (Mini-Dev SQLite json + dev_databases/),
+`rsi_pilot/data/testsuite/` (Spider test-suite `database/`). Runs 1 to 3 ran on a Lambda A10 at
+`/home/ubuntu/Chiron` (see `runs/audit.json`), so the data may survive on a persistent
+filesystem; check `GET /file-systems` first and attach it at launch if present. Otherwise the
+author confirms download sources; do not guess.
 
-Push only run outputs (`runs_v4/s<SEED>/` minus `cache/`, `splits_v4_s<SEED>.json`,
-`frozen_v4_s<SEED>.yaml`), to a branch, not `main`.
+Ollama settings: one server for student, proposer and critic. If arms run in parallel
+(`run_v4.sh` starts A, B, C together with 4 workers), set `OLLAMA_NUM_PARALLEL` and confirm the
+student is still deterministic afterwards: the baseline repeats in `noise_floor.json` must agree.
 
-## Needed before launch
+## Smoke test before any long job (budget gate)
 
-1. `LAMBDA_API_KEY` as a network secret or environment variable, and `cloud.lambda.ai`,
-   `cloud.lambdalabs.com`, `docs.lambda.ai` in the environment's allowed domains. New session.
-2. **Data on the instance.** Spider (dev, train, `database/`), BIRD Mini-Dev SQLite, Spider
-   test-suite databases. Not in git. Either a Lambda persistent filesystem that already holds
-   `rsi_pilot/data/` from runs 1-3 (attach at launch; verify the field name), or download URLs
-   the author confirms.
-3. **A way to get results back.** The session cannot reach the instance except through the Lambda
-   API (raw TCP is blocked; SSH through the HTTPS proxy is unverified). Options: a fine-grained
-   GitHub token scoped to this repo with contents:write and a short expiry, used by the instance to
-   push; or the author pulls results manually. Author's call; a token placed in a startup script is
-   visible in the instance's metadata.
-4. **Models:** `ollama pull qwen2.5:1.5b-instruct` and `qwen2.5:32b-instruct` on the instance
-   (about 20 GB for the 32B).
+1. `RSI_FROZEN=frozen_v4_s20261111.yaml ...` then `python -m rsi.splits` and
+   `python -m rsi.critic_check` (expect 20/20 as in the pre-registration).
+2. Time one baseline E evaluation (100 tasks) and one proposer call with the 32B loaded.
+3. Project hours per seed (about 35 E evaluations per arm, three arms, plus held-out on 720
+   tasks per harness). Write the projection to the ledger as a `check` line.
+4. If the projection for the planned seeds exceeds the cap, stop and report to the author with
+   the numbers. Do not start a seed that cannot finish before the cap.
 
-## Verify in the next session, before spending anything
+## Running and retrieving
 
-- Launch request fields: instance name, startup script (`user_data` or equivalent), filesystem
-  attachment, SSH key requirement.
-- Whether shutting down the OS stops billing, or only the terminate endpoint does. Assume only
-  terminate does until confirmed.
-- Whether the proxy allows SSH to an instance IP. If not, the instance must configure and run
-  itself from its startup script.
-- Live A10 price and availability by region.
+- Seeds run one at a time inside `tmux`: `scripts/run_v4.sh <SEED> 4`.
+- After each seed: `rsync` from the instance to the laptop `runs_v4/s<SEED>/` (exclude
+  `cache/`), `splits_v4_s<SEED>.json`, `frozen_v4_s<SEED>.yaml`; commit locally; push to the
+  working branch. A cap hit then loses at most the seed in progress.
+- Do not open per-seed `results.md` to decide whether to run more seeds. Continue or stop on
+  budget and time only; the pre-registered analysis is across all seeds (`rsi.pool --seed-level`),
+  and stopping on a peek is optional stopping.
+- On job end: rsync, commit, terminate, ledger `terminate` line, commit.
