@@ -11,7 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 
-from rsi.config import RUNS, ROOT, load_yaml
+from rsi.config import BASELINE, RUNS, ROOT, load_yaml
 from rsi.runner import arms_of, evaluate, load_context
 from rsi.stats import compare, transfer_ratio
 
@@ -39,7 +39,7 @@ def main() -> None:
     missing = [str(p) for p in finals.values() if not p.exists()]
     if missing:
         raise SystemExit(f"Evolution not finished; missing {missing}")
-    harnesses = {"baseline": load_yaml(ROOT / "harness.yaml"), **{f"arm_{a}": load_yaml(p) for a, p in finals.items()}}
+    harnesses = {"baseline": load_yaml(BASELINE), **{f"arm_{a}": load_yaml(p) for a, p in finals.items()}}
     splits = [s for s in ("E", "E2", "H", "B") if s in ctx.tasks]
 
     vec, acc, tok = {}, {}, {}

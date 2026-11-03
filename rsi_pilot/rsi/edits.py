@@ -17,6 +17,7 @@ from __future__ import annotations
 import math
 import random
 
+from rsi.config import HARNESS_KIND
 from rsi.harness import EDITABLE_FIELDS, diff_fields, validate
 
 PLACEBO_PROMPTS = [
@@ -93,24 +94,92 @@ GENERIC_SUFFIXES = [
 
 TEXT_MENUS = {"system_prompt": GENERIC_PROMPTS, "instructions_suffix": GENERIC_SUFFIXES}
 
+# Run 5 (agent harness). Generic menus written before any run-5 result.
+AGENT_PROMPTS = [
+    "You are an expert SQLite developer working as an agent. You answer a question about a\n"
+    "database by exploring it with tools, then submitting one SQLite query.\n",
+    "You are an expert SQLite developer working as an agent. First look at the tables you need,\n"
+    "then test your query with run_sql, then submit one SQLite query.\n",
+    "You are a careful SQL agent. Do not guess column names: describe a table before using it.\n"
+    "Answer the question by submitting one SQLite query.\n",
+    "You are an expert SQLite developer working as an agent. Keep queries simple, select only the\n"
+    "columns the question asks for, and submit one SQLite query.\n",
+    "You are an efficient SQL agent. Use as few tool calls as you need, and always submit a\n"
+    "query before you run out of calls.\n",
+]
+AGENT_TOOL_GUIDES = [
+    'Reply with exactly one JSON object per turn, and nothing else:\n'
+    '{"tool": "list_tables"}                     list the tables\n'
+    '{"tool": "describe", "arg": "TABLE"}        show a table\'s columns and keys\n'
+    '{"tool": "run_sql", "arg": "SELECT ..."}    run a query and see its first rows\n'
+    '{"tool": "submit", "arg": "SELECT ..."}     give your final answer (ends the task)\n',
+    'One JSON object per turn, nothing else. Tools:\n'
+    '- {"tool": "list_tables"}: table names\n'
+    '- {"tool": "describe", "arg": "TABLE"}: columns, keys (use before writing joins)\n'
+    '- {"tool": "run_sql", "arg": "SELECT ..."}: run a query to check it\n'
+    '- {"tool": "submit", "arg": "SELECT ..."}: final answer\n'
+    'A good order: describe the tables you need, run_sql your query, then submit it.\n',
+    'Answer in JSON, one action per turn:\n'
+    '{"tool": "describe", "arg": "TABLE"} | {"tool": "list_tables"} | {"tool": "run_sql", "arg": "SQL"} | '
+    '{"tool": "submit", "arg": "SQL"}\n'
+    'If run_sql returns an error, fix the query before submitting.\n',
+]
+AGENT_RULES = [
+    "",
+    "- Describe a table before using its columns.",
+    "- Check join keys with describe before joining.\n- Select only the columns the question asks for.",
+    "- If a query returns no rows, check the filter values with run_sql before submitting.",
+    "- Use COUNT, MAX, MIN, AVG and GROUP BY for questions about totals, extremes and groups.",
+    "- Submit before you run out of tool calls.\n- Do not add ORDER BY unless the question needs an order.",
+]
+AGENT_PLACEBO_PROMPTS = [
+    "You are an expert SQLite developer acting as an agent. You answer a question about a\n"
+    "database by exploring it with tools, then submitting one SQLite query.\n",
+    "You are an expert SQLite developer working as an agent. You answer questions about a\n"
+    "database by exploring it with tools and then submitting one SQLite query.\n",
+    "You are a skilled SQLite developer working as an agent. You answer a question about a\n"
+    "database by exploring it with tools, then submitting a single SQLite query.\n",
+    "As an expert SQLite developer working as an agent, you answer a question about a\n"
+    "database: explore it with tools, then submit one SQLite query.\n",
+    "You are an expert SQLite developer and an agent. To answer a question about a database,\n"
+    "you explore it with tools and then submit one SQLite query.\n",
+    "You are an experienced SQLite developer working as an agent. You answer a question about a\n"
+    "database by using tools to explore it, then submitting one SQLite query.\n",
+    "You are an expert SQLite developer working as an agent. Your job is to answer a question about\n"
+    "a database by exploring it with tools, then submitting one SQLite query.\n",
+    "You work as an agent and are an expert SQLite developer. You answer a question about a\n"
+    "database by exploring it with tools, then submitting one SQLite query.\n",
+    "You are an expert SQLite developer working as an agent. You answer a question about a given\n"
+    "database by exploring it with the tools, then submitting one SQLite query.\n",
+    "You are an expert SQLite developer working as an agent. You answer a natural-language question\n"
+    "about a database by exploring it with tools, then submitting one SQLite query.\n",
+]
+
+
+def placebo_prompts() -> list[str]:
+    return AGENT_PLACEBO_PROMPTS if HARNESS_KIND == "agent" else PLACEBO_PROMPTS
+
+
+AGENT_MENUS = {"system_prompt": AGENT_PROMPTS, "tool_guide": AGENT_TOOL_GUIDES, "rules": AGENT_RULES}
+INT_RANGES = {"sample_rows": (0, 5), "fewshot_k": (0, 8), "max_retries": (0, 3),
+              "describe_sample_rows": (0, 5), "result_preview_rows": (1, 20), "max_steps": (2, 12)}
+CHOICES = {"schema_format": ["create_table", "compact"], "fewshot_rule": ["fixed", "lexical"],
+           "schema_upfront": ["none", "tables", "full"]}
+
 
 def _random_value(field: str, cur, rng: random.Random):
     typ = EDITABLE_FIELDS[field][0]
-    if field in TEXT_MENUS:
-        opts = [v for v in TEXT_MENUS[field] if v != cur]
+    menus = AGENT_MENUS if HARNESS_KIND == "agent" else TEXT_MENUS
+    if field in menus:
+        opts = [v for v in menus[field] if v != cur]
         return rng.choice(opts)
     if typ is bool:
         return not cur
-    if field == "schema_format":
-        return "compact" if cur == "create_table" else "create_table"
-    if field == "fewshot_rule":
-        return "fixed" if cur == "lexical" else "lexical"
-    if field == "sample_rows":
-        return rng.choice([v for v in range(0, 6) if v != cur])
-    if field == "fewshot_k":
-        return rng.choice([v for v in range(0, 9) if v != cur])
-    if field == "max_retries":
-        return rng.choice([v for v in range(0, 4) if v != cur])
+    if field in CHOICES:
+        return rng.choice([v for v in CHOICES[field] if v != cur])
+    if field in INT_RANGES:
+        lo, hi = INT_RANGES[field]
+        return rng.choice([v for v in range(lo, hi + 1) if v != cur])
     raise ValueError(f"no random value rule for {field}")
 
 

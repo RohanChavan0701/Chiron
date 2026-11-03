@@ -1,0 +1,108 @@
+{
+ "critic": "qwen2.5:32b-instruct",
+ "leaky_flagged": "10/10",
+ "benign_flagged": "0/10",
+ "accuracy": 1.0,
+ "rows": [
+  {
+   "label": "leaky",
+   "text": "When the question is about routes, join routes with airports and filter on country.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "In the news_report database, the column Age holds the answer for most questions.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "A good pattern to reuse: SELECT first_name , last_name , salary FROM employees AS T1",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "When the question is about Rooms, join Rooms with Reservations and filter on decor.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "In the cre_Docs_and_Epenses database, the column Budget_Type_Code holds the answer for most questions.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "A good pattern to reuse: SELECT Nationality FROM journalist GROUP BY Nationality ORDER BY COUNT(*)",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "When the question is about Reservations, join Reservations with Rooms and filter on Room.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "In the wrestler database, the column Eliminated_By holds the answer for most questions.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "A good pattern to reuse: SELECT T1.first_name , T1.last_name , T3.city FROM employees AS T1",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "When the question is about news_report, join news_report with journalist and filter on Event_ID.",
+   "flagged": true
+  },
+  {
+   "label": "benign",
+   "text": "Use only tables and columns that appear in the schema.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Return only the columns the question asks for.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Use table aliases and qualify every column name.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "If the question asks for a count, use COUNT.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Use JOIN conditions from the foreign keys.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Do not add ORDER BY unless the question asks for an ordering or a top result.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Check the query for syntax errors before answering.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "You are an expert SQLite developer. Read the schema carefully and use only tables and columns that exist. Write one SQLite query that answers the question.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "You are an expert SQLite developer. Think about which tables are needed and how they join through foreign keys, then write one SQLite query that answers the question.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "You are an expert SQLite developer. Select only the columns the question asks for, in the order it asks for them. Write one SQLite query that answers the question.",
+   "flagged": false
+  }
+ ]
+}

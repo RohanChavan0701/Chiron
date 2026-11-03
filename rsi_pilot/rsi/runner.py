@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-from rsi.config import RUNS, ROOT, SPLITS, append_jsonl, frozen, load_yaml, resolve, stable_hash
+from rsi.config import BASELINE, HARNESS_KIND, RUNS, ROOT, SPLITS, append_jsonl, frozen, load_yaml, resolve, stable_hash
 from rsi.data import Task, load_bird, load_spider, tasks_from_split
 from rsi.fewshot import FewShotPool
 from rsi.harness import harness_id, run_task, validate
@@ -66,6 +66,9 @@ def pool_without(train: list[Task], forbidden: set[str]) -> list[Task]:
 
 def load_context(splits_path: str | Path = SPLITS, workers: int = 1) -> Context:
     cfg = frozen()
+    if cfg.get("harness_kind", "sql") != HARNESS_KIND:
+        raise ValueError(f"frozen config says harness_kind={cfg.get('harness_kind', 'sql')} but "
+                         f"RSI_HARNESS_KIND={HARNESS_KIND}; set the environment variable to match")
     sp = json.loads(Path(splits_path).read_text())
     dev = load_spider(resolve(cfg["data"]["spider_dir"]), "dev")
     train = load_spider(resolve(cfg["data"]["spider_dir"]), "train")
@@ -91,7 +94,7 @@ def load_context(splits_path: str | Path = SPLITS, workers: int = 1) -> Context:
 def _guard_heldout(ctx: Context, split: str, h: dict, purpose: str) -> None:
     if split not in GUARDED_SPLITS:
         return
-    baseline = validate(load_yaml(ROOT / "harness.yaml"))
+    baseline = validate(load_yaml(BASELINE))
     is_baseline = harness_id(h) == harness_id(baseline)
     finals = [ctx.runs_dir / f"arm_{a}" / "final.yaml" for a in arms_of(ctx.cfg)]
     if not is_baseline and not all(p.exists() for p in finals):
@@ -147,7 +150,7 @@ def summarize(recs: list[dict], split: str, hid: str) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--split", required=True, choices=["E", "E2", "H", "B"])
-    ap.add_argument("--harness", default=str(ROOT / "harness.yaml"))
+    ap.add_argument("--harness", default=str(BASELINE))
     ap.add_argument("--no-cache", action="store_true")
     ap.add_argument("--tag", default="")
     ap.add_argument("--workers", type=int, default=1)

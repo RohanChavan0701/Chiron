@@ -1,0 +1,23 @@
+system_prompt: 'You are an expert SQLite developer working as an agent. You answer
+  a question about a
+
+  database by exploring it with tools, then submitting one SQLite query.
+
+  '
+tool_guide: 'Reply with exactly one JSON object per turn, and nothing else:
+
+  {"tool": "list_tables"}                     list the tables
+
+  {"tool": "describe", "arg": "TABLE"}        show a table''s columns and keys
+
+  {"tool": "run_sql", "arg": "SELECT ..."}    run a query and see its first rows
+
+  {"tool": "submit", "arg": "SELECT ..."}     give your final answer (ends the task)
+
+  '
+rules: ''
+schema_upfront: full
+describe_sample_rows: 2
+result_preview_rows: 5
+max_steps: 6
+verify_before_submit: false
