@@ -279,6 +279,15 @@ improved/regressed tasks; runs share models and task pools, so they are not full
 - *Evolution often does nothing useful.* One of three replicates found no edit worth keeping in
   either arm, and the critic rejected 0 candidates across all replicates.
 
+## Poisoning audit (implemented, not run)
+
+`POISON_AUDIT.md` specifies a test of whether a triggered directive carried by a few E tasks is
+written into the evolved harness, whether Arm B's checks stop it, whether it survives pruning and
+clean evolution, and what it does to clean and triggered copies of H and B. `rsi/poison.py` builds
+the poisoned tasks and the report; `scripts/run_poison.sh` runs one cell; `tests/test_poison.py`
+covers the plumbing on synthetic data. Predictions are in the design file and precede any run.
+Requires run 4 to have finished, since run 4's arms are the clean control.
+
 ## Limitations
 
 One seed, n=50 per set, one student model, one proposer model. Spider and BIRD are likely

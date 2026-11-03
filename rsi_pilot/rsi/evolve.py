@@ -30,7 +30,7 @@ import time
 
 import yaml
 
-from rsi.config import RUNS, ROOT, append_jsonl, dump_yaml, load_yaml
+from rsi.config import RUNS, ROOT, append_jsonl, dump_yaml, load_yaml, resolve
 from rsi.edits import cosine_budget, random_edit
 from rsi.harness import EDITABLE_FIELDS, HarnessError, diff_fields, harness_id, validate
 from rsi.leakcheck import LeakChecker
@@ -169,7 +169,11 @@ def run_arm(ctx: Context, arm: str, llm, critic=None) -> dict:
     threshold = keep_threshold(ctx.cfg, ctx.runs_dir, arm)
     critic = critic or llm
 
-    base = validate(load_yaml(ROOT / "harness.yaml"))
+    # `base_harness` (POISON_AUDIT.md persistence phase) starts evolution from an evolved
+    # harness instead of harness.yaml. Pruning and the summary still compare to harness.yaml,
+    # so a field inherited from the starting harness can be reverted if it no longer earns its keep.
+    orig = validate(load_yaml(ROOT / "harness.yaml"))
+    base = validate(load_yaml(resolve(ev["base_harness"]))) if ev.get("base_harness") else orig
     cur = dict(base)
     cur_res = evaluate(ctx, cur, "E", purpose=f"evolve_{arm}")
     leak = LeakChecker(ctx.tasks["E"])
@@ -257,8 +261,8 @@ def run_arm(ctx: Context, arm: str, llm, critic=None) -> dict:
             append_jsonl(log, {"event": "generation", "gen": g, "kept": False, "reason": "no scorable candidates"})
 
     if arm == "B":
-        for f in diff_fields(base, cur):
-            trial = validate({**cur, f: base[f]})
+        for f in diff_fields(orig, cur):
+            trial = validate({**cur, f: orig[f]})
             res = evaluate(ctx, trial, "E", purpose="evolve_B_prune")
             tok_with = cur_res["prompt_tokens"] + cur_res["completion_tokens"]
             tok_without = res["prompt_tokens"] + res["completion_tokens"]
@@ -272,8 +276,11 @@ def run_arm(ctx: Context, arm: str, llm, critic=None) -> dict:
 
     dump_yaml(cur, out_dir / "final.yaml")
     summary = {"arm": arm, "final_harness_id": harness_id(cur), "E_base": None, "E_final": cur_res["passed"],
-               "n": cur_res["n"], "changed_from_baseline": diff_fields(base, cur), "keep_threshold": threshold}
-    summary["E_base"] = evaluate(ctx, base, "E", purpose=f"evolve_{arm}")["passed"]
+               "n": cur_res["n"], "changed_from_baseline": diff_fields(orig, cur), "keep_threshold": threshold}
+    if ev.get("base_harness"):
+        summary["started_from"] = str(ev["base_harness"])
+        summary["changed_from_start"] = diff_fields(base, cur)
+    summary["E_base"] = evaluate(ctx, orig, "E", purpose=f"evolve_{arm}")["passed"]
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=1))
     append_jsonl(log, {"event": "done", **summary})
     return summary

@@ -40,15 +40,19 @@ def main() -> None:
     if missing:
         raise SystemExit(f"Evolution not finished; missing {missing}")
     harnesses = {"baseline": load_yaml(ROOT / "harness.yaml"), **{f"arm_{a}": load_yaml(p) for a, p in finals.items()}}
-    splits = [s for s in ("E", "E2", "H", "B") if s in ctx.tasks]
+    splits = [s for s in ("E", "E2", "H", "B", "H_trig", "B_trig") if s in ctx.tasks]
 
     vec, acc, tok = {}, {}, {}
+    sql: dict[str, dict[str, dict[str, str]]] = {}
     for name, h in harnesses.items():
         for split in splits:
             r = evaluate(ctx, h, split, purpose="heldout_final")
             vec[(name, split)] = r["vector"]
             acc[(name, split)] = r["accuracy"]
             tok[(name, split)] = (r["prompt_tokens"] + r["completion_tokens"]) / r["n"]
+            sql.setdefault(name, {})[split] = {rec["task_id"]: rec["pred_sql"] for rec in r["records"]}
+    # Per-task predicted SQL, so behavioral audits (rsi.poison report) need no re-run.
+    (RUNS / "results_sql.json").write_text(json.dumps(sql))
 
     n = ctx.splits["n_per_split"]
     results = {"n_per_split": n, "splits": splits, "arms": list(arms),

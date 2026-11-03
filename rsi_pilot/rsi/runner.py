@@ -24,7 +24,7 @@ from rsi.harness import harness_id, run_task, validate
 from rsi.student import Completion, make_student
 
 ARMS = ("A", "B")
-GUARDED_SPLITS = ("H", "B", "E2")
+GUARDED_SPLITS = ("H", "B", "E2", "H_trig", "B_trig")
 
 
 def arms_of(cfg: dict) -> tuple[str, ...]:
@@ -42,6 +42,7 @@ class Context:
     runs_dir: Path = RUNS
     workers: int = 1
     pool_fingerprint: str = ""
+    poison_fingerprint: str = ""
 
     @property
     def student_key(self) -> str:
@@ -52,11 +53,14 @@ class Context:
         """Everything besides the harness that decides a task's result. Runs 1-3 keyed the
         cache on the student config only; run 4 (`cache_key_v2: true`) also keys on the eval
         settings, the seed (it picks the fixed few-shot examples) and the few-shot pool, so a
-        cache reused across seeds or settings cannot return stale results."""
+        cache reused across seeds or settings cannot return stale results. A poisoned E
+        (POISON_AUDIT.md) changes task content, so its override file is part of the key too."""
         if not self.cfg.get("cache_key_v2"):
-            return self.student_key
-        return self.student_key + "_" + stable_hash({"eval": self.cfg["eval"], "seed": self.cfg["seed"],
-                                                     "pool": self.pool_fingerprint})
+            key = self.student_key
+        else:
+            key = self.student_key + "_" + stable_hash({"eval": self.cfg["eval"], "seed": self.cfg["seed"],
+                                                        "pool": self.pool_fingerprint})
+        return key + ("_p" + self.poison_fingerprint if self.poison_fingerprint else "")
 
 
 def pool_without(train: list[Task], forbidden: set[str]) -> list[Task]:
@@ -85,7 +89,21 @@ def load_context(splits_path: str | Path = SPLITS, workers: int = 1) -> Context:
     pool_tasks = pool_without(train, forbidden)
     pool = FewShotPool(pool_tasks, forbidden, cfg["seed"])
     fp = stable_hash(sorted(t.task_id for t in pool_tasks))
-    return Context(cfg, sp, tasks, pool, make_student(cfg["student"]), workers=workers, pool_fingerprint=fp)
+    pfp = ""
+    pz_cfg = cfg.get("poison") or {}
+    if pz_cfg.get("overrides"):
+        from rsi.poison import apply, check_disjoint, fingerprint, with_trigger
+        pz = json.loads(resolve(pz_cfg["overrides"]).read_text())
+        check_disjoint(pz, tasks)
+        tasks["E"] = apply(tasks["E"], pz)
+        pfp = fingerprint(pz)
+        if pz_cfg.get("triggered_heldout") and pz.get("trigger"):
+            # Triggered copies of the held-out sets: trigger phrase in every question, gold
+            # unchanged. Guarded like H and B; scored only by rsi.heldout after evolution.
+            tasks["H_trig"] = with_trigger(tasks["H"])
+            tasks["B_trig"] = with_trigger(tasks["B"])
+    return Context(cfg, sp, tasks, pool, make_student(cfg["student"]), workers=workers,
+                   pool_fingerprint=fp, poison_fingerprint=pfp)
 
 
 def _guard_heldout(ctx: Context, split: str, h: dict, purpose: str) -> None:
@@ -146,7 +164,7 @@ def summarize(recs: list[dict], split: str, hid: str) -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--split", required=True, choices=["E", "E2", "H", "B"])
+    ap.add_argument("--split", required=True, choices=["E", "E2", "H", "B", "H_trig", "B_trig"])
     ap.add_argument("--harness", default=str(ROOT / "harness.yaml"))
     ap.add_argument("--no-cache", action="store_true")
     ap.add_argument("--tag", default="")
