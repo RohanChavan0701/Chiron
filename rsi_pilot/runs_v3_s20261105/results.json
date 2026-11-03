@@ -1,0 +1,145 @@
+{
+ "n_per_split": 50,
+ "accuracy": {
+  "baseline/E": 0.46,
+  "baseline/H": 0.54,
+  "baseline/B": 0.08,
+  "arm_A/E": 0.46,
+  "arm_A/H": 0.54,
+  "arm_A/B": 0.08,
+  "arm_B/E": 0.46,
+  "arm_B/H": 0.54,
+  "arm_B/B": 0.08
+ },
+ "tokens_per_task": {
+  "baseline/E": 448.36,
+  "baseline/H": 339.8,
+  "baseline/B": 973.78,
+  "arm_A/E": 448.36,
+  "arm_A/H": 339.8,
+  "arm_A/B": 973.78,
+  "arm_B/E": 448.36,
+  "arm_B/H": 339.8,
+  "arm_B/B": 973.78
+ },
+ "tests": {
+  "arm_A_vs_baseline/E": {
+   "acc_base": 0.46,
+   "acc_new": 0.46,
+   "delta": 0.0,
+   "improved": 0,
+   "regressed": 0,
+   "p_mcnemar": 1.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  },
+  "arm_A_vs_baseline/H": {
+   "acc_base": 0.54,
+   "acc_new": 0.54,
+   "delta": 0.0,
+   "improved": 0,
+   "regressed": 0,
+   "p_mcnemar": 1.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  },
+  "arm_A_vs_baseline/B": {
+   "acc_base": 0.08,
+   "acc_new": 0.08,
+   "delta": 0.0,
+   "improved": 0,
+   "regressed": 0,
+   "p_mcnemar": 1.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  },
+  "arm_B_vs_baseline/E": {
+   "acc_base": 0.46,
+   "acc_new": 0.46,
+   "delta": 0.0,
+   "improved": 0,
+   "regressed": 0,
+   "p_mcnemar": 1.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  },
+  "arm_B_vs_baseline/H": {
+   "acc_base": 0.54,
+   "acc_new": 0.54,
+   "delta": 0.0,
+   "improved": 0,
+   "regressed": 0,
+   "p_mcnemar": 1.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  },
+  "arm_B_vs_baseline/B": {
+   "acc_base": 0.08,
+   "acc_new": 0.08,
+   "delta": 0.0,
+   "improved": 0,
+   "regressed": 0,
+   "p_mcnemar": 1.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  },
+  "arm_B_vs_arm_A/E": {
+   "acc_base": 0.46,
+   "acc_new": 0.46,
+   "delta": 0.0,
+   "improved": 0,
+   "regressed": 0,
+   "p_mcnemar": 1.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  },
+  "arm_B_vs_arm_A/H": {
+   "acc_base": 0.54,
+   "acc_new": 0.54,
+   "delta": 0.0,
+   "improved": 0,
+   "regressed": 0,
+   "p_mcnemar": 1.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  },
+  "arm_B_vs_arm_A/B": {
+   "acc_base": 0.08,
+   "acc_new": 0.08,
+   "delta": 0.0,
+   "improved": 0,
+   "regressed": 0,
+   "p_mcnemar": 1.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "transfer": {
+  "arm_A": {
+   "H": null,
+   "B": null
+  },
+  "arm_B": {
+   "H": null,
+   "B": null
+  }
+ }
+}

@@ -3,9 +3,10 @@
 **Question.** Does a self-improving harness loop tuned on Spider transfer to held-out
 Spider databases and to BIRD, and does RRSI-style regularization change that?
 
-**Status.** Run twice on 2026-11-02. Run 1 (see Results): a null result. Run 2, after a critique of
-run 1 (see Run 2): same direction, B vs A on H p=0.049 uncorrected; not yet a finding.
-This is a pilot: n=50 per set, one seed, a 1.5B student.
+**Status.** Run five times on 2026-11-02 (runs 1-3). Run 1 (see Results): a null result. Run 2, after a critique of
+run 1 (see Run 2): B vs A on H p=0.049 uncorrected. Run 3, three replicates of run 2: that result
+did not replicate; tuning-set gains reliably fail to transfer in both arms (see Run 3).
+This is a pilot: n=50 per set, a 1.5B student; runs 1 and 2 use one seed each, run 3 adds three.
 
 Inspired by RRSI (Regularized Recursive Self-Improvement of Agent Harnesses, arXiv
 2609.24972). This repo does not use RRSI's code; Arm B is a small reimplementation
@@ -238,6 +239,45 @@ run-2 changes were designed after looking at run 1's results.
 - *The new critic approved every candidate* (0 of 15 rejected), the opposite failure from run
   1's critic, which rejected generic edits. The leak check flagged two Arm A candidates for
   the common word "addresses" (a table name in an E database).
+
+## Run 3: three replicates of run 2
+
+Three more runs with run 2's settings, changing only the top-level seed (new E/H/B splits)
+and the proposer seed: `frozen_v3_s20261103.yaml`, `..._s20261104`, `..._s20261105`. One more
+change: a minimum keep threshold of 2 tasks (`min_keep_delta_tasks: 2`), because the student
+is deterministic and run 2's threshold had fallen to 1. Predictions were not registered.
+
+| Run | Baseline E/H/B | Arm A E/H/B | Arm B E/H/B |
+|---|---|---|---|
+| run 2 | 40/58/6 | 48/46/6 | 50/64/10 |
+| seed 20261103 | 40/56/16 | 56/60/22 | 58/54/16 |
+| seed 20261104 | 38/50/6 | 54/40/2 | 48/42/4 |
+| seed 20261105 | 46/54/8 | 46/54/8 | 46/54/8 |
+
+(Accuracy in %, 50 tasks per set.) In seed 20261105 neither arm found any candidate that beat
+the baseline by 2 tasks in 15 tries, so both final harnesses are the baseline.
+
+Pooled over run 2 and the three replicates (`runs_pooled_v2v3.md`; exact sign test on summed
+improved/regressed tasks; runs share models and task pools, so they are not fully independent):
+
+| Comparison | E net tasks (p) | H net tasks (p) | B net tasks (p) |
+|---|---|---|---|
+| A vs baseline | +20 (0.007) | -9 (0.20) | +1 (1.0) |
+| B vs baseline | +19 (0.014) | -2 (0.86) | +1 (1.0) |
+| B vs A | -1 (1.0) | +7 (0.25) | +0 (1.0) |
+
+**What the replicates show.**
+
+- *Run 2's B-over-A result did not replicate.* B vs A on H was +18% in run 2, -6% in seed
+  20261103 and +2% in 20261104. Pooled it is +7 tasks over 200, p = 0.25.
+- *The robust finding is that E gains do not transfer.* Both arms reliably improve the set they
+  are tuned on (+20 and +19 net tasks pooled), and neither improves held-out Spider or BIRD.
+  Arm A is net negative on H (-9); Arm B is about flat (-2). That is consistent with RRSI's
+  claim that regularization limits damage, but this pilot cannot distinguish it from noise.
+- *Run 2's fixed-vs-lexical few-shot idea is not supported.* In the replicates every final
+  harness that uses few-shot examples uses lexical selection, and transfer still varied in sign.
+- *Evolution often does nothing useful.* One of three replicates found no edit worth keeping in
+  either arm, and the critic rejected 0 candidates across all replicates.
 
 ## Limitations
 

@@ -1,0 +1,114 @@
+{
+ "baseline/E": {
+  "passes": 23,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 14,
+  "testsuite_checked": 23,
+  "testsuite_false_positives": 5,
+  "testsuite_false_positive_ids": [
+   "spider_dev_283",
+   "spider_dev_284",
+   "spider_dev_505",
+   "spider_dev_668",
+   "spider_dev_747"
+  ]
+ },
+ "baseline/H": {
+  "passes": 27,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 5,
+  "testsuite_checked": 27,
+  "testsuite_false_positives": 6,
+  "testsuite_false_positive_ids": [
+   "spider_dev_219",
+   "spider_dev_220",
+   "spider_dev_404",
+   "spider_dev_43",
+   "spider_dev_896",
+   "spider_dev_897"
+  ]
+ },
+ "baseline/B": {
+  "passes": 4,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 1
+ },
+ "arm_A/E": {
+  "passes": 23,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 14,
+  "testsuite_checked": 23,
+  "testsuite_false_positives": 5,
+  "testsuite_false_positive_ids": [
+   "spider_dev_283",
+   "spider_dev_284",
+   "spider_dev_505",
+   "spider_dev_668",
+   "spider_dev_747"
+  ]
+ },
+ "arm_A/H": {
+  "passes": 27,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 5,
+  "testsuite_checked": 27,
+  "testsuite_false_positives": 6,
+  "testsuite_false_positive_ids": [
+   "spider_dev_219",
+   "spider_dev_220",
+   "spider_dev_404",
+   "spider_dev_43",
+   "spider_dev_896",
+   "spider_dev_897"
+  ]
+ },
+ "arm_A/B": {
+  "passes": 4,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 1
+ },
+ "arm_B/E": {
+  "passes": 23,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 14,
+  "testsuite_checked": 23,
+  "testsuite_false_positives": 5,
+  "testsuite_false_positive_ids": [
+   "spider_dev_283",
+   "spider_dev_284",
+   "spider_dev_505",
+   "spider_dev_668",
+   "spider_dev_747"
+  ]
+ },
+ "arm_B/H": {
+  "passes": 27,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 5,
+  "testsuite_checked": 27,
+  "testsuite_false_positives": 6,
+  "testsuite_false_positive_ids": [
+   "spider_dev_219",
+   "spider_dev_220",
+   "spider_dev_404",
+   "spider_dev_43",
+   "spider_dev_896",
+   "spider_dev_897"
+  ]
+ },
+ "arm_B/B": {
+  "passes": 4,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 1
+ },
+ "bird_label_csv": "/home/ubuntu/Chiron/rsi_pilot/runs_v3_s20261105/audit_bird_labels.csv"
+}

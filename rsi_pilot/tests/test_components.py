@@ -232,3 +232,16 @@ def test_splits_cap_and_empty_gold(tasks):
     assert sp["max_tasks_per_db"] == 2 and sp["exclude_empty_gold"] is True
     by_id = {t.task_id: t for t in dev + tasks["B"]}
     assert all(gold_nonempty(by_id[i], cfg) for i in sp["E"] + sp["H"] + sp["B"])
+
+
+def test_pool_sign_test_and_table(tmp_path):
+    from rsi.pool import pool, sign_test
+    assert sign_test(6, 0) == 0.03125 and sign_test(0, 0) == 1.0 and sign_test(3, 3) == 1.0
+    t = {"delta": 0.1, "improved": 3, "regressed": 1}
+    r = {"tests": {f"{c}/{s}": t for c in ("arm_A_vs_baseline", "arm_B_vs_baseline", "arm_B_vs_arm_A")
+                   for s in "EHB"}}
+    for name in ("r1", "r2"):
+        (tmp_path / name).mkdir()
+        (tmp_path / name / "results.json").write_text(json.dumps(r))
+    md = pool([tmp_path / "r1", tmp_path / "r2"])
+    assert "| arm_B vs arm_A | H | 6 | 2 | +4 |" in md

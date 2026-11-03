@@ -1,0 +1,113 @@
+{
+ "baseline/E": {
+  "passes": 20,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 10,
+  "testsuite_checked": 20,
+  "testsuite_false_positives": 8,
+  "testsuite_false_positive_ids": [
+   "spider_dev_212",
+   "spider_dev_219",
+   "spider_dev_220",
+   "spider_dev_255",
+   "spider_dev_346",
+   "spider_dev_373",
+   "spider_dev_374",
+   "spider_dev_488"
+  ]
+ },
+ "baseline/H": {
+  "passes": 28,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 10,
+  "testsuite_checked": 28,
+  "testsuite_false_positives": 5,
+  "testsuite_false_positive_ids": [
+   "spider_dev_28",
+   "spider_dev_404",
+   "spider_dev_410",
+   "spider_dev_720",
+   "spider_dev_815"
+  ]
+ },
+ "baseline/B": {
+  "passes": 8,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 0
+ },
+ "arm_A/E": {
+  "passes": 28,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 1,
+  "order_by_or_limit_passes": 18,
+  "testsuite_checked": 28,
+  "testsuite_false_positives": 6,
+  "testsuite_false_positive_ids": [
+   "spider_dev_219",
+   "spider_dev_220",
+   "spider_dev_232",
+   "spider_dev_255",
+   "spider_dev_420",
+   "spider_dev_488"
+  ]
+ },
+ "arm_A/H": {
+  "passes": 30,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 9,
+  "testsuite_checked": 30,
+  "testsuite_false_positives": 3,
+  "testsuite_false_positive_ids": [
+   "spider_dev_279",
+   "spider_dev_403",
+   "spider_dev_64"
+  ]
+ },
+ "arm_A/B": {
+  "passes": 11,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 1
+ },
+ "arm_B/E": {
+  "passes": 29,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 18,
+  "testsuite_checked": 29,
+  "testsuite_false_positives": 7,
+  "testsuite_false_positive_ids": [
+   "spider_dev_212",
+   "spider_dev_219",
+   "spider_dev_220",
+   "spider_dev_255",
+   "spider_dev_423",
+   "spider_dev_427",
+   "spider_dev_488"
+  ]
+ },
+ "arm_B/H": {
+  "passes": 27,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 0,
+  "order_by_or_limit_passes": 8,
+  "testsuite_checked": 27,
+  "testsuite_false_positives": 3,
+  "testsuite_false_positive_ids": [
+   "spider_dev_276",
+   "spider_dev_403",
+   "spider_dev_83"
+  ]
+ },
+ "arm_B/B": {
+  "passes": 8,
+  "gold_empty_passes": 0,
+  "verifier_disagreements": 1,
+  "order_by_or_limit_passes": 0
+ },
+ "bird_label_csv": "/home/ubuntu/Chiron/rsi_pilot/runs_v3_s20261103/audit_bird_labels.csv"
+}
