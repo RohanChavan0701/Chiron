@@ -1,17 +1,84 @@
 # Regularized RSI pilot (AgentWatch / Chiron)
 
-**Question.** Does a self-improving harness loop tuned on Spider transfer to held-out
-Spider databases and to BIRD, and does RRSI-style regularization change that?
+**Question.** When an LLM rewrites an agent's harness to score better on a tuning set,
+do the gains transfer to unseen databases and to another benchmark? And does RRSI-style
+regularization change that?
 
-**Status.** Run five times on 2026-11-02 (runs 1-3). Run 1 (see Results): a null result. Run 2, after a critique of
-run 1 (see Run 2): B vs A on H p=0.049 uncorrected. Run 3, three replicates of run 2: that result
-did not replicate; tuning-set gains reliably fail to transfer in both arms (see Run 3).
-This is a pilot: n=50 per set, a 1.5B student; runs 1 and 2 use one seed each, run 3 adds three.
+## TL;DR (run 5, pre-registered, 6 seeds)
+
+![Run 5 headline](figures/run5_headline.png)
+
+The agent is a multi-step SQL agent on a 7B model; the proposer is a local 32B model.
+The agent lists tables, describes them, runs trial queries, then submits an answer.
+Three arms evolve its harness on 50 Spider-train tasks:
+- **A** keeps any edit that helps.
+- **B** is RRSI-style: a shrinking edit budget, a placebo-calibrated keep threshold, a leak
+  check, an LLM critic and pruning.
+- **C** applies random edits with A's keep rule (a control).
+
+Main results:
+
+1. **Self-improvement transferred.**
+   - Held-out Spider (200 tasks, unseen databases): A gained +23.5 tasks and B +24.0 tasks
+     over the baseline harness, about +12 points.
+   - Both arms were positive in 6 of 6 seeds (exact Wilcoxon p = 0.031 each, Holm 0.25).
+   - BIRD improved too.
+   - Runs 1-4 had a 9-knob single-shot harness and a 1.5B student, and their gains did not
+     transfer. The difference is headroom: the baseline agent was missing general
+     information, and every arm found a way to supply it.
+     - The most common fix was showing the full schema up front: B in 5 of 6 seeds, A and C
+       in 3 of 6. The baseline showed only table names.
+     - The other seeds used sample rows in `describe`, `verify_before_submit` or more steps.
+2. **Regularization did not change accuracy (primary endpoint).** B vs A on held-out
+   Spider: +0.5 tasks per seed, p = 0.84. On BIRD: -1.8 tasks, p = 0.72.
+3. **Regularization kept the harness small (exploratory; not pre-registered).**
+   - B used 1,918 tokens per held-out task, against 1,990 for the baseline. A used 4,969, or
+     2.6x more; A was larger in 6 of 6 seeds.
+   - B changed 1-2 fields per seed (`schema_upfront: full` in 5 of 6 seeds).
+   - A changed about 6 fields per seed: it rewrote `rules` in every seed, always turned on
+     `verify_before_submit`, and added steps.
+4. **The LLM proposer was no better than random edits.**
+   - C gained +24.8 on held-out Spider.
+   - A vs C was -1.3 tasks on held-out Spider (p = 0.53) and -0.8 on the tuning set
+     (p = 0.38).
+   - In this edit space, selecting the best of a few random edits finds the same fixes.
+5. **No selection gap.** The difference between tuning-set gain and gain on fresh tasks
+   from the same databases averaged 0 pp for A, with Holm-corrected p ≈ 1.
+
+**Predictions were wrong on two counts** (`PREDICTION_run5.md`, written before the run):
+- I predicted no transfer, and there was transfer.
+- I predicted a selection gap for A in at least 5 of 6 seeds, and there was a gap in 3.
+
+**Predictions that held:**
+- B vs A was not significant.
+- A's proposer wrote tuning-set identifiers into edits: 8 leak-flagged candidates in A,
+  0 in B. Arm C's 4 flags are false positives of the leak checker on generic words.
+
+Full numbers are in [Run 5](#run-5-multi-step-sql-agent-pre-registered) and
+`runs_v5/seed_level.md`.
+
+**Earlier runs.** Runs 1-3 used a single-shot 1.5B student, 50-task sets and up to 4 seeds.
+Tuning-set gains did not transfer, and about half of run 1's tuning-set passes were false
+positives under Spider's test suites. Run 4 (single-shot, pre-registered, 10 → 6 seeds) is
+paused during seed 1 (see [Run 4](#run-4-paused)). The lab log for runs 1-3 follows.
 
 Inspired by RRSI (Regularized Recursive Self-Improvement of Agent Harnesses, arXiv
-2609.24972). This repo does not use RRSI's code; Arm B is a small reimplementation
-of three of its ideas (edit-size budget that shrinks, a critic against
-benchmark-specific edits, pruning edits that do not pull their weight).
+2609.24972). This repo does not use RRSI's code. Arm B reimplements four of its ideas at small
+scale:
+- an annealed edit budget;
+- a critic against benchmark-specific edits;
+- pruning;
+- a noise-calibrated acceptance threshold.
+
+# Lab log: runs 1-3 (single-shot harness, 1.5B student)
+
+**Status of runs 1-3.**
+- Run 1 was a null result.
+- Run 2, after a critique of run 1, found B vs A on H with p = 0.049, uncorrected.
+- Run 3, three replicates of run 2, did not reproduce that result. Tuning-set gains
+  reliably failed to transfer in both arms.
+- These runs used n = 50 per set and a 1.5B student. Runs 1 and 2 had one seed each; run 3
+  added three.
 
 ## Design
 
@@ -281,5 +348,111 @@ improved/regressed tasks; runs share models and task pools, so they are not full
 
 ## Limitations
 
-One seed, n=50 per set, one student model, one proposer model. Spider and BIRD are likely
+**Runs 1-3:** n = 50 per set, up to 4 seeds, one student model and one proposer model.
+**Run 5:** see its own Caveats. Spider and BIRD are likely
 in the student's pretraining data; this affects all arms equally but limits absolute claims.
+
+## Run 4 (paused)
+
+Run 4 uses the single-shot harness and the 1.5B student, with the 32B proposer, three arms,
+E/E2 of 100, H 322 and B 398, and 10 seeds. Amendment 1 cut that to 6 seeds.
+- Design and predictions are in `PREDICTION.md` (commit e085db7).
+- It was paused at the user's request during seed 1's evolution phase, so run 5 could
+  use the GPU.
+- Resume with `scripts/run_v4_all.sh`, after deleting the partial
+  `runs_v4/s20261111/arm_*` directories.
+- Seed 1 baseline: E 33/100, E2 34/100, H 108/322, B 55/398.
+- Placebo rewordings of the prompt moved E by +1 to +5 tasks, which set Arm B's keep
+  threshold at 6.
+
+Run-4 prep found that Ollama loaded the 1.5B student partly on the CPU while the 32B model
+was resident. That changed the student's greedy outputs: the same harness scored 36 and 39
+out of 100. `rsi/gpu.py` serializes the GPU with a lock to prevent this.
+
+## Run 5: multi-step SQL agent (pre-registered)
+
+**Design** (`frozen_v5.yaml`, `PREDICTION_run5.md`, `rsi/agent.py`).
+- **Student.** `qwen2.5:7b-instruct` as a tool-using agent:
+  `{"tool": "list_tables" | "describe" | "run_sql" | "submit"}`.
+- **Editable harness fields.** `system_prompt`, `tool_guide`, `rules` (a memory shown before
+  every task), `schema_upfront`, `describe_sample_rows`, `result_preview_rows`, `max_steps`
+  and `verify_before_submit`.
+- **Proposer and critic.** `qwen2.5:32b-instruct`. The critic flagged 20/20 planted edits
+  correctly in every seed.
+- **Splits, per seed.**
+  - E: 50 Spider-train hard/extra tasks.
+  - E2: 50 fresh tasks from E's databases.
+  - H: a fixed 200 of the 322 eligible Spider-dev hard/extra tasks.
+  - B: a fixed 200 of the 398 BIRD Mini-Dev simple/moderate tasks.
+- **Search.** 8 generations × 3 candidates per arm.
+- **Seeds.** 20261211-20261216.
+- **Commands.** `scripts/run_v5_all.sh`, then `python -m rsi.pool runs_v5/s* --seed-level`,
+  then `python scripts/plot_run5.py` for the figure (reads `runs_v5/summary.csv`).
+
+**Pre-registered seed-level analysis** (`runs_v5/seed_level.md`):
+
+| Endpoint | Set | Per-seed values | Mean | 95% CI (seeds) | Positive/negative seeds | p | p (Holm) |
+|---|---|---|---|---|---|---|---|
+| **primary** arm_B vs arm_A | H | -4, +1, +4, +3, +2, -3 | +0.5 tasks | [-2.0, +2.8] | 4/2 | 0.844 | - |
+| arm_A vs baseline | H | +23, +17, +26, +19, +23, +33 | +23.5 tasks | [+19.7, +27.8] | 6/0 | 0.031 | 0.250 |
+| arm_B vs baseline | H | +19, +18, +30, +22, +25, +30 | +24.0 tasks | [+20.2, +27.8] | 6/0 | 0.031 | 0.250 |
+| arm_A vs arm_C | E | +1, -3, +0, -2, +0, -1 | -0.8 tasks | [-2.0, +0.2] | 1/3 | 0.375 | 1.000 |
+| arm_A vs arm_C | H | -7, -1, +3, -4, -1, +2 | -1.3 tasks | [-4.0, +1.3] | 2/4 | 0.531 | 1.000 |
+| arm_B vs arm_A | B | +11, -16, -10, -15, +4, +15 | -1.8 tasks | [-11.3, +8.2] | 3/3 | 0.719 | 1.000 |
+| gap_A | E-E2 | +12, +12, -18, -6, -8, +8 | +0.0 pp | [-9.3, +8.3] | 3/3 | 0.875 | 1.000 |
+| gap_B | E-E2 | +4, +10, -16, -12, -12, +2 | -4.0 pp | [-11.3, +4.0] | 3/3 | 0.438 | 1.000 |
+| gap_C | E-E2 | -2, +22, -8, +10, -8, +0 | +2.3 pp | [-5.7, +11.3] | 2/3 | 0.750 | 1.000 |
+
+
+**Per seed, tasks passed** (E and E2 of 50, H and B of 200; tokens per held-out H task):
+
+| Seed | Harness | E | E2 | H | B | tokens/task |
+|---|---|---|---|---|---|---|
+| 20261211 | baseline | 34 | 29 | 96 | 42 | 1955 |
+| 20261211 | arm_A | 45 | 34 | 119 | 65 | 3752 |
+| 20261211 | arm_B | 43 | 36 | 115 | 76 | 1925 |
+| 20261211 | arm_C | 44 | 40 | 126 | 84 | 2185 |
+| 20261212 | baseline | 19 | 22 | 95 | 42 | 1952 |
+| 20261212 | arm_A | 31 | 28 | 112 | 67 | 5421 |
+| 20261212 | arm_B | 28 | 26 | 113 | 51 | 2223 |
+| 20261212 | arm_C | 34 | 26 | 113 | 64 | 3213 |
+| 20261213 | baseline | 24 | 18 | 91 | 39 | 2020 |
+| 20261213 | arm_A | 33 | 36 | 117 | 82 | 5234 |
+| 20261213 | arm_B | 29 | 31 | 121 | 72 | 1944 |
+| 20261213 | arm_C | 33 | 31 | 114 | 82 | 4948 |
+| 20261214 | baseline | 21 | 19 | 95 | 41 | 2033 |
+| 20261214 | arm_A | 34 | 35 | 114 | 80 | 5562 |
+| 20261214 | arm_B | 34 | 38 | 117 | 65 | 1844 |
+| 20261214 | arm_C | 36 | 29 | 118 | 69 | 3452 |
+| 20261215 | baseline | 31 | 25 | 93 | 39 | 2006 |
+| 20261215 | arm_A | 39 | 37 | 116 | 78 | 5775 |
+| 20261215 | arm_B | 38 | 38 | 118 | 82 | 1870 |
+| 20261215 | arm_C | 39 | 37 | 117 | 58 | 3253 |
+| 20261216 | baseline | 21 | 23 | 87 | 38 | 1977 |
+| 20261216 | arm_A | 36 | 34 | 120 | 68 | 4072 |
+| 20261216 | arm_B | 34 | 35 | 117 | 83 | 1704 |
+| 20261216 | arm_C | 37 | 39 | 118 | 82 | 6528 |
+
+**Caveats.**
+- **Timing of the pre-registration.**
+  - `PREDICTION_run5.md` and the run-5 code were committed locally at 02:50 UTC, before
+    any result.
+  - They reached GitHub (`run5-agent`, 005c93a) at about 04:50 UTC, after seed 1 finished
+    at 04:23 UTC.
+  - So seeds 2-6 are pre-registered on GitHub, but seed 1 rests only on the local commit
+    time.
+- **A weak baseline.** The baseline showed only table names. Much of the transfer comes from
+  supplying that missing information, through the full schema up front or sample rows in
+  `describe`. "Self-improvement helps" here means "the loop finds missing
+  general defaults", not a sophisticated learned strategy.
+- **Noise.** The student ran with 8 parallel slots. Identical evaluations flipped 5-7 of 50
+  tuning tasks, with net scores within ±2. The placebo threshold and the seed-level
+  analysis absorb this. Per-task McNemar tests within a seed do not.
+- **What the test can and cannot show.**
+  - The held-out sets are the same for every seed, so seeds are replicates of the search,
+    not of the test set.
+  - With 6 seeds, p = 0.031 is the smallest p the test can give, and it requires every seed
+    to agree.
+  - Token cost was not a pre-registered endpoint. B < A in 6 of 6 seeds is exploratory.
+- **Scale.** The paper uses frontier models and open source-level edits. Here a 7B student
+  edits 8 harness fields. This is an extension at small scale, not a replication.

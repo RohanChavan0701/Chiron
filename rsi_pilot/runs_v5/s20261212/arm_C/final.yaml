@@ -1,0 +1,23 @@
+system_prompt: 'You are a careful SQL agent. Do not guess column names: describe a
+  table before using it.
+
+  Answer the question by submitting one SQLite query.
+
+  '
+tool_guide: 'Reply with exactly one JSON object per turn, and nothing else:
+
+  {"tool": "list_tables"}                     list the tables
+
+  {"tool": "describe", "arg": "TABLE"}        show a table''s columns and keys
+
+  {"tool": "run_sql", "arg": "SELECT ..."}    run a query and see its first rows
+
+  {"tool": "submit", "arg": "SELECT ..."}     give your final answer (ends the task)
+
+  '
+rules: ''
+schema_upfront: tables
+describe_sample_rows: 3
+result_preview_rows: 4
+max_steps: 8
+verify_before_submit: false
