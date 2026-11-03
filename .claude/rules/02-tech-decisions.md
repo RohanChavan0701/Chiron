@@ -3,7 +3,7 @@
 **Do not change without team agreement.** These were debated and settled; re-litigating mid-build wastes time.
 
 ## Detector: statistical, NO model training
-Rolling-window mean + threshold/z-score (or EWMA) per channel. We have no training data and ~12 hours; a statistical detector is more reliable and more defensible than a flaky trained model. (`sklearn.IsolationForest` fit on baseline runs is allowed ONLY if the simple version already works and time remains.)
+Rolling-window mean + threshold/z-score (or EWMA) per channel. There is no labeled drift data to train on; a statistical detector is more reliable and more defensible than a trained one. (`sklearn.IsolationForest` fit on baseline runs is allowed only if the simple version already works.)
 
 ## Drift is detected over a WINDOW, never on a single query
 Per-query accuracy is binary/noisy. The detector operates on a rolling window (~20–30 runs) so the aggregate is smooth. A single bad query is an anomaly, not drift, and must NOT fire the drift detector. The recovery curve plots the **windowed aggregate**.
@@ -28,4 +28,4 @@ Degradation is a real distribution shift (harder queries); the fix is real adapt
 ## Stack
 - **Local only, no GCP.** Laptop demo. Scaling is a *verbal* answer (stateless, per-channel, Ray/KubeRay for fan-out), not a build task.
 - **Spider** for data: a subset (handful of schemas + the question pools). Spider supplies questions + gold SQL + SQLite DBs (solves the database requirement).
-- **Gemini**: weaker/faster tier as the base agent (so it genuinely struggles on hard queries), stronger tier as the teacher.
+- **Models** go through one OpenAI-compatible client (`harness/agent.py`, `correction/provider.py`). Student: a small model that genuinely struggles on hard queries (default `MiniMax-M2.7-highspeed`; `qwen2.5:1.5b-instruct` via Ollama in `rsi_pilot`; Llama-3.2-3B on Prime for coding). Teacher: a stronger model from the same provider (default `MiniMax-M3`). Provider is selected by `AGENT_BASE_URL` / which API key is set.

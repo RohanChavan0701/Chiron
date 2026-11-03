@@ -25,8 +25,8 @@ that mirrors spacecraft anomaly detection pointed at agent telemetry.
                    with severity, window_mean, baseline_mean, failure_mode, failing_run_ids.
 
 ## You also own architecture
-`contracts/schemas.py` is yours to commit hour 1 (then frozen). Help build `orchestrator.py` at
-integration. Keep the detection core clearly yours — it's the centerpiece.
+`contracts/schemas.py` is frozen; changes are versioned and announced (rules/01). The detector
+is the piece every other stage depends on for the drift signal.
 
 ## Build/run
 `python -m detector.detector --input fixtures/mock_telemetry.jsonl`
