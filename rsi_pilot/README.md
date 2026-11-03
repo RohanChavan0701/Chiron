@@ -45,14 +45,21 @@ Main results:
 5. **No selection gap.** The difference between tuning-set gain and gain on fresh tasks
    from the same databases averaged 0 pp for A, with Holm-corrected p ≈ 1.
 
-**Predictions were wrong on two counts** (`PREDICTION_run5.md`, written before the run):
-- I predicted no transfer, and there was transfer.
-- I predicted a selection gap for A in at least 5 of 6 seeds, and there was a gap in 3.
+**Most of my predictions were wrong.** They are in `PREDICTION_run5.md`, written before the
+run.
 
-**Predictions that held:**
-- B vs A was not significant.
-- A's proposer wrote tuning-set identifiers into edits: 8 leak-flagged candidates in A,
-  0 in B. Arm C's 4 flags are false positives of the leak checker on generic words.
+| Prediction | Result |
+|---|---|
+| 1. B beats A on H by about 3 tasks, not significantly | Not significant held (p = 0.84); the size was +0.5 tasks |
+| 2. A has a selection gap in at least 5 of 6 seeds | Wrong: 3 of 6 |
+| 3. A keeps a leaky edit in at least 2 of 6 seeds | Wrong: no flagged edit was kept |
+| 4. No arm gains more than 2% on H or B | Wrong: about +12 points on H |
+
+On prediction 3, the leak check flagged 12 candidates: 8 in A, 0 in B and 4 in C.
+- Only one was genuine. In seed 1, generation 1, A wrote the tuning-set columns
+  `customerid` and `product_id` into `rules`, and that edit was not kept.
+- The other 11 were false positives on common words that happen to be tuning-set table
+  names: `match` (7 in A, seed 6) and `list` (4 in C).
 
 Full numbers are in [Run 5](#run-5-multi-step-sql-agent-pre-registered) and
 `runs_v5/seed_level.md`.
