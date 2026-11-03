@@ -31,7 +31,7 @@ Two lines of work on one codebase (`github.com/RohanChavan0701/Chiron`).
 | Line | Question | Where | Status |
 |---|---|---|---|
 | Runtime self-correction | When a small student model's accuracy drifts, can a stronger teacher's verified repairs, added as few-shot memory, make the same student recover without weight updates? | `harness/`, `detector/`, `correction/`, `viewer/`, `adapters/`, `orchestrator.py` | Same-distribution recovery works as a demo; hard held-out transfer mostly does not (`docs/FINDINGS_CODING.md`) |
-| Harness-evolution pilot | Does an LLM-driven loop that edits the student's harness config (RRSI-style) produce gains that transfer to held-out data, and does regularization help? | `rsi_pilot/` (standalone, own venv) | Four runs done. Run 4 (pre-registered, 6 seeds): primary endpoint null |
+| Harness-evolution pilot | Does an LLM-driven loop that edits the student's harness config (RRSI-style) produce gains that transfer to held-out data, and does regularization help? | `rsi_pilot/` (standalone, own venv) | Five runs done. Run 4 (single-shot, 1.5B student, pre-registered, 6 seeds): no transfer, primary endpoint null. Run 5 (multi-step agent, 7B student, pre-registered, 6 seeds, merged to main in PR #2): transferred about +12 points on held-out Spider, but random edits matched the LLM proposer and regularization did not change accuracy |
 
 Provenance: started as a hackathon build (first commit 2026-07-01); everything after the
 four-stage loop is follow-on research (`.claude/rules/03-provenance.md`).
@@ -320,8 +320,9 @@ Run 2's B-over-A result did not replicate. Both arms reliably improve E; neither
 
 ## 7. Results: run 4 (pre-registered)
 
-Pre-registration: `rsi_pilot/PREDICTION.md`, commit e085db7 (2026-11-03 02:25 UTC), before any
-run-4 result. Amendment 1 (commit 5d1cf41, 02:35 UTC, before any seed finished): 6 seeds
+Pre-registration: `rsi_pilot/PREDICTION.md`, commit e085db7 (committed 02:25, pushed 02:26 UTC
+on 2026-11-03). That was 8 minutes after the first attempt at seed 20261111 started, when only
+its baseline numbers existed, and before any evolution or held-out result. Amendment 1 (commit 5d1cf41, 02:35 UTC, before any seed finished): 6 seeds
 instead of 10. Per `PREDICTION.md`, the predictions were written by the AI coding assistant
 that built run 4, at the author's request, and not edited by the author.
 
@@ -402,6 +403,26 @@ and sample rows raise cost per task up to about 17x with no held-out gain.
 
 ---
 
+### 7.1 Run 5, for contrast (summary of `rsi_pilot/README.md` and `rsi_pilot/PROJECT_REPORT.md` on main)
+
+Run 5 was run separately on the author's original A10 and merged to main in PR #2. It changes
+the harness, not the method: a multi-step SQL agent (list tables, describe, trial queries,
+submit) on a 7B student, with the same 32B proposer and the same three arms, 50 tuning tasks,
+200 held-out Spider and 200 BIRD tasks, 6 seeds, pre-registered in `PREDICTION_run5.md`.
+
+| Result (run 5) | Value |
+|---|---|
+| A and B vs baseline on held-out Spider | +23.5 and +24.0 tasks of 200 (about +12 points), positive in 6 of 6 seeds, p = 0.031 each, Holm 0.25 |
+| Primary, B vs A on held-out Spider | +0.5 tasks per seed, p = 0.84 (regularization did not change accuracy) |
+| C (random edits) vs baseline on held-out Spider | +24.8 tasks |
+| Selection gap for A | about 0 pp |
+| Tokens per held-out task (exploratory) | baseline 1,990; B 1,918; A 4,969 |
+
+Reading runs 4 and 5 together: when the baseline harness lacks general information (run 5's
+agent saw only table names; the common fix was showing the full schema up front), evolution
+finds it and it transfers. When there is little headroom (run 4's single-shot 1.5B harness),
+the gains are selection noise. In both runs random edits did as well as the LLM proposer.
+
 ## 8. Run 4 exploratory analyses (not pre-registered)
 
 These were computed after the pre-registered analysis and are not part of it. Treat them as
@@ -460,7 +481,8 @@ Deviations (also in `rsi_pilot/README.md`, "Run 4 deviations"):
 
 1. Six seeds instead of ten (amendment 1).
 2. Seed 20261111 restarted from scratch; its first attempt on the adopted instance stopped
-   after 8 minutes, before any evolution result.
+   about 20 minutes (02:17 to 02:37 UTC), paused during evolution so run 5 could use the GPU;
+   its partial arm directories were discarded and no evolution or held-out result was used.
 3. Seed 20261112, arm C: crashed at 11:38 UTC in generation 8 when Ollama returned one HTTP
    500 to a student call (the only HTTP 500 in that instance's Ollama log since 10:00 UTC; no
    error message logged). The pre-registered rule says rerun the seed from scratch; only arm C was rerun,
@@ -514,7 +536,7 @@ running at $1.29/h; the ledger estimated $16.29 at 07:33 UTC and its ledger cap 
 
 ## 11. Tests and verification
 
-- `rsi_pilot`: 86 tests; on Windows 85 pass and `test_load_spider_hardness` fails because of
+- `rsi_pilot`: 91 tests after merging main (86 before); on Windows 90 pass and `test_load_spider_hardness` fails because of
   path separators (known, Windows only). `tests/test_cloud.py` (20 tests, no network) covers
   the cap arithmetic, budget split, terminate refusals, launch limits and status flags.
 - Root repo: 285 tests pass with `PYTHONUTF8=1` on Windows.
@@ -530,12 +552,11 @@ running at $1.29/h; the ledger estimated $16.29 at 07:33 UTC and its ledger cap 
 
 - Top-level `README.md`, pilot section: says "Four runs, 1.5B student, 14B proposer, n=50 per
   set, pre-registered run 4" and shows only the run 2-3 pooled table. Run 4 used a 32B proposer
-  and sets of 100 / 100 / 322 / 398, and its result is not in the top-level README yet.
-- `rsi_pilot/README.md` header "Status" and "Limitations" still describe runs 1-3 only ("One
-  seed, n=50 per set").
+  and sets of 100 / 100 / 322 / 398, and neither run 4's nor run 5's result is in the
+  top-level README yet.
 - `rsi_pilot/CLOUD_RUN.md` still says "One instance at a time" in the guardrails list; the
   author's run-4 change (up to 3 more) is recorded in the section below it.
-- `rsi_pilot/README.md` "Run order" says "32 plumbing tests"; there are now 86.
+- `rsi_pilot/README.md` "Run order" says "32 plumbing tests"; there are now 91.
 
 ---
 
@@ -550,7 +571,7 @@ running at $1.29/h; the ledger estimated $16.29 at 07:33 UTC and its ledger cap 
 | Poisoning audit | Phase 4 | Designed and implemented (`POISON_AUDIT.md`, `rsi/poison.py`), not run; run 4's arms are the clean control |
 | Fix the inconsistencies in section 12 | Docs | |
 | Add 5xx retry to `rsi/student.py` | Code, future runs only | |
-| Run 5 (multi-step SQL agent, branch `run5-agent`) | Running | Status not checked in this session |
+| Run 5 (multi-step SQL agent) | Done | Merged to main in PR #2; results summarized in section 7.1. Its instance `Chiron` may still be billing |
 | Write-up and publication | Phase 6 | Outline in `docs/WRITEUP_OUTLINE.md`; citations must be checked |
 
 ---
@@ -561,11 +582,14 @@ What is substantive, stated without overclaiming:
 
 1. A pre-registered, six-seed controlled experiment that overturned the project's own earlier
    positive result (run 2's +18% became -4.3 tasks, p = 0.56).
-2. A direct measurement of selection noise in LLM self-improvement loops: +4 to +9 tasks on the
+2. A second pre-registered experiment (run 5, multi-step agent) where self-improvement did
+   transfer (about +12 points on held-out Spider, 6 of 6 seeds), so the pair shows when it works
+   (missing general information in the baseline) and when it is noise.
+3. A direct measurement of selection noise in LLM self-improvement loops: +4 to +9 tasks on the
    tuning set, -0.2 to +2.2 on fresh tasks from the same pool, and harmless prompt rewordings
    that gain up to +8.
-3. A random-search control that matched a 32B LLM proposer on every set.
-4. Guarded GPU orchestration: spend ledger, on-instance auto-terminate, crash recovery; 18
+4. A random-search control that matched a 32B LLM proposer on every set, in both runs.
+5. Guarded GPU orchestration: spend ledger, on-instance auto-terminate, crash recovery; 18
    arm-runs on three A10s for $17.43.
 
 Draft bullets:

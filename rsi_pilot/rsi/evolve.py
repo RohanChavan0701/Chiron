@@ -182,8 +182,9 @@ def run_arm(ctx: Context, arm: str, llm, critic=None) -> dict:
     critic = critic or llm
 
     # `base_harness` (POISON_AUDIT.md persistence phase) starts evolution from an evolved
-    # harness instead of the baseline. Pruning and the summary still compare to the baseline,
-    # so a field inherited from the starting harness can be reverted if it no longer earns its keep.
+    # harness instead of the baseline harness. Pruning and the summary still compare to the
+    # baseline, so a field inherited from the starting harness can be reverted if it no longer
+    # earns its keep.
     orig = validate(load_yaml(BASELINE))
     base = validate(load_yaml(resolve(ev["base_harness"]))) if ev.get("base_harness") else orig
     cur = dict(base)

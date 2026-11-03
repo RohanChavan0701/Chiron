@@ -54,7 +54,8 @@ docstring lists the commands. Guardrail tests: `tests/test_cloud.py`.
   for **$50 in total**: each launch gets `budget_usd = 50/3`, cap = 1667 / live price
   (12.9 h at $1.29). `lambda_api.MAX_OPEN = 4` covers the adopted instance plus three.
 - Seed 20261111 restarts from scratch: its partial outputs on the old instance stopped after
-  8 minutes, before any evolution result.
+  about 20 minutes (02:17 to 02:37 UTC), paused during evolution; its partial outputs were
+  discarded.
 - Run-4 instances run the working branch (a git bundle, not a push); see `cloud/bootstrap.sh`.
 
 ## Ledger (`rsi_pilot/cloud/ledger.jsonl`, committed)
