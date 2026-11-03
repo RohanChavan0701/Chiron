@@ -20,6 +20,13 @@ import urllib.request
 from contextlib import contextmanager
 
 LOCK_PATH = os.environ.get("RSI_GPU_LOCK", "/tmp/rsi_gpu.lock")
+# Run 5: the student may live on a second Ollama server (more parallel slots). Every server
+# sharing the GPU is listed here, so a big-model call empties the whole GPU first.
+SERVERS = [u for u in os.environ.get("RSI_OLLAMA_SERVERS", "").split(",") if u]
+
+
+def _all_servers(base_url: str) -> list[str]:
+    return list(dict.fromkeys([base_url] + SERVERS))
 
 
 @contextmanager
@@ -66,11 +73,16 @@ def student_ready(base_url: str, model: str) -> bool:
     return m is None or m.get("size_vram", 0) >= m.get("size", 1)
 
 
+def unload_all(base_url: str) -> None:
+    for url in _all_servers(base_url):
+        for name in loaded(url):
+            unload(url, name)
+
+
 def fix_placement(base_url: str, model: str) -> None:
     with gpu_lock(exclusive=True):
         if not student_ready(base_url, model):
-            for name in loaded(base_url):
-                unload(base_url, name)
+            unload_all(base_url)
 
 
 def student_call(base_url: str, model: str, call):
@@ -90,9 +102,7 @@ def big_model_call(base_url: str, call):
     """Run `call()` (which must send keep_alive=0) under the exclusive lock, on an empty GPU,
     and wait until the model has left the GPU before releasing the lock."""
     with gpu_lock(exclusive=True):
-        for name in loaded(base_url):
-            unload(base_url, name)
+        unload_all(base_url)
         out = call()
-        for name in loaded(base_url):
-            unload(base_url, name)
+        unload_all(base_url)
         return out

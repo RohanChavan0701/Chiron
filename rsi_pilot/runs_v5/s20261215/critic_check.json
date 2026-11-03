@@ -1,0 +1,108 @@
+{
+ "critic": "qwen2.5:32b-instruct",
+ "leaky_flagged": "10/10",
+ "benign_flagged": "0/10",
+ "accuracy": 1.0,
+ "rows": [
+  {
+   "label": "leaky",
+   "text": "When the question is about technician, join technician with repair_assignment and filter on value_points.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "In the phone_1 database, the column RAM_MiB holds the answer for most questions.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "A good pattern to reuse: SELECT TYPE , count(*) FROM operate_company GROUP BY TYPE ORDER",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "When the question is about locations, join locations with departments and filter on MANAGER_ID.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "In the sakila_1 database, the column active holds the answer for most questions.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "A good pattern to reuse: SELECT T2.firstname , T2.lastname FROM list AS T1 JOIN teachers",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "When the question is about endowment, join endowment with School and filter on total_budget_percent_invested.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "In the phone_1 database, the column screen_mode holds the answer for most questions.",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "A good pattern to reuse: SELECT t3.name , t3.time FROM station AS t1 JOIN route",
+   "flagged": true
+  },
+  {
+   "label": "leaky",
+   "text": "When the question is about Product, join Product with Problem_Category_Codes and filter on problem_log_id.",
+   "flagged": true
+  },
+  {
+   "label": "benign",
+   "text": "Use only tables and columns that appear in the schema.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Return only the columns the question asks for.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Use table aliases and qualify every column name.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "If the question asks for a count, use COUNT.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Use JOIN conditions from the foreign keys.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Do not add ORDER BY unless the question asks for an ordering or a top result.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "Check the query for syntax errors before answering.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "You are an expert SQLite developer. Read the schema carefully and use only tables and columns that exist. Write one SQLite query that answers the question.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "You are an expert SQLite developer. Think about which tables are needed and how they join through foreign keys, then write one SQLite query that answers the question.",
+   "flagged": false
+  },
+  {
+   "label": "benign",
+   "text": "You are an expert SQLite developer. Select only the columns the question asks for, in the order it asks for them. Write one SQLite query that answers the question.",
+   "flagged": false
+  }
+ ]
+}

@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 from typing import Callable
 
-from rsi.config import stable_hash
+from rsi.config import HARNESS_KIND, stable_hash
 from rsi.data import Task
 from rsi.fewshot import FewShotPool
 from rsi.schema import serialize
@@ -116,3 +116,10 @@ def run_task(h: dict, task: Task, student: Callable[[list[dict]], Completion],
         "completion_tokens": ctok,
         "student_seconds": round(secs, 3),
     }
+
+
+if HARNESS_KIND == "agent":
+    # Run 5: same validation/ids/diffs, but over the agent's fields and its multi-step loop.
+    from rsi.agent import AGENT_FIELDS as _AF, run_task as _agent_run_task
+    EDITABLE_FIELDS = _AF
+    run_task = _agent_run_task  # noqa: F811

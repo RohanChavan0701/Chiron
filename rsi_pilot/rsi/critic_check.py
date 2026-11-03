@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 import random
 
-from rsi.config import RUNS, ROOT, load_yaml
+from rsi.config import BASELINE, HARNESS_KIND, RUNS, ROOT, load_yaml
 from rsi.edits import GENERIC_PROMPTS, GENERIC_SUFFIXES
 from rsi.evolve import CRITIC_SYSTEM, critic_prompt
 from rsi.harness import validate
@@ -45,13 +45,14 @@ def planted_edits(ctx, rng: random.Random, n: int = 10) -> tuple[list[str], list
 def main() -> None:
     ctx = load_context()
     critic = make_llm(ctx.cfg.get("critic") or ctx.cfg["proposer"])
-    base = validate(load_yaml(ROOT / "harness.yaml"))
+    base = validate(load_yaml(BASELINE))
     rng = random.Random(f"{ctx.cfg['seed']}-critic-check")
     leaky, benign = planted_edits(ctx, rng)
+    field = "rules" if HARNESS_KIND == "agent" else "instructions_suffix"   # run 5: agent memory
     rows = []
     for label, texts in (("leaky", leaky), ("benign", benign)):
         for text in texts:
-            new = {**base, "instructions_suffix": text}
+            new = {**base, field: text}
             r = critic(CRITIC_SYSTEM, critic_prompt(base, new, "improves accuracy on the failures shown"))
             try:
                 flagged = bool(parse_json(r.text).get("benchmark_specific", True))

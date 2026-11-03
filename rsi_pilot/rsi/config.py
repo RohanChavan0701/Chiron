@@ -28,6 +28,12 @@ def _env_path(var: str, default: Path) -> Path:
 RUNS = _env_path("RSI_RUNS", ROOT / "runs")
 FROZEN = _env_path("RSI_FROZEN", ROOT / "frozen.yaml")
 SPLITS = _env_path("RSI_SPLITS", ROOT / "splits.json")
+# Run 5: RSI_HARNESS_KIND=agent switches the editable harness to the multi-step SQL agent
+# (rsi/agent.py) with its own baseline file. Runs 1-4 use the single-shot harness.
+HARNESS_KIND = os.environ.get("RSI_HARNESS_KIND", "sql")
+if HARNESS_KIND not in ("sql", "agent"):
+    raise ValueError(f"RSI_HARNESS_KIND must be sql or agent, not {HARNESS_KIND}")
+BASELINE = ROOT / ("harness_agent.yaml" if HARNESS_KIND == "agent" else "harness.yaml")
 
 
 def load_yaml(path: str | Path) -> dict:
