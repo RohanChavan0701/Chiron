@@ -14,6 +14,7 @@ the author decides.
 |---|---|
 | Runs 1 to 3 (harness evolution, n=50) | Done. Tuning-set gains do not transfer; documented with nulls. |
 | Run 4 (10 seeds, arms A/B/C, n=100/322/398) | Code and predictions committed in `e085db7`. Not run. |
+| Run 5 (multi-step SQL agent, 6 seeds) | Code, `frozen_v5.yaml`, `scripts/run_v5*.sh` and `PREDICTION_run5.md` committed in `005c93a` (merged from `run5-agent`). Not run. Selected with `RSI_HARNESS_KIND=agent`. |
 | Poisoning audit (E2) | Designed, implemented, 12 tests. Not run. Needs run 4 seeds 20261111 to 20261113 as its clean control. |
 | Write-up | Draft in `docs/writeup/post.md`, figures in `docs/writeup/`. Not published. |
 | BIRD hand labels | `rsi_pilot/runs*/audit_bird_labels.csv`, about 160 rows, unlabeled. |
@@ -77,6 +78,15 @@ adopted.
 Gate: if step 1 shows no adoption in any arm-run, stop the audit there and write it up as
 "not injectable through the question channel at this dose", per the design.
 
+## Run 5 slot (needs approval; position in the queue is the author's call)
+
+Run 5 is pre-registered and competes with phases 4 and 5 for the same A10. Its own scripts
+(`scripts/run_v5.sh`, `scripts/run_v5_all.sh`) and settings (`frozen_v5.yaml`) apply; read
+`PREDICTION_run5.md` and the run-5 note in `rsi/gpu.py` (student on a second Ollama server with 8
+slots) before launching. Same rules as run 4: no settings changes after the first seed, no
+stopping decisions from held-out results. Ask the author whether it goes before phase 4, between
+phases 4 and 5, or after phase 5.
+
 ## Phase 5: launches 3 and up, run 4 seeds 20261114 to 20261120 (needs approval per launch)
 
 Same procedure as phase 2. About two to three launches at the projected rate. When all seeds that
@@ -101,7 +111,7 @@ Each needs its own pre-registration before any run.
 
 | Next | What | Compute |
 |---|---|---|
-| Run 5 (E1) | Archive arm (top-k harnesses, propose from any) and CMP-style selection on a held-back slice of E. Tests whether the HGM argument explains the transfer gap. | Same as a run-4 seed per arm |
+| Run 6 (E1) | Archive arm (top-k harnesses, propose from any) and CMP-style selection on a held-back slice of E. Tests whether the HGM argument explains the transfer gap. | Same as a run-4 seed per arm |
 | E3 | GRPO on the correction stage's verified (question, gold SQL) pairs for the 1.5B student; compare against few-shot memory on the same held-out set, including forgetting on easy tasks. | One A10, TRL, hours per run |
 | S1 | Standalone poisoning and defense for a self-modifying coding agent (SICA-style), building on E2's attack design. | API, about $100 to $300 |
 
@@ -109,6 +119,6 @@ Each needs its own pre-registration before any run.
 
 1. Watchdog option for the instance cap.
 2. Data source if no Lambda filesystem has it.
-3. Go-ahead and budget for each launch.
+3. Go-ahead and budget for each launch, and where run 5 sits in the GPU queue.
 4. Publish timing for the write-up.
 5. Whether to merge the working branch to `main`.
