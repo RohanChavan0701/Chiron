@@ -68,3 +68,13 @@ A stronger proposer may find real gains such as few-shot examples, but those car
 only partly from train to dev databases. B's stricter keep rule trades E gain for less
 held-out damage, so it should do slightly better on H, by less than the minimum effect the
 study can detect.
+
+## Amendment 1 (2026-11-03, before any seed finished)
+
+At the user's request, to cut wall time from about 22 hours to about 14, run 4 stops
+after **6 seeds (20261111 to 20261116)** instead of 10. When this amendment was
+written, seed 20261111 was in its evolution phase and no seed had evolution or held-out
+results. Six is the smallest number of seeds for which the pre-registered test can reach
+p < 0.05: the exact two-sided Wilcoxon minimum is 2/64 = 0.031, and only if all six seeds
+agree in sign. With five seeds the minimum is 0.0625. Nothing else changes: same
+endpoints, test, Holm correction and predictions. The predictions above are unchanged.
