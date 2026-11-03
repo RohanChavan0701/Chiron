@@ -444,7 +444,7 @@ out of 100. `rsi/gpu.py` serializes the GPU with a lock to prevent this.
 - **Timing of the pre-registration.**
   - `PREDICTION_run5.md` and the run-5 code were committed locally at 02:50 UTC, before
     any result.
-  - They reached GitHub (`run5-agent`, 005c93a) at about 04:50 UTC, after seed 1 finished
+  - They reached GitHub (`run5-agent`, 005c93a) at 05:09 UTC, after seed 1 finished
     at 04:23 UTC.
   - So seeds 2-6 are pre-registered on GitHub, but seed 1 rests only on the local commit
     time.
