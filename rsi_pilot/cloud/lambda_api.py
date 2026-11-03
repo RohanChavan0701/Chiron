@@ -36,6 +36,8 @@ LEDGER = Path(__file__).resolve().parent / "ledger.jsonl"
 MAX_HOURS = 48.0
 MAX_USD = 50.0
 NAME_PREFIX = "chiron-"
+# Lambda's Cloudflare front blocks urllib's default User-Agent (error 1010, HTTP 403).
+USER_AGENT = "chiron-rsi-pilot/0.1"
 REASONS = ("job_done", "cap", "error", "author")
 
 
@@ -56,7 +58,7 @@ def _request(method: str, path: str, body: dict | None = None, timeout: float = 
     data = None if body is None else json.dumps(body).encode()
     req = urllib.request.Request(BASE_URL + path, data=data, method=method, headers={
         "Authorization": f"Bearer {key}", "Content-Type": "application/json",
-        "Accept": "application/json"})
+        "Accept": "application/json", "User-Agent": USER_AGENT})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return json.loads(r.read() or b"{}")
