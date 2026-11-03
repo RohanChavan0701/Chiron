@@ -1,0 +1,33 @@
+harness,task_id,difficulty,question,evidence,gold_sql,pred_sql,label (correct|wrong_reason),notes
+arm_A,bird_1398,moderate,Name the event with the highest amount spent on advertisement.,Name of event refers to event_name; highest amount spent on advertisement refers to MAX(spent) where category = 'Advertisement',SELECT T2.event_name FROM budget AS T1 INNER JOIN event AS T2 ON T1.link_to_event = T2.event_id WHERE T1.category = 'Advertisement' ORDER BY T1.spent DESC LIMIT 1,"SELECT event_name FROM event WHERE event_id = (
+    SELECT link_to_event FROM budget WHERE category = 'Advertisement' ORDER BY spent DESC LIMIT 1
+)",,
+arm_B,bird_1398,moderate,Name the event with the highest amount spent on advertisement.,Name of event refers to event_name; highest amount spent on advertisement refers to MAX(spent) where category = 'Advertisement',SELECT T2.event_name FROM budget AS T1 INNER JOIN event AS T2 ON T1.link_to_event = T2.event_id WHERE T1.category = 'Advertisement' ORDER BY T1.spent DESC LIMIT 1,"SELECT event_name FROM event WHERE event_id = (
+    SELECT link_to_event FROM budget WHERE category = 'Advertisement' ORDER BY spent DESC LIMIT 1
+)",,
+arm_B,bird_1361,simple,What is the total cost of the pizzas for all the events?,total cost of the pizzas refers to SUM(cost) where expense_description = 'Pizza',SELECT SUM(cost) FROM expense WHERE expense_description = 'Pizza',"SELECT SUM(CASE WHEN expense_description = 'Pizza' THEN cost ELSE 0 END) AS total_cost_of_pizzas
+FROM expense",,
+arm_A,bird_1361,simple,What is the total cost of the pizzas for all the events?,total cost of the pizzas refers to SUM(cost) where expense_description = 'Pizza',SELECT SUM(cost) FROM expense WHERE expense_description = 'Pizza',"SELECT SUM(CASE WHEN expense_description = 'Pizza' THEN cost ELSE 0 END) AS total_cost_of_pizzas
+FROM expense",,
+arm_A,bird_1352,moderate,"For all the club members from ""Business"" major, how many of them wear medium size t-shirt?",'Business' is a major name; wear medium size t-shirt refers to t_shirt_size = 'Medium',SELECT COUNT(T1.member_id) FROM member AS T1 INNER JOIN major AS T2 ON T1.link_to_major = T2.major_id WHERE T2.major_name = 'Business' AND T1.t_shirt_size = 'Medium',"SELECT COUNT(DISTINCT m.member_id)
+FROM member m
+JOIN major ma ON m.link_to_major = ma.major_id
+WHERE ma.major_name = 'Business'
+AND m.t_shirt_size = 'Medium'",,
+arm_B,bird_1352,moderate,"For all the club members from ""Business"" major, how many of them wear medium size t-shirt?",'Business' is a major name; wear medium size t-shirt refers to t_shirt_size = 'Medium',SELECT COUNT(T1.member_id) FROM member AS T1 INNER JOIN major AS T2 ON T1.link_to_major = T2.major_id WHERE T2.major_name = 'Business' AND T1.t_shirt_size = 'Medium',"SELECT COUNT(DISTINCT m.member_id)
+FROM member m
+JOIN major ma ON m.link_to_major = ma.major_id
+WHERE ma.major_name = 'Business'
+AND m.t_shirt_size = 'Medium'",,
+arm_A,bird_1509,moderate,"Among the transactions made in the gas stations in the Czech Republic, how many of them are taken place after 2012/1/1?",Czech Republic can be represented as the Country value in the gasstations table is 'CZE',"SELECT COUNT(T1.TransactionID) FROM transactions_1k AS T1 INNER JOIN gasstations AS T2 ON T1.GasStationID = T2.GasStationID WHERE T2.Country = 'CZE' AND STRFTIME('%Y', T1.Date) >= '2012'","SELECT COUNT(T1.TransactionID)
+FROM transactions_1k AS T1
+JOIN gasstations AS T2 ON T1.GasStationID = T2.GasStationID
+JOIN customers AS T3 ON T1.CustomerID = T3.CustomerID
+WHERE T2.Country = 'CZE'
+AND T1.Date > '2012-01-01'",,
+arm_B,bird_1509,moderate,"Among the transactions made in the gas stations in the Czech Republic, how many of them are taken place after 2012/1/1?",Czech Republic can be represented as the Country value in the gasstations table is 'CZE',"SELECT COUNT(T1.TransactionID) FROM transactions_1k AS T1 INNER JOIN gasstations AS T2 ON T1.GasStationID = T2.GasStationID WHERE T2.Country = 'CZE' AND STRFTIME('%Y', T1.Date) >= '2012'","SELECT COUNT(T1.TransactionID)
+FROM transactions_1k AS T1
+JOIN gasstations AS T2 ON T1.GasStationID = T2.GasStationID
+JOIN customers AS T3 ON T1.CustomerID = T3.CustomerID
+WHERE T2.Country = 'CZE'
+AND T1.Date > '2012-01-01'",,

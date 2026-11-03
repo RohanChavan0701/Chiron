@@ -1,0 +1,52 @@
+harness,task_id,difficulty,question,evidence,gold_sql,pred_sql,label (correct|wrong_reason),notes
+arm_A,bird_1346,simple,"Tell the phone number of ""Carlo Jacobs"".","Carlo Jacobs is the full name; full name refers to first_name, last_name;",SELECT phone FROM member WHERE first_name = 'Carlo' AND last_name = 'Jacobs',SELECT phone FROM member WHERE first_name = 'Carlo' AND last_name = 'Jacobs',,
+arm_A,bird_414,simple,What language is the set of 180 cards that belongs to the Ravnica block translated into?,set of 180 cards refers to baseSetSize = 180,SELECT T2.language FROM sets AS T1 INNER JOIN set_translations AS T2 ON T1.code = T2.setCode WHERE T1.block = 'Ravnica' AND T1.baseSetSize = 180,SELECT T2.language FROM sets AS T1 JOIN set_translations AS T2 ON T1.code  =  T2.setCode WHERE T1.baseSetSize  =  180 AND T1.block  =  'Ravnica',,
+arm_A,bird_547,simple,"Among the posts owned by an elder user, how many of them have a score of over 19?",elder users refers to Age > 65; Score of over 19 refers to Score > = 20,SELECT COUNT(T1.Id) FROM posts AS T1 INNER JOIN users AS T2 ON T1.OwnerUserId = T2.Id WHERE T1.Score >= 20 AND T2.Age > 65,SELECT COUNT(*) FROM posts AS T1 JOIN users AS T2 ON T1.OwnerUserId  =  T2.Id WHERE T2.Age  >  65 AND T1.Score  >  19,,
+arm_B,bird_761,moderate,"Among the male superheroes, list the super hero names of superheroes with weight greater than the 79% average weight of all superheroes.","super hero names refers to superhero_name;male superheros refers to gender = 'Male';Calculation = weight_kg > MULTIPLY(AVG(weight_kg), 0.79)",SELECT T1.superhero_name FROM superhero AS T1 INNER JOIN gender AS T2 ON T1.gender_id = T2.id WHERE T2.gender = 'Male' AND T1.weight_kg * 100 > ( SELECT AVG(weight_kg) FROM superhero ) * 79,SELECT superhero_name FROM superhero WHERE gender_id = 1 AND weight_kg > (SELECT AVG(weight_kg) * 0.79 FROM superhero),,
+arm_A,bird_1471,simple,What is the ratio of customers who pay in EUR against customers who pay in CZK?,ratio of customers who pay in EUR against customers who pay in CZK = count(Currency = 'EUR') / count(Currency = 'CZK').,"SELECT CAST(SUM(IIF(Currency = 'EUR', 1, 0)) AS FLOAT) / SUM(IIF(Currency = 'CZK', 1, 0)) AS ratio FROM customers","SELECT CAST(COUNT(CASE WHEN Currency = 'EUR' THEN 1 ELSE NULL END) AS REAL) / COUNT(CASE WHEN Currency = 'CZK' THEN 1 ELSE NULL END) AS Ratio
+FROM customers",,
+arm_A,bird_819,challenging,"In superheroes with missing weight data, calculate the difference between the number of superheroes with blue eyes and no eye color.","missing weight data refers to weight_kg = 0 OR T1.weight_kg = NULL; difference = SUBTRACT(SUM(colour.id = 7), SUM(colour.id = 1)); blue eyes refers to eye_colour_id WHERE colour.id = 7; no eye color refers to eye_colour_id WHERE colour.id = 1;",SELECT SUM(CASE WHEN T2.id = 7 THEN 1 ELSE 0 END) - SUM(CASE WHEN T2.id = 1 THEN 1 ELSE 0 END) FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id WHERE T1.weight_kg = 0 OR T1.weight_kg is NULL,"SELECT 
+    SUM(CASE WHEN eye_colour_id = 7 THEN 1 ELSE 0 END) - 
+    SUM(CASE WHEN eye_colour_id = 1 THEN 1 ELSE 0 END) AS difference
+FROM 
+    superhero
+WHERE 
+    weight_kg = 0 OR weight_kg IS NULL",,
+arm_B,bird_1346,simple,"Tell the phone number of ""Carlo Jacobs"".","Carlo Jacobs is the full name; full name refers to first_name, last_name;",SELECT phone FROM member WHERE first_name = 'Carlo' AND last_name = 'Jacobs',"SELECT T1.phone FROM member AS T1 JOIN major AS T2 ON T1.link_to_major  =  T2.major_id WHERE T1.first_name  =  ""Carlo"" AND T1.last_name  =  ""Jacobs""",,
+arm_B,bird_819,challenging,"In superheroes with missing weight data, calculate the difference between the number of superheroes with blue eyes and no eye color.","missing weight data refers to weight_kg = 0 OR T1.weight_kg = NULL; difference = SUBTRACT(SUM(colour.id = 7), SUM(colour.id = 1)); blue eyes refers to eye_colour_id WHERE colour.id = 7; no eye color refers to eye_colour_id WHERE colour.id = 1;",SELECT SUM(CASE WHEN T2.id = 7 THEN 1 ELSE 0 END) - SUM(CASE WHEN T2.id = 1 THEN 1 ELSE 0 END) FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id WHERE T1.weight_kg = 0 OR T1.weight_kg is NULL,"SELECT 
+    SUM(CASE WHEN eye_colour_id = 7 THEN 1 ELSE 0 END) - 
+    SUM(CASE WHEN eye_colour_id = 1 THEN 1 ELSE 0 END) AS difference
+FROM 
+    superhero
+WHERE 
+    weight_kg = 0 OR weight_kg IS NULL",,
+arm_A,bird_1133,simple,"How many football players born after the 1990s have the first name ""Aaron""?","first name ""Aaron"" refers to player_name LIKE 'Aaron%'; born after the 1990s refers to birthday > '1990'",SELECT COUNT(id) FROM Player WHERE birthday > '1990' AND player_name LIKE 'Aaron%',SELECT COUNT(*) FROM Player WHERE player_name LIKE 'Aaron%' AND birthday > '1990-01-01',,
+arm_A,bird_797,moderate,Which superheroes have blue eyes with brown hair?,which superheroes refers to superhero_name; blue eyes refers to color = 'Blue' and color.id = eye_colour_id; brown hair refers to color = 'Brown' and color.id = hair_colour_id;,SELECT T1.superhero_name FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id INNER JOIN colour AS T3 ON T1.hair_colour_id = T3.id WHERE T2.colour = 'Blue' AND T3.colour = 'Brown',SELECT superhero_name FROM superhero WHERE eye_colour_id = (SELECT id FROM colour WHERE colour = 'Blue') AND hair_colour_id = (SELECT id FROM colour WHERE colour = 'Brown'),,
+arm_B,bird_797,moderate,Which superheroes have blue eyes with brown hair?,which superheroes refers to superhero_name; blue eyes refers to color = 'Blue' and color.id = eye_colour_id; brown hair refers to color = 'Brown' and color.id = hair_colour_id;,SELECT T1.superhero_name FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id INNER JOIN colour AS T3 ON T1.hair_colour_id = T3.id WHERE T2.colour = 'Blue' AND T3.colour = 'Brown',SELECT superhero_name FROM superhero WHERE eye_colour_id = (SELECT id FROM colour WHERE colour = 'Blue') AND hair_colour_id = (SELECT id FROM colour WHERE colour = 'Brown'),,
+arm_A,bird_1198,simple,How many female patients were given an APS diagnosis?,female refers to SEX = 'F'; APS diagnosis refers to Diagnosis='APS',SELECT COUNT(ID) FROM Patient WHERE SEX = 'F' AND Diagnosis = 'APS',SELECT count(*) FROM Patient WHERE SEX = 'F' AND Diagnosis = 'APS',,
+arm_A,bird_794,moderate,Which hero was the fastest?,which hero refers to superhero_name; fastest refers to MAX(attribute_value) WHERE attribute_name = 'Speed';,SELECT T1.superhero_name FROM superhero AS T1 INNER JOIN hero_attribute AS T2 ON T1.id = T2.hero_id INNER JOIN attribute AS T3 ON T2.attribute_id = T3.id WHERE T3.attribute_name = 'Speed' ORDER BY T2.attribute_value DESC LIMIT 1,"SELECT s.superhero_name 
+FROM superhero s 
+JOIN hero_attribute ha ON s.id = ha.hero_id 
+JOIN attribute a ON ha.attribute_id = a.id 
+WHERE a.attribute_name = 'Speed' 
+ORDER BY ha.attribute_value DESC 
+LIMIT 1",,
+arm_B,bird_206,challenging,What elements are in the TR004_8_9 bond atoms?,TR004_8_9 bond atoms refers to bond_id = 'TR004_8_9';,SELECT DISTINCT T1.element FROM atom AS T1 INNER JOIN connected AS T2 ON T1.atom_id = T2.atom_id WHERE T2.bond_id = 'TR004_8_9',"SELECT element FROM atom WHERE atom_id IN (
+    SELECT atom_id FROM connected WHERE bond_id = 'TR004_8_9'
+) INTERSECT SELECT element FROM atom WHERE atom_id IN (
+    SELECT atom_id2 FROM connected WHERE bond_id = 'TR004_8_9'
+)",,
+arm_A,bird_761,moderate,"Among the male superheroes, list the super hero names of superheroes with weight greater than the 79% average weight of all superheroes.","super hero names refers to superhero_name;male superheros refers to gender = 'Male';Calculation = weight_kg > MULTIPLY(AVG(weight_kg), 0.79)",SELECT T1.superhero_name FROM superhero AS T1 INNER JOIN gender AS T2 ON T1.gender_id = T2.id WHERE T2.gender = 'Male' AND T1.weight_kg * 100 > ( SELECT AVG(weight_kg) FROM superhero ) * 79,SELECT superhero_name FROM superhero WHERE gender_id = 1 AND weight_kg > (SELECT AVG(weight_kg) FROM superhero) * 0.79,,
+arm_B,bird_1133,simple,"How many football players born after the 1990s have the first name ""Aaron""?","first name ""Aaron"" refers to player_name LIKE 'Aaron%'; born after the 1990s refers to birthday > '1990'",SELECT COUNT(id) FROM Player WHERE birthday > '1990' AND player_name LIKE 'Aaron%',"SELECT COUNT(*) 
+FROM Player 
+WHERE player_name LIKE 'Aaron%' AND birthday > '1990-01-01'",,
+arm_B,bird_547,simple,"Among the posts owned by an elder user, how many of them have a score of over 19?",elder users refers to Age > 65; Score of over 19 refers to Score > = 20,SELECT COUNT(T1.Id) FROM posts AS T1 INNER JOIN users AS T2 ON T1.OwnerUserId = T2.Id WHERE T1.Score >= 20 AND T2.Age > 65,"SELECT COUNT(p.Id) AS NumberOfPosts
+FROM posts p
+JOIN users u ON p.OwnerUserId = u.Id
+WHERE u.Age > 65 AND p.Score > 19",,
+arm_A,bird_822,moderate,How many green-skinned villains are there in the superhero universe?,green-skinned refers to colour.colour = 'Green' WHERE skin_colour_id = colour.id; villains refers to alignment = 'Bad';,SELECT COUNT(T1.id) FROM superhero AS T1 INNER JOIN alignment AS T2 ON T1.alignment_id = T2.id INNER JOIN colour AS T3 ON T1.skin_colour_id = T3.id WHERE T2.alignment = 'Bad' AND T3.colour = 'Green',"SELECT COUNT(*) FROM superhero
+WHERE alignment_id = (SELECT id FROM alignment WHERE alignment = 'Bad')
+AND skin_colour_id = (SELECT id FROM colour WHERE colour = 'Green')",,
+arm_B,bird_1198,simple,How many female patients were given an APS diagnosis?,female refers to SEX = 'F'; APS diagnosis refers to Diagnosis='APS',SELECT COUNT(ID) FROM Patient WHERE SEX = 'F' AND Diagnosis = 'APS',"SELECT COUNT(DISTINCT ID) AS FemalePatientsWithAPSDiagnosis
+FROM Patient
+WHERE SEX = 'F' AND Diagnosis = 'APS'",,

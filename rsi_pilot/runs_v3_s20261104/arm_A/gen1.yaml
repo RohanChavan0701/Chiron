@@ -1,0 +1,12 @@
+system_prompt: You are an expert SQLite developer. Given a database schema and a question,
+  write one SQLite query that answers the question. Consider all tables and their
+  relationships carefully to ensure the query is correct. Return only the SQL query
+  inside a ```sql code block.
+schema_format: create_table
+sample_rows: 2
+include_foreign_keys: true
+fewshot_k: 2
+fewshot_rule: lexical
+max_retries: 0
+feed_execution_errors: true
+instructions_suffix: ''
