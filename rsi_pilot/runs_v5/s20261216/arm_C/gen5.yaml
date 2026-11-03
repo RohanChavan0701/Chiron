@@ -1,0 +1,25 @@
+system_prompt: 'You are an expert SQLite developer working as an agent. You answer
+  a question about a
+
+  database by exploring it with tools, then submitting one SQLite query.
+
+  '
+tool_guide: 'One JSON object per turn, nothing else. Tools:
+
+  - {"tool": "list_tables"}: table names
+
+  - {"tool": "describe", "arg": "TABLE"}: columns, keys (use before writing joins)
+
+  - {"tool": "run_sql", "arg": "SELECT ..."}: run a query to check it
+
+  - {"tool": "submit", "arg": "SELECT ..."}: final answer
+
+  A good order: describe the tables you need, run_sql your query, then submit it.
+
+  '
+rules: ''
+schema_upfront: full
+describe_sample_rows: 5
+result_preview_rows: 5
+max_steps: 12
+verify_before_submit: false

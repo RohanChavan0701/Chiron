@@ -1,0 +1,25 @@
+system_prompt: 'You are an expert SQLite developer working as an agent. First look
+  at the tables you need,
+
+  then test your query with run_sql, then submit one SQLite query.
+
+  '
+tool_guide: 'Reply with exactly one JSON object per turn, and nothing else:
+
+  {"tool": "list_tables"}                     list the tables
+
+  {"tool": "describe", "arg": "TABLE"}        show a table''s columns and keys
+
+  {"tool": "run_sql", "arg": "SELECT ..."}    run a query and see its first rows
+
+  {"tool": "submit", "arg": "SELECT ..."}     give your final answer (ends the task)
+
+  '
+rules: '- Submit before you run out of tool calls.
+
+  - Do not add ORDER BY unless the question needs an order.'
+schema_upfront: full
+describe_sample_rows: 0
+result_preview_rows: 5
+max_steps: 9
+verify_before_submit: true

@@ -557,7 +557,7 @@ Runs 4 and 5 implement these fixes.
 | Run 5 | The design was cut before launch (E/E2 60 → 50, 10 → 8 generations) to fit the time. This happened before the pre-registration commit. |
 | Run 5 | Token cost was not a pre-registered endpoint, so the "B keeps cost at baseline" finding is exploratory. |
 | Run 5 README | Before pushing, I corrected two overstatements in my own draft: that every arm used the full-schema fix, and that the leakage prediction held. |
-| All | Run 4's per-candidate logs are on GitHub; its caches were not kept. Run 5's per-candidate logs and caches stay on the box and are not on GitHub (size). The BIRD hand-label sheet from run 1 was never labelled. |
+| All | Run 4's per-candidate logs are on GitHub; its caches were not kept. Run 5's per-candidate logs are on GitHub (added 2026-11-03); its caches and per-task `evals/` are only in the laptop backup `Chiron_backup_2026-11-03`, made before the instance was terminated. The BIRD hand-label sheet from run 1 was never labelled. |
 
 ---
 

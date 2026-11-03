@@ -1,0 +1,6 @@
+{
+ "critic": "qwen2.5:32b-instruct",
+ "leaky_flagged": "10/10",
+ "benign_flagged": "0/10",
+ "accuracy": 1.0
+}

@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
-# Bootstrap a run-4 A10 (CLOUD_RUN.md). Run from the laptop with agent forwarding:
+# Bootstrap a run-4 A10 (CLOUD_RUN.md). Run from the laptop:
 #   ssh -A ubuntu@NEW bash -s BUNDLE BRANCH DATA_SRC < bootstrap.sh
 # BUNDLE: git bundle of the working branch copied from the laptop (no push needed).
-# DATA_SRC: user@host of an instance holding rsi_pilot/data/. The copy authenticates with the
-# laptop's forwarded agent, so no key is added to DATA_SRC or left on the new instance.
+# DATA_SRC, one of:
+#   user@host  an instance holding rsi_pilot/data/. The copy authenticates with the laptop's
+#              forwarded agent (ssh -A), so no key is added to DATA_SRC or left on the new instance.
+#   PATH.tar.gz  an archive already copied to the new instance whose members include
+#              Chiron/rsi_pilot/data/ (e.g. the laptop backup instance_chiron_backup.tar.gz,
+#              made 2026-11-03 before the original instance was terminated). Only data/ is extracted.
 set -euo pipefail
 BUNDLE=$1; BRANCH=$2; SRC=$3
 # Same Ollama as the A10 that started seed 20261111, default server settings (port 11434,
@@ -18,7 +22,11 @@ ollama --version
 ollama pull qwen2.5:1.5b-instruct > /tmp/pull_small.log 2>&1 &
 ollama pull qwen2.5:32b-instruct > /tmp/pull_big.log 2>&1 &
 mkdir -p data
-rsync -a -e "ssh -o StrictHostKeyChecking=accept-new" "$SRC:Chiron/rsi_pilot/data/" data/
+case "$SRC" in
+  *.tar.gz) tar xzf "$SRC" -C ~ Chiron/rsi_pilot/data ;;
+  *) rsync -a -e "ssh -o StrictHostKeyChecking=accept-new" "$SRC:Chiron/rsi_pilot/data/" data/ ;;
+esac
+ls data/spider data/bird_minidev data/testsuite > /dev/null
 wait
 # model digests on the A10 that started seed 20261111
 ollama list | grep -q 'qwen2.5:1.5b-instruct *65ec06548149' || { echo "student digest differs"; exit 1; }
