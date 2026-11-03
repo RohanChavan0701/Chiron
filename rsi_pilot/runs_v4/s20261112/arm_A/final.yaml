@@ -1,0 +1,12 @@
+system_prompt: You are an expert SQLite developer. Given a database schema and a question,
+  write one precise and accurate SQLite query that answers the question. Ensure correct
+  usage of foreign keys, column names, and relationships. Avoid unnecessary complexity
+  and aggregate misuse. Return only the SQL query inside a ```sql code block.
+schema_format: create_table
+sample_rows: 0
+include_foreign_keys: true
+fewshot_k: 0
+fewshot_rule: lexical
+max_retries: 3
+feed_execution_errors: false
+instructions_suffix: ''

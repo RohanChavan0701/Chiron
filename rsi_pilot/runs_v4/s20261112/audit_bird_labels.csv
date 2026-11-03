@@ -1,0 +1,68 @@
+harness,task_id,difficulty,question,evidence,gold_sql,pred_sql,label (correct|wrong_reason),notes
+arm_B,bird_1030,moderate,Give the name of the league had the most matches end as draw in the 2016 season?,most matches end as draw refers to MAX(SUM(home_team_goal = away_team_goal)); 2016 season refers to season = '2015/2016';,SELECT t2.name FROM Match AS t1 INNER JOIN League AS t2 ON t1.league_id = t2.id WHERE t1.season = '2015/2016' AND t1.home_team_goal = t1.away_team_goal GROUP BY t2.name ORDER BY COUNT(t1.id) DESC LIMIT 1,"SELECT L.name
+FROM League L
+JOIN Match M ON L.id = M.league_id
+WHERE M.season = '2015/2016'
+GROUP BY L.id
+ORDER BY SUM(CASE WHEN M.home_team_goal = M.away_team_goal THEN 1 ELSE 0 END) DESC
+LIMIT 1",,
+arm_C,bird_368,simple,What is the percentage of borderless cards?,"borderless card refers to borderColor = 'borderless'; percentage = Divide(Count (id) where borderColor = 'borderless', Count(id)) *100",SELECT CAST(SUM(CASE WHEN borderColor = 'borderless' THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(id) FROM cards,"SELECT CAST(COUNT(CASE WHEN borderColor = 'borderless' THEN 1 ELSE NULL END) AS REAL) * 100 / COUNT(id) AS percentage
+FROM cards",,
+arm_B,bird_1025,moderate,Give the name of the league had the most goals in the 2016 season?,"league that had the most goals refers to MAX(SUM(home_team_goal, away_team_goal)); 2016 season refers to season = '2015/2016';",SELECT t2.name FROM Match AS t1 INNER JOIN League AS t2 ON t1.league_id = t2.id WHERE t1.season = '2015/2016' GROUP BY t2.name ORDER BY SUM(t1.home_team_goal + t1.away_team_goal) DESC LIMIT 1,"SELECT L.name 
+FROM League L 
+JOIN Match M ON L.id = M.league_id 
+WHERE M.season = '2015/2016' 
+GROUP BY L.name 
+ORDER BY SUM(M.home_team_goal + M.away_team_goal) DESC 
+LIMIT 1",,
+arm_B,bird_781,simple,Provide the heights of the heroes whose eye colours are amber.,heights of the heroes refers to height_cm; eye colours are amber refers to colour.colour = 'Amber' WHERE eye_colour_id = colour.id;,SELECT T1.height_cm FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id WHERE T2.colour = 'Amber',SELECT T1.height_cm FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id WHERE T2.colour = 'Amber',,
+arm_B,bird_1351,simple,What was Brent Thomason's major?,"Brent Thomason is the full name; full name refers to first_name, last_name; major refers to major_name",SELECT T2.major_name FROM member AS T1 INNER JOIN major AS T2 ON T1.link_to_major = T2.major_id WHERE T1.first_name = 'Brent' AND T1.last_name = 'Thomason',SELECT major_name FROM major WHERE major_id = (SELECT link_to_major FROM member WHERE first_name = 'Brent' AND last_name = 'Thomason'),,
+arm_C,bird_796,moderate,State all of 3-D Man's attributes along with their values.,3-D Man is the superhero_name. attributes refers to attribute_name; values refers to attribute_value;,"SELECT T3.attribute_name, T2.attribute_value FROM superhero AS T1 INNER JOIN hero_attribute AS T2 ON T1.id = T2.hero_id INNER JOIN attribute AS T3 ON T2.attribute_id = T3.id WHERE T1.superhero_name = '3-D Man'","SELECT attribute_name AS 'Attribute', attribute_value AS 'Value'
+FROM superhero
+JOIN hero_attribute ON superhero.id = hero_attribute.hero_id
+JOIN attribute ON hero_attribute.attribute_id = attribute.id
+WHERE superhero_name = '3-D Man'",,
+arm_A,bird_547,simple,"Among the posts owned by an elder user, how many of them have a score of over 19?",elder users refers to Age > 65; Score of over 19 refers to Score > = 20,SELECT COUNT(T1.Id) FROM posts AS T1 INNER JOIN users AS T2 ON T1.OwnerUserId = T2.Id WHERE T1.Score >= 20 AND T2.Age > 65,"SELECT COUNT(p.Id)
+FROM posts p
+JOIN users u ON p.OwnerUserId = u.Id
+WHERE u.Age > 65
+  AND p.Score > 19",,
+arm_B,bird_1346,simple,"Tell the phone number of ""Carlo Jacobs"".","Carlo Jacobs is the full name; full name refers to first_name, last_name;",SELECT phone FROM member WHERE first_name = 'Carlo' AND last_name = 'Jacobs',SELECT phone FROM member WHERE first_name = 'Carlo' AND last_name = 'Jacobs',,
+arm_C,bird_1312,simple,What's Angela Sanders's major?,"Angela Sanders is the full name; full name refers to first_name, last_name; major refers to major_name.",SELECT T2.major_name FROM member AS T1 INNER JOIN major AS T2 ON T1.link_to_major = T2.major_id WHERE T1.first_name = 'Angela' AND T1.last_name = 'Sanders',"SELECT major_name FROM major
+JOIN member ON major.major_id = member.link_to_major
+WHERE first_name = 'Angela' AND last_name = 'Sanders'",,
+arm_B,bird_687,simple,How many comments were added to the post with the highest score?,the highest score refers to MAX(Score);,SELECT COUNT(T2.Id) FROM posts AS T1 INNER JOIN comments AS T2 ON T1.Id = T2.PostId GROUP BY T1.Id ORDER BY T1.Score DESC LIMIT 1,"SELECT COUNT(DISTINCT c.Id) AS CommentCount
+FROM comments c
+JOIN posts p ON c.PostId = p.Id
+WHERE p.Score = (SELECT MAX(Score) FROM posts)",,
+arm_A,bird_785,simple,Describe the names of neutral alignment superheroes.,names of superheroes refers to superhero_name; neutral alignment refers to alignment = 'Neutral';,SELECT T1.superhero_name FROM superhero AS T1 INNER JOIN alignment AS T2 ON T1.alignment_id = T2.id WHERE T2.alignment = 'Neutral',SELECT superhero_name FROM superhero WHERE alignment_id = (SELECT id FROM alignment WHERE alignment = 'Neutral'),,
+arm_C,bird_1409,simple,Mention the total expense used on 8/20/2019.,total expense refers SUM(cost) where expense_date = '2019-08-20',SELECT SUM(cost) FROM expense WHERE expense_date = '2019-08-20',"SELECT SUM(cost) AS total_expense
+FROM expense
+WHERE expense_date = '2019-08-20'",,
+arm_C,bird_573,simple,Write the contents of comments with a score of 17.,score of 17 refers to Score = 17; contents of comments refers to Text,SELECT Text FROM comments WHERE Score = 17,SELECT Text FROM comments WHERE Score = 17,,
+arm_B,bird_1317,moderate,"Among the students from the Student_Club who attended the event ""Women's Soccer"", how many of them want a T-shirt that's in medium size?",Women's Soccer is an event name; T-shirt that is in medium size refers to t_shirt_size = 'Medium',SELECT COUNT(T1.event_id) FROM event AS T1 INNER JOIN attendance AS T2 ON T1.event_id = T2.link_to_event INNER JOIN member AS T3 ON T2.link_to_member = T3.member_id WHERE T1.event_name = 'Women''s Soccer' AND T3.t_shirt_size = 'Medium',"SELECT COUNT(DISTINCT T2.member_id)
+FROM attendance AS T1
+JOIN member AS T2 ON T1.link_to_member = T2.member_id
+JOIN event AS T3 ON T1.link_to_event = T3.event_id
+WHERE T3.event_name = 'Women''s Soccer' AND T2.t_shirt_size = 'Medium'",,
+arm_C,bird_200,simple,Find the triple-bonded molecules which are carcinogenic.,triple-bonded molecules refers to bond_type = '#'; carcinogenic refers to label = '+',SELECT DISTINCT T2.molecule_id FROM bond AS T1 INNER JOIN molecule AS T2 ON T1.molecule_id = T2.molecule_id WHERE T1.bond_type = '#' AND T2.label = '+',"SELECT DISTINCT T1.molecule_id
+FROM atom AS T1
+JOIN molecule AS T2 ON T1.molecule_id = T2.molecule_id
+JOIN connected AS T3 ON T1.atom_id = T3.atom_id
+JOIN bond AS T4 ON T3.bond_id = T4.bond_id
+WHERE T4.bond_type = '#'
+AND T2.label = '+'",,
+arm_C,bird_1201,moderate,What percentage of patients who were born in 1980 and were diagnosed with RA are women?,"born in 1980 refers to YEAR(BIRTHDAY) = '1980'; 'RA' refers to Diagnosis='RA' ; women refers to SEX = 'F'; calculation = DIVIDE(SUM(SEX = 'F'), COUNT(SEX)) * 100","SELECT CAST(SUM(CASE WHEN SEX = 'F' THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(ID) FROM Patient WHERE Diagnosis = 'RA' AND STRFTIME('%Y', Birthday) = '1980'","SELECT 
+    CAST(COUNT(CASE WHEN SEX = 'F' THEN 1 ELSE NULL END) AS REAL) * 100 / COUNT(DISTINCT ID) AS Percentage
+FROM 
+    Patient
+WHERE 
+    strftime('%Y', BIRTHDAY) = '1980' 
+    AND Diagnosis = 'RA'",,
+arm_A,bird_1344,simple,What was the notes of the fundraising on 2019/9/14?,fundraising on 2019/9/14 refers to source = 'Fundraising' where date_received = '2019-09-14',SELECT notes FROM income WHERE source = 'Fundraising' AND date_received = '2019-09-14',SELECT notes FROM income WHERE source = 'Fundraising' AND date_received = '2019-09-14',,
+arm_C,bird_532,simple,Please list the display names of all the users whose accounts were created in the year 2011.,account created in the year 2011 refers to year(CreationDate) = 2011,"SELECT DisplayName FROM users WHERE STRFTIME('%Y', CreationDate) = '2011'","SELECT DisplayName
+FROM users
+WHERE strftime('%Y', CreationDate) = '2011'",,
+arm_B,bird_368,simple,What is the percentage of borderless cards?,"borderless card refers to borderColor = 'borderless'; percentage = Divide(Count (id) where borderColor = 'borderless', Count(id)) *100",SELECT CAST(SUM(CASE WHEN borderColor = 'borderless' THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(id) FROM cards,"SELECT CAST(COUNT(CASE WHEN borderColor = 'borderless' THEN id ELSE NULL END) AS REAL) * 100 / COUNT(id) AS Percentage
+FROM cards",,
+arm_A,bird_356,simple,How many cards have infinite power?,infinite power refers to power = '*';,SELECT COUNT(*) FROM cards WHERE power = '*',SELECT COUNT(id) FROM cards WHERE power = '*',,

@@ -1,0 +1,46 @@
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/home/ubuntu/Chiron/rsi_pilot/rsi/evolve.py", line 302, in <module>
+    main()
+  File "/home/ubuntu/Chiron/rsi_pilot/rsi/evolve.py", line 297, in main
+    s = run_arm(ctx, args.arm, llm, critic)
+  File "/home/ubuntu/Chiron/rsi_pilot/rsi/evolve.py", line 244, in run_arm
+    res = evaluate(ctx, new, "E", purpose=f"evolve_{arm}")
+  File "/home/ubuntu/Chiron/rsi_pilot/rsi/runner.py", line 142, in evaluate
+    recs = list(ex.map(one, tasks))
+  File "/usr/lib/python3.10/concurrent/futures/_base.py", line 621, in result_iterator
+    yield _result_or_cancel(fs.pop())
+  File "/usr/lib/python3.10/concurrent/futures/_base.py", line 319, in _result_or_cancel
+    return fut.result(timeout)
+  File "/usr/lib/python3.10/concurrent/futures/_base.py", line 458, in result
+    return self.__get_result()
+  File "/usr/lib/python3.10/concurrent/futures/_base.py", line 403, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/home/ubuntu/Chiron/rsi_pilot/rsi/runner.py", line 136, in one
+    rec = run_task(h, t, ctx.student, ctx.pool, ctx.cfg["eval"])
+  File "/home/ubuntu/Chiron/rsi_pilot/rsi/harness.py", line 92, in run_task
+    c = student(messages)
+  File "/home/ubuntu/Chiron/rsi_pilot/rsi/student.py", line 53, in __call__
+    out = student_call(c["base_url"], c["model"], call)
+  File "/home/ubuntu/Chiron/rsi_pilot/rsi/gpu.py", line 82, in student_call
+    out = call()
+  File "/home/ubuntu/Chiron/rsi_pilot/rsi/student.py", line 48, in call
+    with urllib.request.urlopen(req, timeout=c["request_timeout_s"]) as r:
+  File "/usr/lib/python3.10/urllib/request.py", line 216, in urlopen
+    return opener.open(url, data, timeout)
+  File "/usr/lib/python3.10/urllib/request.py", line 525, in open
+    response = meth(req, response)
+  File "/usr/lib/python3.10/urllib/request.py", line 634, in http_response
+    response = self.parent.error(
+  File "/usr/lib/python3.10/urllib/request.py", line 563, in error
+    return self._call_chain(*args)
+  File "/usr/lib/python3.10/urllib/request.py", line 496, in _call_chain
+    result = func(*args)
+  File "/usr/lib/python3.10/urllib/request.py", line 643, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 500: Internal Server Error
