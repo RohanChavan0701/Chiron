@@ -18,7 +18,7 @@ Working branch: `claude/laughing-ritchie-zafhnk`, open as PR RohanChavan0701/Chi
 | Lambda tooling | Done: `rsi_pilot/cloud/` (client, ledger, watchdog, bootstrap), 20 tests. |
 | Lambda instances | None running. All four instances in `cloud/ledger.jsonl` are terminated. |
 | Data (Spider, BIRD Mini-Dev, test-suite DBs, about 8 GB) | Not on any instance or Lambda filesystem. Only copy: laptop archive `C:\Users\Rohan\Desktop\Chiron_backup_2026-11-03\instance_chiron_backup.tar.gz` (members `Chiron/rsi_pilot/data/...`). |
-| Write-up | Draft in `docs/writeup/post.md` covers runs 1 to 3 only. Not published. |
+| Write-up | Draft in `docs/writeup/post.md` covers runs 1 to 5 (runs 4 and 5 folded in 2026-11-05; figures regenerated, `fig3_arms` added). Not published; citations unchecked. |
 | BIRD hand labels | `audit_bird_labels.csv` per run and seed, unlabeled. |
 
 ## Rules that hold in every phase

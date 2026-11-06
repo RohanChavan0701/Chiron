@@ -43,20 +43,43 @@ def pooled_net(path: Path) -> dict[tuple[str, str], int]:
     return out
 
 
+def seed_gains(run_dir: str) -> dict[str, dict[str, list[float]]]:
+    """arm -> split -> per-seed gain over baseline in percentage points, from results.json."""
+    out: dict[str, dict[str, list[float]]] = {}
+    for p in sorted((ROOT / "rsi_pilot" / run_dir).glob("s*/results.json")):
+        r = json.loads(p.read_text())
+        for arm in ("arm_A", "arm_B", "arm_C"):
+            for split in ("E", "E2", "H", "B"):
+                n = r["n_per_split"][split]
+                gain = 100 * (r["passed"][f"{arm}/{split}"] - r["passed"][f"baseline/{split}"]) / n
+                out.setdefault(arm, {}).setdefault(split, []).append(gain)
+    return out
+
+
+def mean(xs: list[float]) -> float:
+    return sum(xs) / len(xs)
+
+
 def figure_transfer() -> None:
     net = pooled_net(ROOT / "rsi_pilot/runs_pooled_v2v3.md")
     n = 200  # 4 runs x 50 tasks per set
+    r4 = seed_gains("runs_v4")
+    r5 = seed_gains("runs_v5")
     rows = [
         # label, gain where tuned (pp), held-out gain (pp), source
         ("Coding, Llama-3.2-3B", 18.2, -6.9, "FINDINGS_CODING A and C"),
         ("Coding, mistral-nemo 12B", 17.2, 0.0, "FINDINGS_CODING E and F (4-repeat mean)"),
         ("GSM8K, Llama-3.2-3B", 8.3, -14.3, "FINDINGS_REASONING curriculum and ablation"),
-        ("Harness evolution, unconstrained", 100 * net[("arm_A vs baseline", "E")] / n,
+        ("Harness evolution, runs 2-3, unconstrained", 100 * net[("arm_A vs baseline", "E")] / n,
          100 * net[("arm_A vs baseline", "H")] / n, "runs_pooled_v2v3.md"),
-        ("Harness evolution, regularized", 100 * net[("arm_B vs baseline", "E")] / n,
+        ("Harness evolution, runs 2-3, regularized", 100 * net[("arm_B vs baseline", "E")] / n,
          100 * net[("arm_B vs baseline", "H")] / n, "runs_pooled_v2v3.md"),
+        ("Run 4, single-shot 1.5B, 6 seeds", mean(r4["arm_A"]["E"]), mean(r4["arm_A"]["H"]),
+         "runs_v4/s*/results.json, arm A"),
+        ("Run 5, agent 7B, 6 seeds", mean(r5["arm_A"]["E"]), mean(r5["arm_A"]["H"]),
+         "runs_v5/s*/results.json, arm A"),
     ]
-    fig, ax = plt.subplots(figsize=(7.6, 3.4))
+    fig, ax = plt.subplots(figsize=(7.6, 4.2))
     ys = list(range(len(rows)))[::-1]
     for y, (label, tuned, held, _) in zip(ys, rows):
         ax.plot([held, tuned], [y, y], color=GRID, lw=2, zorder=1, solid_capstyle="round")
@@ -68,8 +91,8 @@ def figure_transfer() -> None:
                     ha="right", fontsize=9, color=INK)
     ax.axvline(0, color=INK2, lw=1, zorder=0)
     ax.set_yticks(ys, [r[0] for r in rows])
-    ax.set_xlim(-22, 26)
-    ax.set_xlabel("Accuracy change vs. no memory / baseline harness (percentage points)")
+    ax.set_xlim(-22, 30)
+    ax.set_xlabel("Accuracy change vs. no memory or baseline harness (pp)")
     ax.grid(axis="x", color=GRID, lw=0.8)
     ax.set_axisbelow(True)
     for s in ("top", "right", "left"):
@@ -116,7 +139,39 @@ def figure_audit() -> None:
     plt.close(fig)
 
 
+def figure_arms() -> None:
+    """Per-seed held-out Spider gain for arms A, B, C in runs 4 and 5."""
+    runs = [("runs_v4", "Run 4: single-shot, 1.5B student (H = 322)"),
+            ("runs_v5", "Run 5: agent, 7B student (H = 200)")]
+    arms = [("arm_A", "A\nLLM proposer"), ("arm_B", "B\nregularized"), ("arm_C", "C\nrandom edits")]
+    fig, axes = plt.subplots(1, 2, figsize=(7.6, 3.2), sharey=True)
+    for ax, (run_dir, title) in zip(axes, runs):
+        g = seed_gains(run_dir)
+        for x, (arm, _) in enumerate(arms):
+            ys = g[arm]["H"]
+            ax.scatter([x] * len(ys), ys, s=36, color=HELD, alpha=0.75, zorder=3,
+                       edgecolors=SURFACE, linewidths=1)
+            m = mean(ys)
+            ax.plot([x - 0.22, x + 0.22], [m, m], color=INK, lw=2, zorder=4)
+            ax.annotate(f"{m:+.1f}", (x + 0.26, m), va="center", fontsize=9, color=INK)
+        ax.axhline(0, color=INK2, lw=1, zorder=0)
+        ax.set_xticks(range(len(arms)), [lab for _, lab in arms], fontsize=9)
+        ax.set_xlim(-0.5, len(arms) - 0.3)
+        ax.set_title(title, fontsize=10, color=INK, loc="left")
+        ax.grid(axis="y", color=GRID, lw=0.8)
+        ax.set_axisbelow(True)
+        for s in ("top", "right"):
+            ax.spines[s].set_visible(False)
+        ax.tick_params(axis="x", length=0)
+    axes[0].set_ylabel("Held-out Spider gain over baseline (pp)")
+    fig.tight_layout()
+    for ext in ("svg", "png"):
+        fig.savefig(OUT / f"fig3_arms.{ext}", dpi=200)
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     figure_transfer()
     figure_audit()
+    figure_arms()
     print("wrote", sorted(p.name for p in OUT.glob("fig*")))
