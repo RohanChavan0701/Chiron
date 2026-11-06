@@ -31,8 +31,8 @@ Working branch: `claude/laughing-ritchie-zafhnk`, open as PR RohanChavan0701/Chi
   stop, record it in the README's deviations list, and ask.
 - Do not decide whether to run more seeds from held-out results. Decide on budget and time.
 - Commit run outputs with the code that produced them. Report nulls.
-- Process, in order, one item at a time: branch, code, PR, review, QA, merge, release. No
-  Linear ticket for this personal repo. Nothing is pushed before the author has looked at it.
+- Process: branch, code, the author looks, push. No ticket, PR, review or QA pipeline on this
+  personal repo. Nothing is pushed before the author has looked at it.
 
 ## Phase A: close out runs 4 and 5 (no GPU)
 
