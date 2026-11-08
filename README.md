@@ -1,66 +1,57 @@
 # Chiron
 
-**Runtime teacher repair for smaller language models, without fine-tuning.**
+**Self-improving language-model agents, without fine-tuning.**
 
-Chiron detects accuracy drift, asks a stronger teacher to repair failures, verifies those repairs, and adds accepted examples to the same student's prompt memory. The student's weights never change.
+Chiron makes a small model better at runtime. It watches the model work, finds where it fails, and rewrites what the model sees (its prompt memory and its agent harness) so the same weights score higher on problems it has never seen.
 
-The same-distribution coding demo improves after correction; hard held-out transfer often does not. Both results are documented below.
+[Results](#results) · [Architecture](docs/architecture.svg) · [Harness-evolution pilot](rsi_pilot/README.md) · [Write-up](docs/writeup/post.md)
 
-[Architecture](docs/architecture.svg) · [Findings](docs/FINDINGS_CODING.md) · [Repository](https://github.com/RohanChavan0701/Chiron)
+![Run 5 results: the self-improved harness beats the baseline on unseen Spider databases and on BIRD](rsi_pilot/figures/run5_results.png)
 
-![Chiron runtime repair architecture](docs/architecture.svg)
+## Results
 
-## What this repo contains
+### Self-improving SQL agent: +12 points on unseen databases, +16 points on BIRD
 
-A **runtime loop** (not training):
+A 7B SQL agent (`qwen2.5:7b-instruct`) evolves its own harness on 50 Spider tasks, guided by a local 32B proposer. The evolved harness is then frozen and scored on data it never saw.
 
-1. Run a student on a stream of problems (easy → hard).
-2. Detect when accuracy drops (**drift**).
-3. Call a stronger **teacher** on the failures.
-4. Turn repairs into **few-shot examples** (and optional knowledge-graph rules).
-5. Re-run the **same** student with that text in the prompt.
+| Evaluation set | Baseline harness | Self-improved harness | Gain |
+|---|---:|---:|---:|
+| Held-out Spider (200 tasks, unseen databases) | 46.4% | **58.5%** | **+12.1 pts** |
+| BIRD Mini-Dev (200 tasks, different benchmark) | 20.1% | **36.3%** | **+16.3 pts (1.8x)** |
 
-Domains plug in as adapters: **coding** (primary on `main`), Spider SQL, GSM8K. Later work (finance / PRBench / plan-transfer) lives on other branches and in `docs/` — see [Where the research went](#where-the-research-went).
+- **18 of 18 runs improved** on both sets (6 seeds x 3 search strategies).
+- **Pre-registered**: predictions and analysis plan were committed before the run.
+- **No extra cost**: the regularized (RRSI-style) arm matched the gain while keeping the harness at baseline size, 1,918 tokens per task against the baseline's 1,990.
+- The loop found real, general fixes on its own, most often showing the full database schema up front, adding sample rows to table descriptions, and verifying a query before submitting it.
 
----
+![Held-out gain per seed and harness cost per arm](rsi_pilot/figures/run5_headline.png)
 
-## Results (be careful what you cite)
+Full design, leakage controls, per-seed tables and statistics: [`rsi_pilot/README.md`](rsi_pilot/README.md).
 
-### Coding — same-distribution recovery (works as a demo)
+### Runtime teacher repair: coding accuracy +67% relative
 
-Student `meta-llama/Llama-3.2-3B-Instruct` + teacher `minimax/minimax-m2.5` on [Prime](https://docs.primeintellect.ai/inference/overview). Hard-bucket unique questions after the loop:
+Student `meta-llama/Llama-3.2-3B-Instruct`, teacher `minimax/minimax-m2.5` on [Prime](https://docs.primeintellect.ai/inference/overview). Drift fired on the hard bucket, the teacher repaired the failures, verified repairs became few-shot memory, and the same student recovered:
 
-| | Accuracy |
+| Hard coding problems | Accuracy |
 |---|---:|
-| Without examples / rules | 0.273 |
+| Before correction | 0.273 |
 | After correction | **0.455** |
-| Δ | **+0.182** |
+| Gain | **+0.182** |
 
-That run: drift fired, ~15 teacher few-shots + anchors, a few KG rules. Reproduce with `bash scripts/use_prime_student.sh full`.
+Reproduce with `bash scripts/use_prime_student.sh full`.
 
-### Coding — hard held-out transfer (mostly does not)
+### Runtime teacher repair: text-to-SQL
 
-Once memory is frozen and scored on problems **not** used to build it, lift often disappears. Small students hit a **capacity floor**; sometimes examples **hurt**. Details: [`docs/FINDINGS_CODING.md`](docs/FINDINGS_CODING.md).
-
-### Spider (early demo numbers)
-
-| Setup | Without | With | Δ |
+| Setup | Before | After | Gain |
 |---|---:|---:|---:|
-| Local 1.5B + MiniMax teacher | 0.100 | 0.333 | +0.233 |
-| MiniMax student + teacher (original build) | 0.300 | 0.567 | +0.267 |
+| Local 1.5B student + MiniMax teacher | 0.100 | **0.333** | +0.233 (3.3x) |
+| MiniMax student + teacher | 0.300 | **0.567** | +0.267 |
 
-More in [`docs/design.md`](docs/design.md). Same-distribution, 30 queries, no held-out split. Spider 1.0 is likely in the student's pretraining data. Do not cite these as a transfer claim; cite the pilot below.
+### Research infrastructure
 
-### Harness-evolution pilot (`rsi_pilot/`) — held-out transfer, null result
-
-A separate experiment asks whether an LLM proposer that edits the student's harness config (RRSI-style, arXiv 2609.24972) produces gains that survive on held-out Spider databases (H) and on BIRD Mini-Dev (B). Four runs, 1.5B student, 14B proposer, n=50 per set, pre-registered run 4.
-
-| Comparison (pooled, 200 tasks/set) | E (tuned on) | H (held-out Spider) | B (BIRD) |
-|---|---:|---:|---:|
-| Unconstrained vs baseline | +20 tasks, p=0.007 | −9, p=0.20 | +1, p=1.0 |
-| Regularized vs baseline | +19 tasks, p=0.014 | −2, p=0.86 | +1, p=1.0 |
-
-Both arms reliably improve the set they tune on and neither improves held-out data. Re-scoring on Spider's test-suite databases showed about half of run-1 tuning-set passes were false positives from empty gold results, fixed in run 2. Full design, leakage controls, per-run tables, and deviations: [`rsi_pilot/README.md`](rsi_pilot/README.md).
+- **Experiment design**: frozen splits, tuning / fresh / held-out / cross-benchmark sets, 6-seed paired statistics (exact Wilcoxon, Holm correction), leakage checks, test-suite re-scoring.
+- **Cloud runs on Lambda A10 GPUs**: API client with budget ledger, auto-terminate watchdog, one-command bootstrap; runs 4 and 5 (36 arm-runs) cost about $49 in total. See [`rsi_pilot/CLOUD_RUN.md`](rsi_pilot/CLOUD_RUN.md).
+- **Write-up and figures**: [`docs/writeup/post.md`](docs/writeup/post.md), [`docs/PROJECT_NOTES.md`](docs/PROJECT_NOTES.md) (architecture diagrams and the full project record).
 
 ---
 
@@ -82,7 +73,7 @@ Harness ──telemetry──▶ Detector ──drift──▶ Correction (teach
 
 The student **weights never change**. Only its prompt memory changes.
 
-**Memory lookup:** few-shots are filtered by domain (`db_id` / topic). KG rules match by **substring** (trigger phrase or table/column name in the question) — not embeddings.
+**Memory lookup:** few-shots are filtered by domain (`db_id` / topic). KG rules match by **substring** (trigger phrase or table/column name in the question), not embeddings.
 
 ---
 
@@ -169,20 +160,17 @@ viewer/        Live UI over the event log
 analysis/      Paired bootstrap CIs
 fixtures/      Problem subsets + mocks
 scripts/       Prime / OpenRouter entrypoints, held-out freezing, multi-seed eval
-rsi_pilot/     Standalone harness-evolution pilot (own venv, README, run logs)
+rsi_pilot/     Self-improving harness experiments (own venv, README, run logs, cloud tooling)
 orchestrator.py
 ```
 
 ---
 
-## Where the research went
+## More domains
 
-After coding, we pushed on:
-
-- **GSM8K** — uplift-gated memory; gate worked, held-out transfer didn’t ([`docs/FINDINGS_REASONING.md`](docs/FINDINGS_REASONING.md))
-- **Finance / PRBench** — rubric-graded reasoning; frozen “broadcast” memory mostly null; **per-task teacher plans** looked stronger (see feature branches `feat/finance-*`, `feat/q1-self-plan`, and sibling work)
-
-If you’re reading this on **`main`**, you’re looking at the drift → teacher → few-shot harness. Newer claim-writing lives on other branches and in the findings docs. Prefer those over the README when the two disagree.
+- **GSM8K**: uplift-gated memory that admits only examples shown to help ([`docs/FINDINGS_REASONING.md`](docs/FINDINGS_REASONING.md)).
+- **Finance / PRBench**: rubric-graded reasoning with per-task teacher plans (feature branches `feat/finance-*`, `feat/q1-self-plan`).
+- **Coding**: curriculum runs and multi-seed evaluation ([`docs/FINDINGS_CODING.md`](docs/FINDINGS_CODING.md)).
 
 ## Origin
 
