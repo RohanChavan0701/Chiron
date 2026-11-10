@@ -118,7 +118,9 @@ def test_run7_end_to_end_with_scripted_models(tmp_path):
         return SimpleNamespace(text=json.dumps({"correct": calls["n"] % 3 == 0, "score": 5}))
 
     assert bank.build(cfg, tasks, student, judge, 1)["evaluated"] == 2 + 40
+    before = calls["n"]
     assert run7.regrade(cfg, tasks, "verdict", judge, 1)["graded"] == 42
+    assert calls["n"] - before == 42 * len(tasks)    # one P2 call per episode; P1 is not asked again
     rep = run7.regrade(cfg, tasks, "repeat", judge, 1)
     assert rep["graded"] == 4 and rep["not_in_bank"] == 0
     assert run7.regrade(cfg, tasks, "repeat", judge, 1)["seconds_per_harness"] is None     # all cached

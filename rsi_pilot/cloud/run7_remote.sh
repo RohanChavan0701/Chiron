@@ -7,7 +7,7 @@
 # Order follows the design's stop rule: bank, then verdict regrade (H5), then judge repeat.
 # Idempotent: episodes and grades are cached, so a rerun resumes. Analysis runs on the laptop.
 set -euo pipefail
-BUILD_DEADLINE=$1; FINAL_DEADLINE=$2; W=${3:-6}
+BUILD_DEADLINE=$1; FINAL_DEADLINE=$2; W=${3:-8}
 OLLAMA_VERSION=0.40.13          # same as runs 4, 5 and 6
 PORT=11435                      # own server; frozen_v7.yaml points at this port
 cd ~/Chiron/rsi_pilot
@@ -19,12 +19,16 @@ ollama --version | tee $L/ollama_version.txt
 
 export OLLAMA_HOST=127.0.0.1:$PORT
 if ! curl -fsS http://$OLLAMA_HOST/api/version >/dev/null 2>&1; then
-  OLLAMA_NUM_PARALLEL=$W OLLAMA_MAX_LOADED_MODELS=2 OLLAMA_MODELS=$HOME/ollama_v7/models \
+  # keep both models resident (no reload between the student and judge phases); flash attention
+  # is a faster attention kernel with the same weights
+  OLLAMA_NUM_PARALLEL=$W OLLAMA_MAX_LOADED_MODELS=2 OLLAMA_KEEP_ALIVE=-1 OLLAMA_FLASH_ATTENTION=1 \
+    OLLAMA_MODELS=$HOME/ollama_v7/models \
     setsid nohup ollama serve > $L/ollama_serve.log 2>&1 < /dev/null &
   for i in $(seq 30); do curl -fsS http://$OLLAMA_HOST/api/version >/dev/null 2>&1 && break; sleep 2; done
 fi
-ollama pull qwen2.5:7b-instruct > $L/pull_student.log 2>&1
+ollama pull qwen2.5:7b-instruct > $L/pull_student.log 2>&1 &    # both pulls at once
 ollama pull llama3.1:8b > $L/pull_judge.log 2>&1
+wait
 ollama list | tee $L/models.txt          # digests, for the write-up
 
 PY=.venv/bin/python

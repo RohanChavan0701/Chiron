@@ -70,10 +70,18 @@ Both were made after a power check on run 6 stage 1 data and before any run 7 da
 
 Any change after registration is logged here with its reason.
 
-1. Hardware (2026-11-10, before launch, no run 7 data yet): the run uses one H100
-   (`gpu_1x_h100_pcie`) instead of the A10 named in the design, on the author's instruction, to
-   get results sooner. Budget cap $30. Parallel request slots go from 6 to 12 to use the larger
-   card. Models, prompts, seeds, tasks and the analysis are unchanged. GPU type and slot count
-   change how requests are batched, and run 6 showed batching moves individual student answers
-   slightly, so run 7 is not a bit-for-bit continuation of the run 6 setup. The registered
-   quantities compare selectors within run 7 and do not depend on that.
+1. Hardware (2026-11-10, before launch, no run 7 data yet): the author approved one H100 for
+   this run to get results sooner, but none had capacity, so the run is on the A10 named in the
+   design after all. The exception stays in `CLOUD_RUN.md` and `lambda_api` and was not used.
+2. Speed changes (2026-11-10, before launch, no run 7 data yet), at the author's request to make
+   the A10 run faster. Models, prompts, seeds, sampling settings, tasks and the analysis are
+   unchanged.
+   - Ollama server: 8 parallel request slots (run 6 used 6), flash attention on, models kept
+     loaded. Slot count and attention kernel change how requests are batched and computed, and
+     run 6 showed batching moves individual student answers slightly, so run 7 is not a
+     bit-for-bit continuation of the run 6 setup. The registered quantities compare selectors
+     within run 7 and do not depend on that. If 8 slots do not fit on the GPU the run falls
+     back to 6.
+   - Verdict regrade and judge repeat ask only the P2 judge again. P1 and P3 are copied from
+     the main grades, since they do not depend on the P2 prompt. The judge repeat therefore
+     reports a flip rate for P2 only.

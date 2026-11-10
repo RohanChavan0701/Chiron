@@ -16,10 +16,11 @@ import argparse
 import json
 import random
 import time
+from concurrent.futures import ThreadPoolExecutor
 from statistics import fmean
 
-from rsi import bank, goodhart, replay, stage0
-from rsi.config import load_yaml, resolve
+from rsi import bank, goodhart, proxies, replay, stage0
+from rsi.config import load_yaml, resolve, stable_hash
 
 SELECTORS = ("truth", "p1", "p2", "p2v")     # p2 = main (recompute) judge, p2v = verdict judge
 
@@ -42,6 +43,20 @@ def subset(cfg: dict, name: str) -> list[tuple[str, str, dict, int]]:
     return base + [j for j in jobs if j[1] != "baseline"][:cfg["repeat_edits"]]
 
 
+def _regrade_p2(cfg, v, h, tasks, rep, judge, workers) -> None:
+    """Write the variant's grade file with only P2 asked again. P1 and P3 do not depend on the
+    P2 prompt, so they are copied from the main grades and not paid for twice."""
+    main = stage0.evaluate(cfg, h, tasks, None, None, rep, 1)
+    style = v["judge"].get("style", "verdict")
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        p2 = list(ex.map(lambda pair: proxies.p2_judge_free(pair[0], pair[1], judge, h["table_format"], style),
+                         zip(tasks, main)))
+    key = stable_hash({"h": h, "tasks": [t.task_id for t in tasks], "repeat": rep,
+                       "student": v["student"], "judge": v["judge"]})     # same key as stage0.evaluate
+    (resolve(v["out_dir"]) / f"gr_{key}.json").write_text(
+        json.dumps([{**r, "p2": g} for r, g in zip(main, p2)]), encoding="utf-8")
+
+
 def regrade(cfg, tasks, name: str, judge, workers: int, deadline: float | None = None) -> dict:
     v, done, spent, skipped, missing = variant(cfg, name), 0, [], 0, 0
     for _, _, h, rep in subset(cfg, name):
@@ -55,7 +70,7 @@ def regrade(cfg, tasks, name: str, judge, workers: int, deadline: float | None =
             skipped += 1
             continue
         t0 = time.time()
-        stage0.evaluate(v, h, tasks, None, judge, rep, workers)
+        _regrade_p2(cfg, v, h, tasks, rep, judge, workers)
         spent.append(time.time() - t0)
         done += 1
     return {"variant": name, "graded": done, "skipped_for_deadline": skipped, "not_in_bank": missing,
@@ -172,23 +187,18 @@ def bootstrap(t, P, t0, P0, k, m, boots, rounds, seed, resample_edits: bool = Fa
 def repeat_stats(cfg, tasks) -> dict | None:
     """How often the main judge changes its verdict when asked again about the same episode."""
     v = variant(cfg, "repeat")
-    flips = {"p1": [], "p2": []}
-    wrong_flip, n_h = [], 0
+    flips, wrong_flip, n_h = [], [], 0
     for _, _, h, rep in subset(cfg, "repeat"):
         if not (bank._cached(cfg, h, tasks, rep) and bank._cached(v, h, tasks, rep)):
             continue
         n_h += 1
         a, b = (stage0.evaluate(c, h, tasks, None, None, rep, 1) for c in (cfg, v))
-        truth = stage0.rate(a, "truth")
-        for px in flips:
-            x, y = stage0.rate(a, px), stage0.rate(b, px)
-            flips[px] += [float(i != j) for i, j in zip(x, y)]
-            if px == "p2":
-                wrong_flip += [float(i != j) for i, j, tr in zip(x, y, truth) if i != tr]
+        truth, x, y = stage0.rate(a, "truth"), stage0.rate(a, "p2"), stage0.rate(b, "p2")
+        flips += [float(i != j) for i, j in zip(x, y)]
+        wrong_flip += [float(i != j) for i, j, tr in zip(x, y, truth) if i != tr]
     if not n_h:
         return None
-    return {"harnesses": n_h, "episodes": len(flips["p2"]), "p2_flip_rate": fmean(flips["p2"]),
-            "p1_flip_rate": fmean(flips["p1"]),
+    return {"harnesses": n_h, "episodes": len(flips), "p2_flip_rate": fmean(flips),
             "p2_flip_rate_where_judge_disagreed_with_truth": fmean(wrong_flip) if wrong_flip else None}
 
 
