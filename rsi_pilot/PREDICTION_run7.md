@@ -85,3 +85,11 @@ Any change after registration is logged here with its reason.
    - Verdict regrade and judge repeat ask only the P2 judge again. P1 and P3 are copied from
      the main grades, since they do not depend on the P2 prompt. The judge repeat therefore
      reports a flip rate for P2 only.
+3. Setup stall (2026-11-10): the first start of the job hung for 12 minutes before any harness
+   ran, on a shell `wait` that also waited on the model server. Fixed and restarted at 10:05
+   UTC. No data was affected.
+4. Analysis timing: see "Deviations in the analysis" in `RUN7_DESIGN.md`.
+
+## Outcome
+
+H1 inconclusive, H2 to H5 hold, H6 fails. Details: `RUN7_DESIGN.md`, "Results".

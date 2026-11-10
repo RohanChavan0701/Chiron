@@ -1,8 +1,7 @@
 # Run 7 design: judge noise and the winner's curse in label-free selection
 
-Status: DRAFT for the author's review. Nothing here has run. Predictions are in
-`PREDICTION_run7.md` and are not registered until the author accepts them and they are
-committed before launch.
+Status: RUN COMPLETE (2026-11-10). Predictions were registered in `PREDICTION_run7.md` before
+launch. Results and the verdict on each prediction are at the end of this file.
 
 ## Where this comes from
 
@@ -114,3 +113,72 @@ the author's go-ahead.
   separated. The judge repeat separates only the judge's part.
 - Predictions were drafted after seeing run 6 stage 1, on the same catalog and anchor. The
   fresh tasks are what make run 7 confirmatory.
+
+## Results (2026-11-10, registered analysis)
+
+Run: one A10 (`chiron-run7`, us-west-1), 09:48 to 18:44 UTC, 8.9 h, est $11.52, terminated at
+job end. 43 harness runs on 300 fresh FinQA dev tasks, none skipped; verdict regrade on all 43;
+judge repeat on 13. Numbers: `runs_v7/analyze.json`. FinQA is public and may be in the
+student's pretraining data. One domain, one student, one judge model, 40 hand-written edits.
+
+Baseline truth at the weak anchor: 51.0 / 52.0 / 51.7%.
+
+Greedy best of 8 edits on 150 selection tasks, 3000 replay rounds (points):
+
+| Selector | Agrees with truth | Approves | Reported | Real | Persistent bias | Curse | Multiplier | Theory |
+|---|---|---|---|---|---|---|---|---|
+| Truth | 100% | 53% | +5.1 | +2.4 | 0 | +2.7 | 1.00 | 1.00 |
+| P1, judge with reference | 90% | 58% | +5.3 | +2.5 | 0.0 | +2.8 | 1.06 | 1.07 |
+| P2, recompute judge | 74% | 57% | +5.8 | +2.3 | -0.1 | +3.6 | 1.36 | 1.37 |
+| P2 verdict judge | 62% | 88% | +3.9 | +2.6 | -0.4 | +1.7 | 0.64 | 0.87 |
+
+95% intervals for the multiplier, tasks resampled with the catalog fixed (registered): P1 0.86
+to 1.35, P2 1.06 to 1.82, P2 verdict 0.49 to 1.08. Tasks and edits resampled (secondary): P2
+0.95 to 1.96.
+
+### Predictions
+
+| | Prediction | Result | Verdict |
+|---|---|---|---|
+| H1 (primary) | P2 multiplier 1.3 to 2.0, interval lower bound above 1.15; fails at or below 1.0 | 1.36, interval 1.06 to 1.82 | **Inconclusive.** Point estimate in range (at its low edge), lower bound between the fail line and the pass line |
+| H2 | Multiplier within 25% of sqrt(r_pp / r_tt) | 1.36 observed, 1.37 predicted | Holds |
+| H3 | Winner's bias within 1.5 points of a random pick's, interval includes 0 | +0.7 points, interval -0.8 to +2.1 | Holds |
+| H4 | P1 multiplier 0.6 to 1.25 | 1.06 | Holds (also inside the draft's 0.8 to 1.25) |
+| H5 | Verdict judge has a smaller multiplier than recompute | 0.64 versus 1.36 | Holds |
+| H6 | P2 winner's real gain at or below zero, and not above the truth-selected winner's | +2.3 points; truth-selected +2.4 | **Fails** on the first clause, holds on the second |
+
+### Reading
+
+1. The extra curse from judge selection is real in direction and matches the variance formula
+   to within a point, but it is smaller than run 6 suggested (1.36 against 1.6 to 1.7) and the
+   primary criterion was not met. The exploratory estimate shrank on fresh data, as such
+   estimates do.
+2. Most of the inflation is not the judge's. Selecting on truth itself reports +5.1 for a real
+   +2.4. The recompute judge adds about one more point of curse. The practical rule is the
+   same for labels and judges: re-score the winner on tasks it was not selected on.
+3. Curse tracks the judge's residual variance, not its accuracy (H5). The verdict judge agrees
+   with truth least (62%) and approves 88% of answers, so its scores barely vary and its curse
+   is below truth selection's. The formula is less exact there (0.87 predicted, 0.64 observed),
+   and the secondary grid shows the verdict multiplier falling as m grows.
+4. No Goodhart amplification, again (H3). Selection did not concentrate judge bias.
+5. H6 failed because run 7's edits have real headroom: 32 of 40 raise truth, and every
+   selector's winner gains about 2.3 to 2.6 points for real. Run 6 stage 1 found almost none
+   on 150 tasks at the same anchor. So judge selection did not pick worse edits than truth
+   selection here; it reported a slightly more inflated number for an equally good edit.
+6. Judge repeat (descriptive): asked again about the same 3,900 stored episodes, with
+   temperature 0 and the same seed, the recompute judge changed its verdict on 11.8%, and on
+   20.9% of the episodes where it had disagreed with truth. Part of the judge's noise is
+   therefore re-ask instability under batched serving, which averaging repeated judgements
+   would reduce. How much of the curse that removes was not measured.
+
+### Deviations in the analysis
+
+- The registered analysis was started when 10 of the 13 judge-repeat harnesses had finished,
+  to save wall time. The bank and the verdict regrade were complete, and no registered
+  quantity uses the repeat grades. The `judge_repeat` block in `analyze.json` was recomputed
+  afterwards on all 13.
+- The point multiplier comes from 3000 replay rounds; the secondary grid's k = 8, m = 150 cell,
+  from a different random stream, gives 1.32. Monte Carlo error is about 0.03, so "inside 1.3
+  to 2.0" is marginal.
+- Run-time deviations (hardware, server settings, P2-only regrades, a 12 minute setup stall)
+  are in `PREDICTION_run7.md`.
