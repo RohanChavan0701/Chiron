@@ -1,0 +1,50 @@
+# RUN 7 (RUN7_DESIGN.md, PREDICTION_run7.md). Confirmatory: judge noise and the winner's curse.
+# Frozen before launch. Same student, judge and weak anchor as run 6 stage 1; fresh tasks.
+# base_url uses the run's own Ollama server port, so this file is used unchanged on the
+# instance and on the laptop (grade caches are keyed on the judge block).
+
+seed: 20261403
+
+data:
+  finqa_file: data/finqa/dev.json
+  n_tasks: 300
+  exclude_sample:                      # replayed in order: run 6 stage 0, then stage 1
+    - {seed: 20261401, n_tasks: 100}
+    - {seed: 20261402, n_tasks: 150}
+
+student:
+  provider: ollama
+  model: qwen2.5:7b-instruct
+  base_url: http://localhost:11435
+  temperature: 0
+  seed: 20261102
+  num_ctx: 8192
+  num_predict: 512
+  request_timeout_s: 180
+
+judge:                                 # main selector P2: recompute prompt
+  provider: ollama
+  model: llama3.1:8b
+  style: recompute
+  base_url: http://localhost:11435
+  temperature: 0
+  seed: 20261102
+  num_ctx: 8192
+  num_predict: 700
+
+judge_verdict:                         # overrides for the verdict regrade (selector p2v, H5)
+  style: verdict
+  num_predict: 256
+
+baseline_repeats: 3
+repeat_edits: 10                       # judge repeat: baselines plus the first 10 catalog edits
+out_dir: runs_v7
+
+analysis:
+  k: 8
+  m: 150
+  rounds: 3000
+  boots: 1000
+  boot_rounds: 400                     # replay rounds inside each bootstrap resample
+  grid_k: [4, 8, 20, 40]
+  grid_m: [25, 75, 150]

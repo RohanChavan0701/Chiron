@@ -67,9 +67,9 @@ def sample_tasks(cfg: dict) -> list[finqa.FinTask]:
     """`data.exclude_sample: {seed, n_tasks}` removes an earlier sample first (e.g. the stage-0
     tasks, which were used to tune judges and must not be reused)."""
     tasks = finqa.load_finqa(resolve(cfg["data"]["finqa_file"]))
-    ex = cfg["data"].get("exclude_sample")
-    if ex:
-        gone = {t.task_id for t in random.Random(ex["seed"]).sample(tasks, min(ex["n_tasks"], len(tasks)))}
+    ex = cfg["data"].get("exclude_sample") or []
+    for one in [ex] if isinstance(ex, dict) else ex:     # a list replays earlier samples in order
+        gone = {t.task_id for t in random.Random(one["seed"]).sample(tasks, min(one["n_tasks"], len(tasks)))}
         tasks = [t for t in tasks if t.task_id not in gone]
     return random.Random(cfg["seed"]).sample(tasks, min(cfg["data"]["n_tasks"], len(tasks)))
 

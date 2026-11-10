@@ -17,3 +17,9 @@ runs_v6/**/ollama_serve*.log
 runs_v6/**/pull_*.log
 runs_v6/**/judgecal*.log
 runs_v6/**/analyze_partial.json
+
+# run 7 caches, same rule as run 6
+runs_v7/**/ep_*.json
+runs_v7/**/gr_*.json
+runs_v7/**/ollama_serve*.log
+runs_v7/**/pull_*.log
