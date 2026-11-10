@@ -45,7 +45,7 @@ repo showed random edits match an LLM proposer under truth selection.
 | Tasks | 150, two anchors | 300 fresh, one anchor |
 | Selectors | truth, P1, P2 recompute | plus P2 verdict (high approval, low AUROC) |
 | Judge repeat | none | judge re-run on a fixed subset of harnesses |
-| Uncertainty | none on the multiplier | bootstrap over tasks and edits |
+| Uncertainty | none on the multiplier | bootstrap over tasks (edits fixed); joint as secondary |
 | Replay decomposition | changed mid-analysis | frozen before launch |
 
 ## Setting
@@ -76,7 +76,9 @@ repo showed random edits match an LLM proposer under truth selection.
 - Replay: `rsi.replay.replay` as committed in 8caf360, greedy rule, k = 8, m = 150 (half the
   tasks), 3000 rounds. Curse = mean `noise`. Multiplier = curse(selector) / curse(truth).
 - Theory: sqrt(r_cc(selector) / r_cc(truth)) from `rsi.goodhart.components`.
-- Interval: 1000 bootstrap resamples, tasks and edits resampled jointly, percentile 95%.
+- Interval (registered): 1000 bootstrap resamples of tasks, edit catalog fixed, percentile 95%.
+  The claim is therefore about this set of 40 edits. Secondary, reported but not a criterion:
+  the same with tasks and edits resampled jointly.
   Implementation (`rsi.run7.curse_boot`, checked against `rsi.replay.replay` in the tests): a
   resampled task carries its multiplicity as a weight and the selection/fresh split is made
   over the original tasks, so a task never sits on both sides. 400 replay rounds per resample.
@@ -91,7 +93,8 @@ repo showed random edits match an LLM proposer under truth selection.
 Power check on run 6 stage 1 data (150 tasks, m = 75, 300 resamples), done before launch:
 the joint interval for the P2 multiplier was 1.05 to 2.40 (weak) and 1.01 to 2.61 (strong);
 resampling tasks only gave 1.17 to 2.07 and 1.20 to 2.44. Doubling the tasks narrows the task
-part but not the part that comes from having 40 edits.
+part but not the part that comes from having 40 edits. For that reason the registered interval
+resamples tasks only (amended 2026-11-10, before registration and before any run 7 data).
 
 ## Stop rules and cost
 

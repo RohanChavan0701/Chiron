@@ -54,6 +54,8 @@ def test_bootstrap_returns_ordered_intervals():
     lo, hi = ci["judge"]["multiplier"]
     assert lo <= hi
     assert ci["truth"]["multiplier"] == [1.0, 1.0]
+    joint = run7.bootstrap(t, P, t0, P0, k=4, m=30, boots=30, rounds=60, seed=5, resample_edits=True)
+    assert joint["judge"]["multiplier"] != ci["judge"]["multiplier"]
 
 
 def test_variants_change_only_the_judge_block():
@@ -124,5 +126,6 @@ def test_run7_end_to_end_with_scripted_models(tmp_path):
     assert out["selectors"] == ["truth", "p1", "p2", "p2v"] and out["n_edits"] == 40
     assert out["point"]["truth"]["multiplier_theory"] in (1.0, None)
     assert set(out["interval95"]) == set(out["selectors"]) and "k4_m2" in out["grid"]
+    assert set(out["interval95_tasks_and_edits"]) == set(out["selectors"])
     assert out["judge_repeat"]["harnesses"] == 4 and 0 <= out["judge_repeat"]["p2_flip_rate"] <= 1
     json.dumps(out)                                  # serialisable

@@ -7,7 +7,8 @@
 
 `verdict` and `repeat` read stored episodes and call only the judge. `analyze` computes the
 registered quantities: the curse (mean replay noise) per selector, its ratio to the curse under
-truth selection, the variance-component prediction of that ratio, and bootstrap intervals.
+truth selection, the variance-component prediction of that ratio, and bootstrap intervals
+(tasks resampled, edit catalog fixed: the registered one; tasks and edits: secondary).
 """
 from __future__ import annotations
 
@@ -152,8 +153,9 @@ def _interval(values: list[float]) -> list[float] | None:
     return [v[int(0.025 * (len(v) - 1))], v[int(round(0.975 * (len(v) - 1)))]]
 
 
-def bootstrap(t, P, t0, P0, k, m, boots, rounds, seed) -> dict:
-    """Percentile intervals; tasks and edits are resampled jointly."""
+def bootstrap(t, P, t0, P0, k, m, boots, rounds, seed, resample_edits: bool = False) -> dict:
+    """Percentile intervals over resampled tasks. The registered interval keeps the edit catalog
+    fixed (the claim is about this set of edits); `resample_edits` also resamples the edits."""
     rng = random.Random(seed)
     n, n_tasks = len(t), len(t0)
     draws = []
@@ -161,7 +163,7 @@ def bootstrap(t, P, t0, P0, k, m, boots, rounds, seed) -> dict:
         w = [0.0] * n_tasks
         for _ in range(n_tasks):
             w[rng.randrange(n_tasks)] += 1.0
-        edit_idx = [rng.randrange(n) for _ in range(n)]
+        edit_idx = [rng.randrange(n) for _ in range(n)] if resample_edits else None
         draws.append(_derived(curse_boot(t, P, t0, P0, k, m, rounds, rng, w, edit_idx)))
     return {s: {key: _interval([d[s][key] for d in draws]) for key in ("curse", "multiplier", "bias_minus_random",
                                                                          "real")} for s in P}
@@ -214,6 +216,8 @@ def analyze(cfg, tasks) -> dict:
             "bias_minus_random": rep[s]["bias"] - rnd[s]["bias"],
             "agreement_with_truth": agree, "approval_rate": fmean(fmean(e[s]) for e in edits)}
     out["interval95"] = bootstrap(t, P, t0, P0, a["k"], a["m"], a["boots"], a["boot_rounds"], cfg["seed"])
+    out["interval95_tasks_and_edits"] = bootstrap(t, P, t0, P0, a["k"], a["m"], a["boots"], a["boot_rounds"],
+                                                  cfg["seed"], resample_edits=True)
     rng = random.Random(cfg["seed"] + 1)
     for k in a["grid_k"]:
         for m in a["grid_m"]:
