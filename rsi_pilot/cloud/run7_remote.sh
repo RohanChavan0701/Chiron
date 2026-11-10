@@ -27,8 +27,9 @@ if ! curl -fsS http://$OLLAMA_HOST/api/version >/dev/null 2>&1; then
   for i in $(seq 30); do curl -fsS http://$OLLAMA_HOST/api/version >/dev/null 2>&1 && break; sleep 2; done
 fi
 ollama pull qwen2.5:7b-instruct > $L/pull_student.log 2>&1 &    # both pulls at once
+PULL=$!
 ollama pull llama3.1:8b > $L/pull_judge.log 2>&1
-wait
+wait $PULL                               # only the pull: a bare wait would also wait on the server
 ollama list | tee $L/models.txt          # digests, for the write-up
 
 PY=.venv/bin/python
