@@ -4,7 +4,8 @@ CLOUD_RUN.md.
 Every launch, status check and termination appends a line to ledger.jsonl (committed). The
 guardrails are enforced here, not left to the caller:
 - at most MAX_OPEN instances: launch refuses while that many launches lack a terminate;
-- 1x A10 only, name prefix `chiron-`, author approval recorded on the launch line;
+- 1x A10 only (one author exception, TYPE_EXCEPTIONS: an H100 for run 7), name prefix `chiron-`,
+  author approval recorded on the launch line;
 - cap hours = min(48, budget_usd * 100 / live price_cents_per_hour), budget_usd <= $50, price
   read from the API at launch;
 - terminate refuses any id that this ledger did not launch.
@@ -43,6 +44,10 @@ NAME_PREFIX = "chiron-"
 # Lambda's Cloudflare front blocks urllib's default User-Agent (error 1010, HTTP 403).
 USER_AGENT = "chiron-rsi-pilot/0.1"
 REASONS = ("job_done", "cap", "error", "author")
+# Author, 2026-11-10 chat: run 7 only may use one H100 instead of the A10, budget $30
+# (CLOUD_RUN.md, "Author changes for run 7"). Keyed by instance type; a launch qualifies only
+# if its name starts with the given prefix and its budget is within the given dollars.
+TYPE_EXCEPTIONS = {"gpu_1x_h100_pcie": {"name_prefix": "chiron-run7", "max_budget_usd": 30.0}}
 
 
 class LambdaError(RuntimeError):
@@ -89,6 +94,24 @@ def filesystems() -> list[dict]:
 
 def instances() -> list[dict]:
     return _request("GET", "/instances")["data"]
+
+
+def excepted_type(types: dict, type_name: str, name: str, budget_usd: float) -> tuple[str, int, list[str]]:
+    """Same triple as a10_type for a type the author has excepted for this launch, else refuse."""
+    rule = TYPE_EXCEPTIONS.get(type_name)
+    if rule is None:
+        raise GuardrailError(f"{type_name} is not the 1x A10 and has no author exception")
+    if not name.startswith(rule["name_prefix"]):
+        raise GuardrailError(f"the {type_name} exception covers names starting {rule['name_prefix']!r} only")
+    if budget_usd > rule["max_budget_usd"]:
+        raise GuardrailError(f"the {type_name} exception allows at most ${rule['max_budget_usd']:.0f}")
+    if type_name not in types:
+        raise GuardrailError(f"{type_name} is not in the instance-types listing")
+    t = types[type_name]
+    if t["instance_type"]["specs"]["gpus"] != 1:
+        raise GuardrailError(f"{type_name} is not a single-GPU type")
+    return (type_name, int(t["instance_type"]["price_cents_per_hour"]),
+            [r["name"] for r in t["regions_with_capacity_available"]])
 
 
 def a10_type(types: dict) -> tuple[str, int, list[str]]:
@@ -152,7 +175,7 @@ def elapsed_and_spend(launch: dict, at: datetime) -> tuple[float, float]:
 
 def launch(name: str, region: str, ssh_key: str, approved_by: str,
            filesystem: str | None = None, user_data: str | None = None,
-           budget_usd: float = MAX_USD, ledger: Path = LEDGER) -> dict:
+           budget_usd: float = MAX_USD, ledger: Path = LEDGER, instance_type: str | None = None) -> dict:
     if not name.startswith(NAME_PREFIX) or len(name) > 64:
         raise GuardrailError(f"name must start with {NAME_PREFIX!r} and be <= 64 chars: {name!r}")
     if not approved_by.strip():
@@ -161,7 +184,9 @@ def launch(name: str, region: str, ssh_key: str, approved_by: str,
     if len(still_open) >= MAX_OPEN:
         raise GuardrailError(f"{len(still_open)} instances without a terminate line "
                              f"(max {MAX_OPEN}): {still_open}")
-    type_name, price, regions = a10_type(instance_types())
+    types = instance_types()
+    type_name, price, regions = (excepted_type(types, instance_type, name, budget_usd) if instance_type
+                                 else a10_type(types))
     if region not in regions:
         raise GuardrailError(f"no {type_name} capacity in {region}; available: {regions}")
     hours = cap_hours(price, budget_usd)
@@ -234,6 +259,7 @@ def main(argv: list[str] | None = None) -> int:
     pl.add_argument("--filesystem")
     pl.add_argument("--user-data", type=Path, help="cloud-init user-data file")
     pl.add_argument("--budget-usd", type=float, default=MAX_USD)
+    pl.add_argument("--instance-type", help="only a type with an author exception (TYPE_EXCEPTIONS)")
     ps = sub.add_parser("status")
     ps.add_argument("id")
     ps.add_argument("--job-state", default="")
@@ -255,7 +281,8 @@ def main(argv: list[str] | None = None) -> int:
         out = [{k: i.get(k) for k in ("id", "name", "status", "region")} for i in instances()]
     elif a.cmd == "launch":
         ud = a.user_data.read_text(encoding="utf-8") if a.user_data else None
-        out = launch(a.name, a.region, a.ssh_key, a.approved_by, a.filesystem, ud, a.budget_usd)
+        out = launch(a.name, a.region, a.ssh_key, a.approved_by, a.filesystem, ud, a.budget_usd,
+                     instance_type=a.instance_type)
     elif a.cmd == "status":
         out = status(a.id, a.job_state)
     else:

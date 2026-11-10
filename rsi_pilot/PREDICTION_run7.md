@@ -68,4 +68,12 @@ Both were made after a power check on run 6 stage 1 data and before any run 7 da
 
 ## Deviations
 
-None yet. Any change after registration is logged here with its reason.
+Any change after registration is logged here with its reason.
+
+1. Hardware (2026-11-10, before launch, no run 7 data yet): the run uses one H100
+   (`gpu_1x_h100_pcie`) instead of the A10 named in the design, on the author's instruction, to
+   get results sooner. Budget cap $30. Parallel request slots go from 6 to 12 to use the larger
+   card. Models, prompts, seeds, tasks and the analysis are unchanged. GPU type and slot count
+   change how requests are batched, and run 6 showed batching moves individual student answers
+   slightly, so run 7 is not a bit-for-bit continuation of the run 6 setup. The registered
+   quantities compare selectors within run 7 and do not depend on that.
