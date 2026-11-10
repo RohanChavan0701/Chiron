@@ -7,3 +7,13 @@ runs_*/cache/
 runs_v5/*/cache/
 runs_v5/*/evals/
 runs_v5/driver.log
+
+# run 6 per-harness caches (about 1.1 GB): episodes, grades, judge calibration. Summaries are committed.
+runs_v6/**/ep_*.json
+runs_v6/**/gr_*.json
+runs_v6/**/jc_*.json
+runs_v6/**/mixedcpu_jc_*.json
+runs_v6/**/ollama_serve*.log
+runs_v6/**/pull_*.log
+runs_v6/**/judgecal*.log
+runs_v6/**/analyze_partial.json

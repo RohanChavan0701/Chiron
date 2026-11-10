@@ -1,0 +1,36 @@
+# RUN 6, STAGE 1 (see RUN6_DESIGN.md). Exploratory edit bank at a weak and a strong anchor.
+# Not pre-registered. Changes from stage 0, each because of a stage-0 result:
+#  - judge style `recompute`: the verdict-only judge had AUROC 0.55 against truth, the
+#    recompute prompt 0.69 (runs_v6/stage0/judgecal*.json);
+#  - 150 tasks per harness, not 100: single edits moved truth by 1 to 5 points;
+#  - tasks exclude the 100 stage-0 tasks, which were used to choose the judge prompt.
+
+seed: 20261402
+
+data:
+  finqa_file: data/finqa/dev.json
+  n_tasks: 150
+  exclude_sample: {seed: 20261401, n_tasks: 100}
+
+student:
+  provider: ollama
+  model: qwen2.5:7b-instruct
+  base_url: http://localhost:11435
+  temperature: 0
+  seed: 20261102
+  num_ctx: 8192
+  num_predict: 512
+  request_timeout_s: 180
+
+judge:
+  provider: ollama
+  model: llama3.1:8b
+  style: recompute
+  base_url: http://localhost:11435
+  temperature: 0
+  seed: 20261102
+  num_ctx: 8192
+  num_predict: 700
+
+baseline_repeats: 3
+out_dir: runs_v6/stage1

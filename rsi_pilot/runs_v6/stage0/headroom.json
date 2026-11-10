@@ -1,0 +1,41 @@
+{
+  "n_tasks": 100,
+  "baseline_runs": [
+    {
+      "truth": 0.67,
+      "truth_strict": 0.67,
+      "p1": 0.67,
+      "p2": 0.92,
+      "p3": 1.0,
+      "p2_false_pos": 0.8181818181818182,
+      "p2_false_neg": 0.02985074626865669,
+      "judge_unparsed": 0.0,
+      "submitted": 1.0
+    },
+    {
+      "truth": 0.63,
+      "truth_strict": 0.63,
+      "p1": 0.67,
+      "p2": 0.92,
+      "p3": 1.0,
+      "p2_false_pos": 0.8648648648648649,
+      "p2_false_neg": 0.04761904761904767,
+      "judge_unparsed": 0.0,
+      "submitted": 1.0
+    },
+    {
+      "truth": 0.66,
+      "truth_strict": 0.66,
+      "p1": 0.69,
+      "p2": 0.93,
+      "p3": 1.0,
+      "p2_false_pos": 0.8823529411764706,
+      "p2_false_neg": 0.045454545454545414,
+      "judge_unparsed": 0.0,
+      "submitted": 1.0
+    }
+  ],
+  "truth_mean": 0.6533333333333333,
+  "truth_spread": 0.040000000000000036,
+  "in_band": true
+}

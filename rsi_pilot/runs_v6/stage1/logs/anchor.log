@@ -1,0 +1,102 @@
+{
+  "grid": [
+    {
+      "table_format": "markdown",
+      "max_steps": 2,
+      "verify_before_submit": false,
+      "truth": 0.6
+    },
+    {
+      "table_format": "markdown",
+      "max_steps": 2,
+      "verify_before_submit": true,
+      "truth": 0.6
+    },
+    {
+      "table_format": "markdown",
+      "max_steps": 4,
+      "verify_before_submit": false,
+      "truth": 0.58
+    },
+    {
+      "table_format": "markdown",
+      "max_steps": 4,
+      "verify_before_submit": true,
+      "truth": 0.5733333333333334
+    },
+    {
+      "table_format": "markdown",
+      "max_steps": 6,
+      "verify_before_submit": false,
+      "truth": 0.6066666666666667
+    },
+    {
+      "table_format": "markdown",
+      "max_steps": 6,
+      "verify_before_submit": true,
+      "truth": 0.5866666666666667
+    },
+    {
+      "table_format": "markdown",
+      "max_steps": 8,
+      "verify_before_submit": false,
+      "truth": 0.5866666666666667
+    },
+    {
+      "table_format": "markdown",
+      "max_steps": 8,
+      "verify_before_submit": true,
+      "truth": 0.6
+    },
+    {
+      "table_format": "rows",
+      "max_steps": 2,
+      "verify_before_submit": false,
+      "truth": 0.6066666666666667
+    },
+    {
+      "table_format": "rows",
+      "max_steps": 2,
+      "verify_before_submit": true,
+      "truth": 0.6
+    },
+    {
+      "table_format": "rows",
+      "max_steps": 4,
+      "verify_before_submit": false,
+      "truth": 0.6066666666666667
+    },
+    {
+      "table_format": "rows",
+      "max_steps": 4,
+      "verify_before_submit": true,
+      "truth": 0.6266666666666667
+    },
+    {
+      "table_format": "rows",
+      "max_steps": 6,
+      "verify_before_submit": false,
+      "truth": 0.6
+    },
+    {
+      "table_format": "rows",
+      "max_steps": 6,
+      "verify_before_submit": true,
+      "truth": 0.5933333333333334
+    },
+    {
+      "table_format": "rows",
+      "max_steps": 8,
+      "verify_before_submit": false,
+      "truth": 0.5933333333333334
+    },
+    {
+      "table_format": "rows",
+      "max_steps": 8,
+      "verify_before_submit": true,
+      "truth": 0.6
+    }
+  ],
+  "strong_truth": 0.6266666666666667,
+  "weak_truth": 0.52
+}

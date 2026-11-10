@@ -1,0 +1,34 @@
+# RUN 6, STAGE 0b. Same episodes as stage 0, regraded by the recompute-style judge.
+# Only judge.style and judge.num_predict differ from frozen_v6_stage0.yaml.
+# Nothing here is pre-registered; stage 0 is allowed to look.
+
+seed: 20261401            # task sample; outside run-5 and planned run-6 seeds
+
+data:
+  finqa_file: data/finqa/dev.json     # FinQA dev split (github.com/czyssrs/FinQA, MIT)
+  n_tasks: 100
+
+student:
+  provider: ollama
+  model: qwen2.5:7b-instruct
+  base_url: http://localhost:11435
+  temperature: 0
+  seed: 20261102
+  num_ctx: 8192
+  num_predict: 512
+  request_timeout_s: 180
+
+# Judges are a different model family from the student. Same model for P1 and P2.
+judge:
+  provider: ollama
+  model: llama3.1:8b
+  style: recompute
+  base_url: http://localhost:11435
+  temperature: 0
+  seed: 20261102
+  num_ctx: 8192
+  num_predict: 700
+
+baseline_repeats: 3       # reruns of the baseline harness, for the noise estimate
+headroom: [0.15, 0.80]    # keep the domain only if baseline truth accuracy is inside this band
+out_dir: runs_v6/stage0
