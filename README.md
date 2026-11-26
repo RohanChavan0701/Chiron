@@ -1,36 +1,33 @@
 # Chiron
 
-**Self-improving language-model agents, without fine-tuning.**
+**Agent evaluation and runtime repair with frozen model weights.**
 
-Chiron makes a small model better at runtime. It watches the model work, finds where it fails, and rewrites what the model sees (its prompt memory and its agent harness) so the same weights score higher on problems it has never seen.
+Chiron has two experiments. The runtime loop detects accuracy drift and adds verified teacher repairs to an agent's context. The harness study asks whether changing what a SQL agent can see and do improves performance on held-out tasks.
 
-[Results](#results) · [Architecture](docs/architecture.svg) · [Harness-evolution pilot](rsi_pilot/README.md) · [Write-up](docs/writeup/post.md)
-
-![Run 5 results: the self-improved harness beats the baseline on unseen Spider databases and on BIRD](rsi_pilot/figures/run5_results.png)
+[Results](#results) · [Architecture](docs/architecture.svg) · [Experiment design](rsi_pilot/README.md) · [Project notes](docs/PROJECT_NOTES.md)
 
 ## Results
 
-### Self-improving SQL agent: +12 points on unseen databases, +16 points on BIRD
+### Run 5: harness performance and random-edit control
 
-A 7B SQL agent (`qwen2.5:7b-instruct`) evolves its own harness on 50 Spider tasks, guided by a local 32B proposer. The evolved harness is then frozen and scored on data it never saw.
+A 7B SQL agent uses a 32B proposer to revise its harness. The harnesses are frozen before scoring on held-out databases and a second benchmark. Each row below aggregates six seeds, with 200 tasks per benchmark in each seed.
 
-| Evaluation set | Baseline harness | Self-improved harness | Gain |
-|---|---:|---:|---:|
-| Held-out Spider (200 tasks, unseen databases) | 46.4% | **58.5%** | **+12.1 pts** |
-| BIRD Mini-Dev (200 tasks, different benchmark) | 20.1% | **36.3%** | **+16.3 pts (1.8x)** |
+| Harness | Held-out Spider | BIRD Mini-Dev |
+| --- | ---: | ---: |
+| Baseline | 46.4% | 20.1% |
+| Plain LLM proposer | 58.2% | 36.7% |
+| Regularized LLM proposer | 58.4% | 35.8% |
+| Random-edit control | 58.8% | 36.6% |
 
-- **18 of 18 runs improved** on both sets (6 seeds x 3 search strategies).
-- **Pre-registered**: predictions and analysis plan were committed before the run.
-- **No extra cost**: the regularized (RRSI-style) arm matched the gain while keeping the harness at baseline size, 1,918 tokens per task against the baseline's 1,990.
-- The loop found real, general fixes on its own, most often showing the full database schema up front, adding sample rows to table descriptions, and verifying a query before submitting it.
+The edits helped all three arms. The LLM proposer showed no measurable advantage over random edits on held-out Spider. The baseline exposed table names only, and all three arms often surfaced the full schema or added useful examples. Regularization did not produce a clear accuracy gain over the plain proposer. An exploratory comparison found fewer tokens per held-out task with regularization, 1,918 versus 4,969 for the plain proposer.
 
-![Held-out gain per seed and harness cost per arm](rsi_pilot/figures/run5_headline.png)
+**Grader audit.** On an earlier run, about half of the tuning-set passes contained wrong queries that happened to produce the expected result on a single database. Rescoring against test-suite databases exposed the false positives. Later runs split by database and guarded access to the held-out sets. Spider 1.0 may already be in the student's training data.
 
-Full design, leakage controls, per-seed tables and statistics: [`rsi_pilot/README.md`](rsi_pilot/README.md).
+[Run 5 design and limitations](rsi_pilot/README.md#run-5-multi-step-sql-agent-pre-registered) · [Per-seed results](rsi_pilot/runs_v5/seed_level.md) · [Committed measurements](rsi_pilot/runs_v5/summary.csv)
 
-### Runtime teacher repair: coding accuracy +67% relative
+### Runtime teacher repair: coding
 
-Student `meta-llama/Llama-3.2-3B-Instruct`, teacher `minimax/minimax-m2.5` on [Prime](https://docs.primeintellect.ai/inference/overview). Drift fired on the hard bucket, the teacher repaired the failures, verified repairs became few-shot memory, and the same student recovered:
+Student `meta-llama/Llama-3.2-3B-Instruct`, teacher `minimax/minimax-m2.5` on [Prime](https://docs.primeintellect.ai/inference/overview). Drift fired on the hard bucket, the teacher repaired the failures, verified repairs became few-shot memory, and the same student recovered on the evaluated hard bucket. This is a same-distribution demonstration.
 
 | Hard coding problems | Accuracy |
 |---|---:|
@@ -41,6 +38,8 @@ Student `meta-llama/Llama-3.2-3B-Instruct`, teacher `minimax/minimax-m2.5` on [P
 Reproduce with `bash scripts/use_prime_student.sh full`.
 
 ### Runtime teacher repair: text-to-SQL
+
+This small runtime demonstration used no held-out split. Spider 1.0 may be in the students' training data.
 
 | Setup | Before | After | Gain |
 |---|---:|---:|---:|
