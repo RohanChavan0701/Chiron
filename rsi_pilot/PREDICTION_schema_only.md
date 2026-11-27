@@ -126,4 +126,12 @@ are context only, and the fresh baseline's mean on this hardware is reported nex
   owner kept the A100, set the per-launch cap to 30 dollars and a 5 hour job deadline. If the
   deadline stops the run before all six sessions finish, the finished sessions are reported
   as they are and the missing ones are run later with the same seeds.
+- **Provider and layout, 2026-11-27, before any result.** Vultr never admitted a GPU launch, so
+  the run moved to Modal (`cloud/modal_ablation.py`, `CLOUD_RUN_MODAL.md`). The card is the
+  registered one (A100 80 GB), Ollama 0.40.13, 8 parallel slots. Each of the six sessions runs
+  in its own container of that GPU type, all started together, instead of one after another on
+  one VM. A session's baseline and four variants still share one container and one server, so
+  the registered pairing is unchanged. Per-session hard timeout 75 minutes; a failed session
+  is rerun once with the same seed while the 30 dollar cap allows. The hardware section above
+  still names Vultr; this entry supersedes it.
 
