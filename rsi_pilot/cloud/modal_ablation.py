@@ -447,6 +447,26 @@ def _copy_into(src: Path, dst: Path) -> None:
         shutil.copy2(src, dst)
 
 
+TEXT_SUFFIXES = {".py", ".sh", ".yaml", ".yml", ".json", ".jsonl", ".md", ".txt", ".csv", ".toml", ".cfg", ".ini"}
+
+
+def normalize_eol(root: Path) -> int:
+    """Rewrite CRLF as LF in text files under root; returns the number of files changed.
+
+    The image is built from the laptop's working copy. On Windows with core.autocrlf that copy
+    has CRLF where the committed blobs have LF, and the seed-line grep in run_ablation.sh
+    then fails. Normalizing reproduces the committed content."""
+    crlf, lf = bytes([13, 10]), bytes([10])
+    n = 0
+    for p in Path(root).rglob("*"):
+        if p.is_file() and not p.is_symlink() and p.suffix.lower() in TEXT_SUFFIXES:
+            b = p.read_bytes()
+            if crlf in b:
+                p.write_bytes(b.replace(crlf, lf))
+                n += 1
+    return n
+
+
 def _sqlite_wal_files(root: Path) -> list[str]:
     """SQLite header byte 18 is 2 for WAL databases; those cannot be read on a read-only mount."""
     bad = []
@@ -540,6 +560,7 @@ def prepare() -> dict:
         shutil.rmtree(work)
     shutil.copytree(IMAGE_REPO, work, symlinks=True)
     shutil.copytree(IMAGE_HARNESS, work.parent / "harness", dirs_exist_ok=True)
+    normalize_eol(work.parent)
     t = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
                         "tests/test_ablate.py", "tests/test_agent.py"], cwd=work, capture_output=True, text=True)
     (rec_dir / "pytest.log").write_text(t.stdout + t.stderr)
@@ -604,6 +625,7 @@ def run_seed(seed: int) -> dict:
             shutil.rmtree(work.parent)
         shutil.copytree(IMAGE_REPO, work, symlinks=True)
         shutil.copytree(IMAGE_HARNESS, work.parent / "harness")
+        normalize_eol(work.parent)
         if (work / f"runs_v5/s{seed}/ablation").exists():
             raise RuntimeError("the uploaded repo already has an ablation dir for this seed")
         (work / "data").symlink_to(DATA_IN_VOLUME, target_is_directory=True)

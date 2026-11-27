@@ -134,4 +134,13 @@ are context only, and the fresh baseline's mean on this hardware is reported nex
   the registered pairing is unchanged. Per-session hard timeout 75 minutes; a failed session
   is rerun once with the same seed while the 30 dollar cap allows. The hardware section above
   still names Vultr; this entry supersedes it.
+- **First Modal launch failed before any evaluation, 2026-11-27 09:26 UTC.** All six sessions
+  exited within seconds: the image was built from a Windows working copy with CRLF line
+  endings, and the seed-line check in `scripts/run_ablation.sh` did not match. No model call
+  and no held-out access happened (0 of 10 evaluations in every session; the failed attempts'
+  records are kept under `run/` in the output volume). The fix normalizes line endings in the
+  container to the committed content. The sessions were then started again with the same
+  seeds. Before the launch, the CPU-only prepare step also switched one BIRD database
+  (`card_games`) from WAL to rollback journal mode so it opens on a read-only mount; rows and
+  schema are unchanged.
 

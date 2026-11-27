@@ -291,3 +291,13 @@ def test_merge_skips_unfinished_seed(tmp_path):
     copies, conflicts = M.merge_plan(stage, repo)
     assert copies == [] and conflicts and "not merged" in conflicts[0]
     assert M.merge(stage, repo) == []
+
+
+def test_normalize_eol_rewrites_text_only(tmp_path):
+    crlf, lf = bytes([13, 10]), bytes([10])
+    (tmp_path / "a.yaml").write_bytes(b"seed: 1" + crlf + b"x: 2" + crlf)
+    (tmp_path / "b.sh").write_bytes(b"echo ok" + lf)
+    (tmp_path / "c.sqlite").write_bytes(b"bin" + crlf + b"ary")
+    assert M.normalize_eol(tmp_path) == 1
+    assert (tmp_path / "a.yaml").read_bytes() == b"seed: 1" + lf + b"x: 2" + lf
+    assert (tmp_path / "c.sqlite").read_bytes() == b"bin" + crlf + b"ary"
