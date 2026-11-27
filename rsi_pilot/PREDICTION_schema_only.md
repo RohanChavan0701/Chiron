@@ -143,4 +143,15 @@ are context only, and the fresh baseline's mean on this hardware is reported nex
   seeds. Before the launch, the CPU-only prepare step also switched one BIRD database
   (`card_games`) from WAL to rollback journal mode so it opens on a read-only mount; rows and
   schema are unchanged.
+- **Pinned splits, 2026-11-27, before any result.** The second launch stopped at the split
+  consistency check: the regenerated BIRD list differed from run 5's. Cause, found with a
+  CPU-only timing pass over all 398 eligible BIRD gold queries (`cloud/modal_diag_bird.py`,
+  output in `runs_v5/ablation_logs/bird_gold_timing_local.json`): one gold query, `bird_518`
+  (`card_games`), exceeds the frozen 30 s execution timeout on Modal's CPUs (about 90 s on
+  the author's laptop) but finished under 30 s on the Lambda A10 that ran run 5. Split
+  eligibility depends on that timeout, so the eligible pool and the seeded 200-task subsample
+  shifted. The other 397 queries ran in under 0.7 s. `bird_518` is not in run 5's held-out set
+  for any seed. The split files `splits_v5_s<SEED>.json` are now written from run 5's own
+  evaluation records (`scripts/pin_splits_v5.py`) and committed, so each session scores exactly
+  the tasks run 5 scored. Still no evaluation had run.
 

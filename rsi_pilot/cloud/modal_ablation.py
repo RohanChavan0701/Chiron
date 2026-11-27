@@ -102,7 +102,7 @@ IGNORE = ["data", ".venv", "**/cache", "**/__pycache__", "**/.pytest_cache",
 
 # Files the run uses; a launch is refused while any of them is modified or untracked.
 USED_PATTERNS = ["rsi/*", "scripts/*", "cloud/modal_ablation.py", "ablations_v5.yaml",
-                 "frozen_v5*.yaml", "harness_agent.yaml", "requirements.txt",
+                 "frozen_v5*.yaml", "splits_v5*.json", "harness_agent.yaml", "requirements.txt",
                  "runs_v5/s*/arm_*/final.yaml", "runs_v5/s*/audit.json",
                  "runs_v5/s*/heldout_access.jsonl",
                  "tests/conftest.py", "tests/test_ablate.py", "tests/test_agent.py"]

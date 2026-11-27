@@ -22,7 +22,8 @@ fi
 grep -q "^seed: $SEED$" "$RSI_FROZEN"
 mkdir -p "$RSI_RUNS/logs"
 L=$RSI_RUNS/logs
-# Splits are not committed: regenerate from the data (H and B do not depend on the seed).
+# The split files are pinned from run 5's records (scripts/pin_splits_v5.py) and committed, so
+# the session scores exactly run 5's tasks. Regeneration is only a fallback for a missing file.
 [ -f "$RSI_SPLITS" ] || $PY -m rsi.splits --out "$RSI_SPLITS" | tee $L/splits_ablation.log
 $PY -m rsi.ablate check | tee $L/ablation_check.log
 [ -f "$RSI_RUNS/ablation/ablation.json" ] || $PY -m rsi.ablate --workers "$W" 2>&1 | tee $L/ablation.log
