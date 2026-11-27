@@ -494,7 +494,21 @@ def prepare() -> dict:
             raise RuntimeError(f"data/{d} missing after extraction")
     wal = _sqlite_wal_files(data)
     if wal:
-        raise RuntimeError(f"WAL-mode databases cannot be read from the read-only data mount: {wal[:5]}")
+        # A WAL-mode database cannot be opened on the seeds' read-only mount. Switch the journal
+        # mode here, where the volume is writable. This changes the header's journal flag and
+        # checkpoints any pending WAL; rows and schema are untouched. The list is recorded.
+        import sqlite3
+        for p in wal:
+            c = sqlite3.connect(p)
+            mode = c.execute("PRAGMA journal_mode=DELETE").fetchone()[0]
+            c.close()
+            if mode.lower() != "delete":
+                raise RuntimeError(f"could not switch {p} out of WAL mode (got {mode})")
+        (rec_dir / "wal_converted.json").write_text(json.dumps(sorted(wal), indent=1))
+        rec["wal_converted"] = len(wal)
+        left = _sqlite_wal_files(data)
+        if left:
+            raise RuntimeError(f"still WAL after conversion: {left[:5]}")
     rec["data"] = json.loads(marker.read_text())
     data_vol.commit()
     # b. model
