@@ -1,0 +1,864 @@
+From a85d919c8e3a7dd46e31c20eb7997f5e77a267fc Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 27 Nov 2026 20:21:08 +0000
+Subject: [PATCH] Concurrent-serving sweep tooling for vLLM (not yet run)
+
+The committed matrix is batch size 1, which never exercises continuous
+batching. run_load_sweep.sh starts one vllm serve process and runs vLLM's own
+`vllm bench serve` at --max-concurrency 1/4/16/64 with --request-rate inf,
+three repeats, on the matrix's fixed prompt (128 forced output tokens, so the
+concurrency-1 cell lines up with the committed vLLM row) and on random-length
+prompts (the fixed prompt runs in synchronized waves under a cap).
+
+vLLM 0.4.2's benchmark_serving.py has only --request-rate (checked in the
+v0.4.2 source), so the sweep uses a current vLLM in its own venv
+(setup_vllm_serve.sh, 0.34.0) and is reported as a separate measurement.
+load_sweep_table.py turns the result JSONs into the README table and lists
+incomplete runs instead of dropping them; CI parses the fixture results and
+syntax-checks the shell. Nothing has run on a GPU; the README says so and
+gives the cost plan (about one A100 hour).
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01HqJ7VmUiXDk1tkbMZHabKR
+---
+ .github/workflows/ci.yml                      |   2 +
+ README.md                                     |  17 +-
+ analysis/load_sweep_table.py                  | 114 ++++++++++++
+ scripts/run_load_sweep.sh                     | 167 ++++++++++++++++++
+ scripts/setup_vllm_serve.sh                   |  22 +++
+ .../vllm_serve_fixed_prompt_c1_run1.json      |  42 +++++
+ .../vllm_serve_fixed_prompt_c1_run2.json      |  42 +++++
+ .../vllm_serve_fixed_prompt_c4_run1.json      |  42 +++++
+ .../vllm_serve_fixed_prompt_c4_run2.json      |  42 +++++
+ .../vllm_serve_random_c16_run1.json           |  42 +++++
+ .../load_sweep/vllm_serve_random_c1_run1.json |  42 +++++
+ .../load_sweep/vllm_serve_random_c1_run2.json |  42 +++++
+ .../load_sweep/vllm_serve_random_c4_run1.json |  42 +++++
+ .../load_sweep/vllm_serve_random_c4_run2.json |  42 +++++
+ 14 files changed, 699 insertions(+), 1 deletion(-)
+ create mode 100644 analysis/load_sweep_table.py
+ create mode 100755 scripts/run_load_sweep.sh
+ create mode 100755 scripts/setup_vllm_serve.sh
+ create mode 100644 tests/fixtures/load_sweep/vllm_serve_fixed_prompt_c1_run1.json
+ create mode 100644 tests/fixtures/load_sweep/vllm_serve_fixed_prompt_c1_run2.json
+ create mode 100644 tests/fixtures/load_sweep/vllm_serve_fixed_prompt_c4_run1.json
+ create mode 100644 tests/fixtures/load_sweep/vllm_serve_fixed_prompt_c4_run2.json
+ create mode 100644 tests/fixtures/load_sweep/vllm_serve_random_c16_run1.json
+ create mode 100644 tests/fixtures/load_sweep/vllm_serve_random_c1_run1.json
+ create mode 100644 tests/fixtures/load_sweep/vllm_serve_random_c1_run2.json
+ create mode 100644 tests/fixtures/load_sweep/vllm_serve_random_c4_run1.json
+ create mode 100644 tests/fixtures/load_sweep/vllm_serve_random_c4_run2.json
+
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 0fd28c4..3ef32b0 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -39,6 +39,8 @@ jobs:
+           python -c "from benchmarks.profiler import Profiler, ProfileResult; print('profiler OK')"
+           python -c "from evals.eval_utils import EvalResult, load_all_results; print('eval_utils OK')"
+           python -c "from analysis.pareto import build_combined_df, is_pareto_optimal; print('pareto OK')"
++          python analysis/load_sweep_table.py --results-dir tests/fixtures/load_sweep
++          bash -n scripts/run_load_sweep.sh scripts/setup_vllm_serve.sh
+ 
+       - name: Validate benchmark config schema
+         run: |
+diff --git a/README.md b/README.md
+index bbcc36d..a5380f7 100644
+--- a/README.md
++++ b/README.md
+@@ -48,7 +48,7 @@ Values are mean ± std across the 3 repeats. Latency is the full 128-token gener
+ ### Limitations
+ 
+ - **Single GPU type and one model.** These numbers do not transfer to other hardware or models.
+-- **One prompt at batch size 1.** Nothing here measures concurrent serving, which is the workload vLLM is built for.
++- **One prompt at batch size 1.** Nothing here measures concurrent serving, which is the workload vLLM is built for. The sweep below is the planned measurement; it has not run.
+ - **Sample sizes.** The MMLU margin is about ±1.8 points and the TruthfulQA margin about ±7 points (95%, binomial approximation). The accuracy gaps between configurations are smaller than these margins, so this run does not show that any configuration is more accurate, and it does not show that quantization has no quality cost.
+ - **GGUF is a different artifact.** llama.cpp runs use separately converted community files, not the same weights as the HF and vLLM runs.
+ - **llama.cpp has no quality evals.** Its speed and memory cannot be weighed against accuracy from this data.
+@@ -58,6 +58,21 @@ Values are mean ± std across the 3 repeats. Latency is the full 128-token gener
+ - **Version deviations.** peft 0.10.0, and transformers, accelerate and datasets in the vLLM venv, are pinned beyond `requirements.txt`; vLLM uses torch 2.3.0; Python is 3.10.12, not the 3.11 stated under Install. See [`results/ENVIRONMENT.md`](results/ENVIRONMENT.md).
+ - **Eval scores are not portable across GPUs.** In smoke tests, HF INT8 scored differently on an A10 and an A100 on the same 285 questions, cause unknown. Do not mix these results with runs from other hardware.
+ 
++## Concurrent serving sweep (tooling committed, not yet run)
++
++The limitation above that matters most for vLLM is the batch-size-1 workload. `scripts/run_load_sweep.sh` measures the serving case: one `vllm serve` process, then vLLM's own `vllm bench serve` client at a fixed cap of 1, 4, 16 and 64 in-flight requests with all requests queued at the start (`--request-rate inf --max-concurrency N`, the pattern vLLM's benchmarking guide calls "maximum throughput"). Three repeats per level. Two prompt sets: the matrix's single prompt repeated with exactly 128 output tokens, so that on the same GPU type as the committed matrix (A100 40 GB SXM4) the concurrency-1 cell lines up with the committed vLLM row, and on any other GPU it is the sweep's own reference point, and random prompts (input 256, output 128, both ±50%) because identical requests under a concurrency cap run in synchronized waves and each request's time to first token then includes the whole wave's prefill. Reported per level: requests/s, output tokens/s, and p50/p99 of time to first token, time per output token and end-to-end latency, with per-request detail saved.
++
++The pinned vLLM 0.4.2 cannot run this: its `benchmark_serving.py` had only `--request-rate` and no concurrency cap (checked in the v0.4.2 source). The sweep uses a current vLLM in its own venv (`scripts/setup_vllm_serve.sh`, 0.34.0 at the time of writing) and is a separate measurement from the 0.4.2 rows; the two must not share a table. Analysis: `python analysis/load_sweep_table.py --results-dir results/load_sweep` (parse check in CI on `tests/fixtures/load_sweep/`).
++
++Plan for the run: setup about 15 min, 24 client runs of 128 prompts about 25 min, so about 1 GPU hour; cap 5 USD (3.9 h on a Lambda A10 at 1.29 USD/h, 2.5 h on an A100 40 GB at 1.99, live prices 2026-11-27). The GPU is recorded in `results/load_sweep/ENVIRONMENT_serve.md`; a 24 GB A10 holds the fp16 weights (about 14.5 GB) with room for the 4k-context KV cache. Nothing here has been executed on a GPU; the scripts were syntax-checked and the analysis was run on fixtures only.
++
++```bash
++scripts/setup_vllm_serve.sh
++scripts/run_load_sweep.sh --out results/load_sweep_smoke --repeats 1 --concurrency "1 4" --num-prompts 8
++scripts/run_load_sweep.sh --out results/load_sweep --repeats 3
++python3 analysis/load_sweep_table.py --results-dir results/load_sweep
++```
++
+ ## Install
+ 
+ Python 3.11 and a CUDA-capable environment are expected for the configured GPU runs.
+diff --git a/analysis/load_sweep_table.py b/analysis/load_sweep_table.py
+new file mode 100644
+index 0000000..ba33726
+--- /dev/null
++++ b/analysis/load_sweep_table.py
+@@ -0,0 +1,114 @@
++"""
++load_sweep_table.py - Markdown table for the concurrent-serving sweep.
++
++Reads the `vllm bench serve` result files written by scripts/run_load_sweep.sh
++(vllm_serve_<variant>_c<N>_run<r>.json) and prints, per variant and
++concurrency level, mean ± std across repeats of request throughput, output
++token throughput, and median / p99 TTFT, TPOT and end-to-end latency. A run
++with failed requests, or with fewer completed requests than prompts, is listed
++under "incomplete runs" and left out of the means rather than dropped silently.
++
++Usage:
++    python analysis/load_sweep_table.py --results-dir results/load_sweep
++"""
++
++import argparse
++import glob
++import json
++import os
++import re
++import sys
++
++import pandas as pd
++
++FILENAME = re.compile(r"vllm_serve_(?P<variant>[a-z_]+)_c(?P<concurrency>\d+)_run(?P<repeat>\d+)\.json$")
++
++COLUMNS = [
++    ("request_throughput", "Requests/s", "{:.2f}"),
++    ("output_throughput", "Output tok/s", "{:.0f}"),
++    ("median_ttft_ms", "TTFT p50 (ms)", "{:.0f}"),
++    ("p99_ttft_ms", "TTFT p99 (ms)", "{:.0f}"),
++    ("median_tpot_ms", "TPOT p50 (ms)", "{:.1f}"),
++    ("p99_tpot_ms", "TPOT p99 (ms)", "{:.1f}"),
++    ("median_e2el_ms", "E2E p50 (ms)", "{:.0f}"),
++    ("p99_e2el_ms", "E2E p99 (ms)", "{:.0f}"),
++]
++
++
++def load_runs(results_dir):
++    rows, incomplete = [], []
++    for path in sorted(glob.glob(os.path.join(results_dir, "vllm_serve_*.json"))):
++        m = FILENAME.search(os.path.basename(path))
++        if not m:
++            continue
++        with open(path) as f:
++            d = json.load(f)
++        row = {
++            "variant": m["variant"],
++            "concurrency": int(m["concurrency"]),
++            "repeat": int(m["repeat"]),
++            "file": os.path.basename(path),
++            "num_prompts": d.get("num_prompts"),
++            "completed": d.get("completed"),
++            "failed": d.get("failed", 0),
++            "max_concurrency": d.get("max_concurrency"),
++        }
++        for key, _, _ in COLUMNS:
++            row[key] = d.get(key)
++        if row["max_concurrency"] not in (None, row["concurrency"]):
++            incomplete.append((row["file"], f"max_concurrency {row['max_concurrency']} != filename {row['concurrency']}"))
++            continue
++        if row["failed"] or (row["num_prompts"] is not None and row["completed"] != row["num_prompts"]):
++            incomplete.append((row["file"], f"completed {row['completed']} of {row['num_prompts']}, failed {row['failed']}"))
++            continue
++        missing = [k for k, _, _ in COLUMNS if row[k] is None]
++        if missing:
++            incomplete.append((row["file"], f"missing {', '.join(missing)}"))
++            continue
++        rows.append(row)
++    return pd.DataFrame(rows), incomplete
++
++
++def fmt(mean, std, pattern):
++    if pd.isna(std):
++        return pattern.format(mean)
++    return f"{pattern.format(mean)} ± {pattern.format(std)}"
++
++
++def table(df):
++    lines = []
++    header = "| Variant | Concurrency | Runs | " + " | ".join(label for _, label, _ in COLUMNS) + " |"
++    lines.append(header)
++    lines.append("|" + "---|" * (3 + len(COLUMNS)))
++    grouped = df.groupby(["variant", "concurrency"], sort=True)
++    for (variant, c), g in grouped:
++        cells = [variant, str(c), str(len(g))]
++        for key, _, pattern in COLUMNS:
++            cells.append(fmt(g[key].mean(), g[key].std(ddof=1) if len(g) > 1 else float("nan"), pattern))
++        lines.append("| " + " | ".join(cells) + " |")
++    return "\n".join(lines)
++
++
++def main():
++    parser = argparse.ArgumentParser(description="Print the load-sweep table")
++    parser.add_argument("--results-dir", default="results/load_sweep")
++    args = parser.parse_args()
++
++    df, incomplete = load_runs(args.results_dir)
++    if df.empty and not incomplete:
++        print(f"No vllm_serve_*.json files in {args.results_dir}")
++        return 1
++    if not df.empty:
++        print(table(df))
++        print()
++        print("Values are mean ± std across repeats. TTFT: time to first token; TPOT: time per output token after the first; E2E: full request.")
++    if incomplete:
++        print()
++        print("Incomplete runs (left out of the means):")
++        for name, why in incomplete:
++            print(f"- `{name}`: {why}")
++    return 0
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/scripts/run_load_sweep.sh b/scripts/run_load_sweep.sh
+new file mode 100755
+index 0000000..00bac13
+--- /dev/null
++++ b/scripts/run_load_sweep.sh
+@@ -0,0 +1,167 @@
++#!/usr/bin/env bash
++# run_load_sweep.sh - Concurrent-serving sweep for vLLM (the workload the
++# committed batch-size-1 matrix never measured).
++#
++# Starts `vllm serve` once, then runs vLLM's own serving benchmark
++# (`vllm bench serve`) at each concurrency level, REPEATS times, with the
++# documented "maximum throughput" load pattern: --request-rate inf (all
++# requests queued at t=0) and --max-concurrency N (a gateway-style cap on
++# in-flight requests). Two variants per level:
++#
++#   fixed_prompt  the matrix's single prompt from the config, repeated, with
++#                 exactly OUTPUT_LEN output tokens (--ignore-eos), so the
++#                 concurrency-1 cell is comparable with the committed vllm/fp16 row
++#                 when run on the same GPU type, apart from the vLLM version and the
++#                 client path.
++#   random        random prompts, input 256 +-50%, output OUTPUT_LEN +-50%.
++#                 With identical requests and a concurrency cap, requests run
++#                 in synchronized waves and each TTFT includes the whole wave's
++#                 prefill (vLLM docs, "Load Pattern Configuration"); the random
++#                 variant staggers the work so the wave artefact is visible by
++#                 comparison instead of hidden.
++#
++# Needs: scripts/setup_vllm_serve.sh run first (.venv-vllm-serve), HF_TOKEN
++# for the gated model, one free GPU.
++#
++# Usage (from the repo root):
++#   scripts/run_load_sweep.sh --out results/load_sweep --repeats 3
++#   scripts/run_load_sweep.sh --out results/load_sweep_smoke --repeats 1 \
++#       --concurrency "1 4" --num-prompts 8
++#
++# Writes into --out: vllm_serve_<variant>_c<N>_run<r>.json (vLLM's result
++# format, with per-request detail), server.log, ENVIRONMENT_serve.md,
++# freeze-venv-vllm-serve.txt, logs/<step>.log, timings.tsv, FAILURES.txt.
++
++set -uo pipefail
++
++OUT="" REPEATS=3 CONCURRENCY="1 4 16 64" NUM_PROMPTS=128 OUTPUT_LEN=128
++CONFIG="configs/final.yaml" PORT=8011 VENV=".venv-vllm-serve"
++MAX_MODEL_LEN=4096      # same as benchmarks/run_vllm.py
++WARMUPS=4
++
++while [ $# -gt 0 ]; do
++  case "$1" in
++    --out) OUT=$2; shift 2 ;;
++    --repeats) REPEATS=$2; shift 2 ;;
++    --concurrency) CONCURRENCY=$2; shift 2 ;;
++    --num-prompts) NUM_PROMPTS=$2; shift 2 ;;
++    --output-len) OUTPUT_LEN=$2; shift 2 ;;
++    --config) CONFIG=$2; shift 2 ;;
++    --port) PORT=$2; shift 2 ;;
++    *) echo "unknown option: $1" >&2; exit 2 ;;
++  esac
++done
++[ -n "$OUT" ] || { echo "need --out" >&2; exit 2; }
++[ -x "$VENV/bin/vllm" ] || { echo "no $VENV/bin/vllm; run scripts/setup_vllm_serve.sh" >&2; exit 2; }
++[ -f "$CONFIG" ] || { echo "no config $CONFIG" >&2; exit 2; }
++
++mkdir -p "$OUT/logs"
++TIMINGS="$OUT/timings.tsv"; FAILURES="$OUT/FAILURES.txt"
++[ -f "$TIMINGS" ] || printf 'step\tseconds\texit_code\n' > "$TIMINGS"
++
++PY="$VENV/bin/python"
++MODEL=$("$PY" -c "import yaml,sys; print(yaml.safe_load(open(sys.argv[1]))['model']['name'])" "$CONFIG")
++REVISION=$("$PY" -c "import yaml,sys; print(yaml.safe_load(open(sys.argv[1]))['model'].get('revision','main'))" "$CONFIG")
++SERVED=mistral-7b
++
++# The fixed prompt, repeated NUM_PROMPTS times, in the custom-dataset format
++# (one {"prompt": ...} per line; vLLM docs, "Custom Dataset").
++DATA="$OUT/fixed_prompt.jsonl"
++"$PY" - "$CONFIG" "$NUM_PROMPTS" > "$DATA" <<'PYEOF'
++import json, sys, yaml
++cfg = yaml.safe_load(open(sys.argv[1]))
++prompt = cfg["profiling"]["prompt"].strip()
++for _ in range(int(sys.argv[2])):
++    print(json.dumps({"prompt": prompt}))
++PYEOF
++
++# ---------------------------------------------------------------------------
++# Environment record and server
++# ---------------------------------------------------------------------------
++{
++  echo "# Serving environment"
++  echo
++  echo "Recorded by \`scripts/run_load_sweep.sh\` on $(date -u +%Y-%m-%dT%H:%M:%SZ)."
++  echo
++  echo "- Repo commit: $(git rev-parse HEAD)"
++  echo "- Model: \`$MODEL\` @ \`$REVISION\`"
++  echo "- vllm: $("$VENV/bin/vllm" --version 2>/dev/null | tail -1)"
++  echo "- torch: $("$PY" -c 'import torch; print(torch.__version__)')"
++  echo "- Python: $("$PY" --version)"
++  echo "- Server args: --dtype float16 --max-model-len $MAX_MODEL_LEN"
++  echo "- Client: vllm bench serve, --request-rate inf, --max-concurrency {$CONCURRENCY}, --num-prompts $NUM_PROMPTS, output $OUTPUT_LEN tokens (--ignore-eos), $WARMUPS warmups, $REPEATS repeats"
++  echo
++  echo '```'
++  nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv
++  echo '```'
++} > "$OUT/ENVIRONMENT_serve.md"
++"$VENV/bin/pip" freeze > "$OUT/freeze-venv-vllm-serve.txt"
++
++echo "Starting vllm serve $MODEL on port $PORT"
++"$VENV/bin/vllm" serve "$MODEL" --revision "$REVISION" --tokenizer-revision "$REVISION" \
++  --dtype float16 --max-model-len "$MAX_MODEL_LEN" --port "$PORT" \
++  --served-model-name "$SERVED" > "$OUT/server.log" 2>&1 &
++SERVER_PID=$!
++cleanup() { kill "$SERVER_PID" 2>/dev/null; wait "$SERVER_PID" 2>/dev/null; }
++trap cleanup EXIT
++
++waited=0
++until curl -sf "http://127.0.0.1:$PORT/health" >/dev/null; do
++  if ! kill -0 "$SERVER_PID" 2>/dev/null; then
++    echo "server exited during startup; see $OUT/server.log" >&2; exit 1
++  fi
++  if [ "$waited" -ge 1200 ]; then echo "server not healthy after 20 min" >&2; exit 1; fi
++  sleep 5; waited=$((waited + 5))
++done
++echo "Server healthy after ${waited}s"
++nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits | head -1 > "$OUT/server_gpu_memory_mb.txt"
++
++run_step() {
++  local name=$1; shift
++  echo "--> $name"
++  local start=$SECONDS
++  "$@" > "$OUT/logs/$name.log" 2>&1
++  local rc=$?
++  local secs=$((SECONDS - start))
++  printf '%s\t%s\t%s\n' "$name" "$secs" "$rc" >> "$TIMINGS"
++  if [ "$rc" -ne 0 ]; then
++    echo "$name: exit $rc (see logs/$name.log)" >> "$FAILURES"; echo "    FAILED in ${secs}s, exit $rc"
++  else
++    echo "    ok in ${secs}s"
++  fi
++}
++
++# The client tokenizer is loaded at the Hub default revision: `vllm bench serve` has no
++# --tokenizer-revision flag (checked against the argument list, 2026-11-27). The tokenizer
++# files of mistralai/Mistral-7B-v0.1 are the same at the pinned revision; the server itself
++# runs the pinned revision.
++COMMON=(--backend openai --base-url "http://127.0.0.1:$PORT" --endpoint /v1/completions
++        --model "$SERVED" --tokenizer "$MODEL"
++        --request-rate inf --num-prompts "$NUM_PROMPTS" --num-warmups "$WARMUPS"
++        --ignore-eos --temperature 0
++        --percentile-metrics ttft,tpot,itl,e2el,client_queue_time --metric-percentiles 50,99
++        --save-result --save-detailed --result-dir "$OUT")
++
++for c in $CONCURRENCY; do
++  for r in $(seq 1 "$REPEATS"); do
++    run_step "serve_fixed_prompt_c${c}_run${r}" "$VENV/bin/vllm" bench serve "${COMMON[@]}" \
++      --dataset-name custom --dataset-path "$DATA" --skip-chat-template \
++      --custom-output-len "$OUTPUT_LEN" --max-concurrency "$c" --seed "$r" \
++      --result-filename "vllm_serve_fixed_prompt_c${c}_run${r}.json" \
++      --metadata "variant=fixed_prompt" "concurrency=$c" "repeat=$r"
++  done
++done
++
++for c in $CONCURRENCY; do
++  for r in $(seq 1 "$REPEATS"); do
++    run_step "serve_random_c${c}_run${r}" "$VENV/bin/vllm" bench serve "${COMMON[@]}" \
++      --dataset-name random --random-input-len 256 --random-output-len "$OUTPUT_LEN" \
++      --random-range-ratio 0.5 --max-concurrency "$c" --seed "$r" \
++      --result-filename "vllm_serve_random_c${c}_run${r}.json" \
++      --metadata "variant=random" "concurrency=$c" "repeat=$r"
++  done
++done
++
++echo; echo "Timings: $TIMINGS"
++if [ -s "$FAILURES" ]; then echo "Failures:"; cat "$FAILURES"; exit 1; fi
++echo "No failures."
+diff --git a/scripts/setup_vllm_serve.sh b/scripts/setup_vllm_serve.sh
+new file mode 100755
+index 0000000..874da4d
+--- /dev/null
++++ b/scripts/setup_vllm_serve.sh
+@@ -0,0 +1,22 @@
++#!/usr/bin/env bash
++# setup_vllm_serve.sh - Build .venv-vllm-serve for scripts/run_load_sweep.sh.
++#
++# The committed matrix used vLLM 0.4.2, whose benchmark_serving.py had only
++# --request-rate (checked in the v0.4.2 source): no fixed-concurrency cap, and
++# no `vllm bench serve` subcommand. The sweep therefore uses a current vLLM in
++# its own venv, pinned here, and is reported as a separate measurement from
++# the 0.4.2 batch-1 row. Record the installed version from the pip freeze the
++# sweep writes; do not mix the two in one table.
++#
++# Usage (from the repo root): scripts/setup_vllm_serve.sh
++set -euo pipefail
++VLLM_VERSION="${VLLM_VERSION:-0.34.0}"   # latest stable on PyPI when this was written (2026-11-27)
++VENV=.venv-vllm-serve
++PYTHON="${PYTHON:-python3}"
++[ -f benchmarks/profiler.py ] || { echo "run from the repo root" >&2; exit 1; }
++if [ ! -x "$VENV/bin/python" ]; then "$PYTHON" -m venv "$VENV"; fi
++"$VENV/bin/python" -m pip install -q --upgrade pip wheel
++"$VENV/bin/pip" install -q "vllm==$VLLM_VERSION" pyyaml
++"$VENV/bin/python" -c "import torch, vllm; assert torch.cuda.is_available(), 'no GPU'; print('vllm', vllm.__version__, 'torch', torch.__version__, torch.cuda.get_device_name(0))"
++"$VENV/bin/vllm" bench serve --help >/dev/null
++echo "ok: $VENV ready (vllm $VLLM_VERSION)"
+diff --git a/tests/fixtures/load_sweep/vllm_serve_fixed_prompt_c1_run1.json b/tests/fixtures/load_sweep/vllm_serve_fixed_prompt_c1_run1.json
+new file mode 100644
+index 0000000..28a9df4
+--- /dev/null
++++ b/tests/fixtures/load_sweep/vllm_serve_fixed_prompt_c1_run1.json
+@@ -0,0 +1,42 @@
++{
++ "date": "20261127-000000",
++ "endpoint_type": "openai",
++ "backend": "openai",
++ "label": "openai",
++ "model_id": "mistral-7b",
++ "tokenizer_id": "mistralai/Mistral-7B-v0.1",
++ "num_prompts": 8,
++ "request_rate": "inf",
++ "burstiness": 1.0,
++ "max_concurrency": 1,
++ "completed": 8,
++ "failed": 0,
++ "total_input_tokens": 480,
++ "total_output_tokens": 1024,
++ "request_throughput": 0.56,
++ "output_throughput": 71.0,
++ "total_token_throughput": 100.0,
++ "mean_ttft_ms": 50.0,
++ "median_ttft_ms": 49.0,
++ "std_ttft_ms": 3.0,
++ "p50_ttft_ms": 49.0,
++ "p99_ttft_ms": 80.0,
++ "mean_tpot_ms": 13.5,
++ "median_tpot_ms": 13.5,
++ "std_tpot_ms": 0.4,
++ "p50_tpot_ms": 13.5,
++ "p99_tpot_ms": 15.6,
++ "mean_itl_ms": 13.0,
++ "median_itl_ms": 12.9,
++ "std_itl_ms": 1.0,
++ "p50_itl_ms": 12.9,
++ "p99_itl_ms": 20.0,
++ "mean_e2el_ms": 1760.0,
++ "median_e2el_ms": 1751.0,
++ "std_e2el_ms": 10.0,
++ "p50_e2el_ms": 1751.0,
++ "p99_e2el_ms": 1830.0,
++ "variant": "fixed_prompt",
++ "concurrency": "1",
++ "repeat": "1"
++}
+\ No newline at end of file
+diff --git a/tests/fixtures/load_sweep/vllm_serve_fixed_prompt_c1_run2.json b/tests/fixtures/load_sweep/vllm_serve_fixed_prompt_c1_run2.json
+new file mode 100644
+index 0000000..e685264
+--- /dev/null
++++ b/tests/fixtures/load_sweep/vllm_serve_fixed_prompt_c1_run2.json
+@@ -0,0 +1,42 @@
++{
++ "date": "20261127-000000",
++ "endpoint_type": "openai",
++ "backend": "openai",
++ "label": "openai",
++ "model_id": "mistral-7b",
++ "tokenizer_id": "mistralai/Mistral-7B-v0.1",
++ "num_prompts": 8,
++ "request_rate": "inf",
++ "burstiness": 1.0,
++ "max_concurrency": 1,
++ "completed": 8,
++ "failed": 0,
++ "total_input_tokens": 480,
++ "total_output_tokens": 1024,
++ "request_throughput": 0.5700000000000001,
++ "output_throughput": 72.0,
++ "total_token_throughput": 100.0,
++ "mean_ttft_ms": 50.0,
++ "median_ttft_ms": 50.0,
++ "std_ttft_ms": 3.0,
++ "p50_ttft_ms": 50.0,
++ "p99_ttft_ms": 80.0,
++ "mean_tpot_ms": 13.5,
++ "median_tpot_ms": 13.5,
++ "std_tpot_ms": 0.4,
++ "p50_tpot_ms": 13.5,
++ "p99_tpot_ms": 15.6,
++ "mean_itl_ms": 13.0,
++ "median_itl_ms": 12.9,
++ "std_itl_ms": 1.0,
++ "p50_itl_ms": 12.9,
++ "p99_itl_ms": 20.0,
++ "mean_e2el_ms": 1760.0,
++ "median_e2el_ms": 1752.0,
++ "std_e2el_ms": 10.0,
++ "p50_e2el_ms": 1752.0,
++ "p99_e2el_ms": 1830.0,
++ "variant": "fixed_prompt",
++ "concurrency": "1",
++ "repeat": "2"
++}
+\ No newline at end of file
+diff --git a/tests/fixtures/load_sweep/vllm_serve_fixed_prompt_c4_run1.json b/tests/fixtures/load_sweep/vllm_serve_fixed_prompt_c4_run1.json
+new file mode 100644
+index 0000000..3411eec
+--- /dev/null
++++ b/tests/fixtures/load_sweep/vllm_serve_fixed_prompt_c4_run1.json
+@@ -0,0 +1,42 @@
++{
++ "date": "20261127-000000",
++ "endpoint_type": "openai",
++ "backend": "openai",
++ "label": "openai",
++ "model_id": "mistral-7b",
++ "tokenizer_id": "mistralai/Mistral-7B-v0.1",
++ "num_prompts": 8,
++ "request_rate": "inf",
++ "burstiness": 1.0,
++ "max_concurrency": 4,
++ "completed": 8,
++ "failed": 0,
++ "total_input_tokens": 480,
++ "total_output_tokens": 1024,
++ "request_throughput": 1.677288223161438,
++ "output_throughput": 213.20031931145576,
++ "total_token_throughput": 303.14331330207966,
++ "mean_ttft_ms": 80.0,
++ "median_ttft_ms": 79.0,
++ "std_ttft_ms": 3.0,
++ "p50_ttft_ms": 79.0,
++ "p99_ttft_ms": 140.0,
++ "mean_tpot_ms": 15.0,
++ "median_tpot_ms": 15.0,
++ "std_tpot_ms": 0.4,
++ "p50_tpot_ms": 15.0,
++ "p99_tpot_ms": 17.4,
++ "mean_itl_ms": 13.0,
++ "median_itl_ms": 12.9,
++ "std_itl_ms": 1.0,
++ "p50_itl_ms": 12.9,
++ "p99_itl_ms": 20.0,
++ "mean_e2el_ms": 1940.0,
++ "median_e2el_ms": 1931.0,
++ "std_e2el_ms": 10.0,
++ "p50_e2el_ms": 1931.0,
++ "p99_e2el_ms": 2070.0,
++ "variant": "fixed_prompt",
++ "concurrency": "4",
++ "repeat": "1"
++}
+\ No newline at end of file
+diff --git a/tests/fixtures/load_sweep/vllm_serve_fixed_prompt_c4_run2.json b/tests/fixtures/load_sweep/vllm_serve_fixed_prompt_c4_run2.json
+new file mode 100644
+index 0000000..2cf7dc9
+--- /dev/null
++++ b/tests/fixtures/load_sweep/vllm_serve_fixed_prompt_c4_run2.json
+@@ -0,0 +1,42 @@
++{
++ "date": "20261127-000000",
++ "endpoint_type": "openai",
++ "backend": "openai",
++ "label": "openai",
++ "model_id": "mistral-7b",
++ "tokenizer_id": "mistralai/Mistral-7B-v0.1",
++ "num_prompts": 8,
++ "request_rate": "inf",
++ "burstiness": 1.0,
++ "max_concurrency": 4,
++ "completed": 8,
++ "failed": 0,
++ "total_input_tokens": 480,
++ "total_output_tokens": 1024,
++ "request_throughput": 1.6872882231614381,
++ "output_throughput": 214.20031931145576,
++ "total_token_throughput": 303.14331330207966,
++ "mean_ttft_ms": 80.0,
++ "median_ttft_ms": 80.0,
++ "std_ttft_ms": 3.0,
++ "p50_ttft_ms": 80.0,
++ "p99_ttft_ms": 140.0,
++ "mean_tpot_ms": 15.0,
++ "median_tpot_ms": 15.0,
++ "std_tpot_ms": 0.4,
++ "p50_tpot_ms": 15.0,
++ "p99_tpot_ms": 17.4,
++ "mean_itl_ms": 13.0,
++ "median_itl_ms": 12.9,
++ "std_itl_ms": 1.0,
++ "p50_itl_ms": 12.9,
++ "p99_itl_ms": 20.0,
++ "mean_e2el_ms": 1940.0,
++ "median_e2el_ms": 1932.0,
++ "std_e2el_ms": 10.0,
++ "p50_e2el_ms": 1932.0,
++ "p99_e2el_ms": 2070.0,
++ "variant": "fixed_prompt",
++ "concurrency": "4",
++ "repeat": "2"
++}
+\ No newline at end of file
+diff --git a/tests/fixtures/load_sweep/vllm_serve_random_c16_run1.json b/tests/fixtures/load_sweep/vllm_serve_random_c16_run1.json
+new file mode 100644
+index 0000000..48b55af
+--- /dev/null
++++ b/tests/fixtures/load_sweep/vllm_serve_random_c16_run1.json
+@@ -0,0 +1,42 @@
++{
++ "date": "20261127-000000",
++ "endpoint_type": "openai",
++ "backend": "openai",
++ "label": "openai",
++ "model_id": "mistral-7b",
++ "tokenizer_id": "mistralai/Mistral-7B-v0.1",
++ "num_prompts": 8,
++ "request_rate": "inf",
++ "burstiness": 1.0,
++ "max_concurrency": 16,
++ "completed": 7,
++ "failed": 1,
++ "total_input_tokens": 480,
++ "total_output_tokens": 1024,
++ "request_throughput": 5.064272761986954,
++ "output_throughput": 644.2710787983397,
++ "total_token_throughput": 918.9586839976281,
++ "mean_ttft_ms": 200.0,
++ "median_ttft_ms": 199.0,
++ "std_ttft_ms": 3.0,
++ "p50_ttft_ms": 199.0,
++ "p99_ttft_ms": 380.0,
++ "mean_tpot_ms": 21.0,
++ "median_tpot_ms": 21.0,
++ "std_tpot_ms": 0.4,
++ "p50_tpot_ms": 21.0,
++ "p99_tpot_ms": 24.6,
++ "mean_itl_ms": 13.0,
++ "median_itl_ms": 12.9,
++ "std_itl_ms": 1.0,
++ "p50_itl_ms": 12.9,
++ "p99_itl_ms": 20.0,
++ "mean_e2el_ms": 2660.0,
++ "median_e2el_ms": 2651.0,
++ "std_e2el_ms": 10.0,
++ "p50_e2el_ms": 2651.0,
++ "p99_e2el_ms": 3030.0,
++ "variant": "random",
++ "concurrency": "16",
++ "repeat": "1"
++}
+\ No newline at end of file
+diff --git a/tests/fixtures/load_sweep/vllm_serve_random_c1_run1.json b/tests/fixtures/load_sweep/vllm_serve_random_c1_run1.json
+new file mode 100644
+index 0000000..fa544dd
+--- /dev/null
++++ b/tests/fixtures/load_sweep/vllm_serve_random_c1_run1.json
+@@ -0,0 +1,42 @@
++{
++ "date": "20261127-000000",
++ "endpoint_type": "openai",
++ "backend": "openai",
++ "label": "openai",
++ "model_id": "mistral-7b",
++ "tokenizer_id": "mistralai/Mistral-7B-v0.1",
++ "num_prompts": 8,
++ "request_rate": "inf",
++ "burstiness": 1.0,
++ "max_concurrency": 1,
++ "completed": 8,
++ "failed": 0,
++ "total_input_tokens": 480,
++ "total_output_tokens": 1024,
++ "request_throughput": 0.56,
++ "output_throughput": 71.0,
++ "total_token_throughput": 100.0,
++ "mean_ttft_ms": 50.0,
++ "median_ttft_ms": 49.0,
++ "std_ttft_ms": 3.0,
++ "p50_ttft_ms": 49.0,
++ "p99_ttft_ms": 80.0,
++ "mean_tpot_ms": 13.5,
++ "median_tpot_ms": 13.5,
++ "std_tpot_ms": 0.4,
++ "p50_tpot_ms": 13.5,
++ "p99_tpot_ms": 15.6,
++ "mean_itl_ms": 13.0,
++ "median_itl_ms": 12.9,
++ "std_itl_ms": 1.0,
++ "p50_itl_ms": 12.9,
++ "p99_itl_ms": 20.0,
++ "mean_e2el_ms": 1760.0,
++ "median_e2el_ms": 1751.0,
++ "std_e2el_ms": 10.0,
++ "p50_e2el_ms": 1751.0,
++ "p99_e2el_ms": 1830.0,
++ "variant": "random",
++ "concurrency": "1",
++ "repeat": "1"
++}
+\ No newline at end of file
+diff --git a/tests/fixtures/load_sweep/vllm_serve_random_c1_run2.json b/tests/fixtures/load_sweep/vllm_serve_random_c1_run2.json
+new file mode 100644
+index 0000000..8aacc55
+--- /dev/null
++++ b/tests/fixtures/load_sweep/vllm_serve_random_c1_run2.json
+@@ -0,0 +1,42 @@
++{
++ "date": "20261127-000000",
++ "endpoint_type": "openai",
++ "backend": "openai",
++ "label": "openai",
++ "model_id": "mistral-7b",
++ "tokenizer_id": "mistralai/Mistral-7B-v0.1",
++ "num_prompts": 8,
++ "request_rate": "inf",
++ "burstiness": 1.0,
++ "max_concurrency": 1,
++ "completed": 8,
++ "failed": 0,
++ "total_input_tokens": 480,
++ "total_output_tokens": 1024,
++ "request_throughput": 0.5700000000000001,
++ "output_throughput": 72.0,
++ "total_token_throughput": 100.0,
++ "mean_ttft_ms": 50.0,
++ "median_ttft_ms": 50.0,
++ "std_ttft_ms": 3.0,
++ "p50_ttft_ms": 50.0,
++ "p99_ttft_ms": 80.0,
++ "mean_tpot_ms": 13.5,
++ "median_tpot_ms": 13.5,
++ "std_tpot_ms": 0.4,
++ "p50_tpot_ms": 13.5,
++ "p99_tpot_ms": 15.6,
++ "mean_itl_ms": 13.0,
++ "median_itl_ms": 12.9,
++ "std_itl_ms": 1.0,
++ "p50_itl_ms": 12.9,
++ "p99_itl_ms": 20.0,
++ "mean_e2el_ms": 1760.0,
++ "median_e2el_ms": 1752.0,
++ "std_e2el_ms": 10.0,
++ "p50_e2el_ms": 1752.0,
++ "p99_e2el_ms": 1830.0,
++ "variant": "random",
++ "concurrency": "1",
++ "repeat": "2"
++}
+\ No newline at end of file
+diff --git a/tests/fixtures/load_sweep/vllm_serve_random_c4_run1.json b/tests/fixtures/load_sweep/vllm_serve_random_c4_run1.json
+new file mode 100644
+index 0000000..1cf2c91
+--- /dev/null
++++ b/tests/fixtures/load_sweep/vllm_serve_random_c4_run1.json
+@@ -0,0 +1,42 @@
++{
++ "date": "20261127-000000",
++ "endpoint_type": "openai",
++ "backend": "openai",
++ "label": "openai",
++ "model_id": "mistral-7b",
++ "tokenizer_id": "mistralai/Mistral-7B-v0.1",
++ "num_prompts": 8,
++ "request_rate": "inf",
++ "burstiness": 1.0,
++ "max_concurrency": 4,
++ "completed": 8,
++ "failed": 0,
++ "total_input_tokens": 480,
++ "total_output_tokens": 1024,
++ "request_throughput": 1.677288223161438,
++ "output_throughput": 213.20031931145576,
++ "total_token_throughput": 303.14331330207966,
++ "mean_ttft_ms": 80.0,
++ "median_ttft_ms": 79.0,
++ "std_ttft_ms": 3.0,
++ "p50_ttft_ms": 79.0,
++ "p99_ttft_ms": 140.0,
++ "mean_tpot_ms": 15.0,
++ "median_tpot_ms": 15.0,
++ "std_tpot_ms": 0.4,
++ "p50_tpot_ms": 15.0,
++ "p99_tpot_ms": 17.4,
++ "mean_itl_ms": 13.0,
++ "median_itl_ms": 12.9,
++ "std_itl_ms": 1.0,
++ "p50_itl_ms": 12.9,
++ "p99_itl_ms": 20.0,
++ "mean_e2el_ms": 1940.0,
++ "median_e2el_ms": 1931.0,
++ "std_e2el_ms": 10.0,
++ "p50_e2el_ms": 1931.0,
++ "p99_e2el_ms": 2070.0,
++ "variant": "random",
++ "concurrency": "4",
++ "repeat": "1"
++}
+\ No newline at end of file
+diff --git a/tests/fixtures/load_sweep/vllm_serve_random_c4_run2.json b/tests/fixtures/load_sweep/vllm_serve_random_c4_run2.json
+new file mode 100644
+index 0000000..8ec2d9b
+--- /dev/null
++++ b/tests/fixtures/load_sweep/vllm_serve_random_c4_run2.json
+@@ -0,0 +1,42 @@
++{
++ "date": "20261127-000000",
++ "endpoint_type": "openai",
++ "backend": "openai",
++ "label": "openai",
++ "model_id": "mistral-7b",
++ "tokenizer_id": "mistralai/Mistral-7B-v0.1",
++ "num_prompts": 8,
++ "request_rate": "inf",
++ "burstiness": 1.0,
++ "max_concurrency": 4,
++ "completed": 8,
++ "failed": 0,
++ "total_input_tokens": 480,
++ "total_output_tokens": 1024,
++ "request_throughput": 1.6872882231614381,
++ "output_throughput": 214.20031931145576,
++ "total_token_throughput": 303.14331330207966,
++ "mean_ttft_ms": 80.0,
++ "median_ttft_ms": 80.0,
++ "std_ttft_ms": 3.0,
++ "p50_ttft_ms": 80.0,
++ "p99_ttft_ms": 140.0,
++ "mean_tpot_ms": 15.0,
++ "median_tpot_ms": 15.0,
++ "std_tpot_ms": 0.4,
++ "p50_tpot_ms": 15.0,
++ "p99_tpot_ms": 17.4,
++ "mean_itl_ms": 13.0,
++ "median_itl_ms": 12.9,
++ "std_itl_ms": 1.0,
++ "p50_itl_ms": 12.9,
++ "p99_itl_ms": 20.0,
++ "mean_e2el_ms": 1940.0,
++ "median_e2el_ms": 1932.0,
++ "std_e2el_ms": 10.0,
++ "p50_e2el_ms": 1932.0,
++ "p99_e2el_ms": 2070.0,
++ "variant": "random",
++ "concurrency": "4",
++ "repeat": "2"
++}
+\ No newline at end of file
+-- 
+2.43.0
+
