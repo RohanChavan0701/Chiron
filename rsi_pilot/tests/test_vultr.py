@@ -191,7 +191,7 @@ def test_module_constants_ship_as_set():
     assert list(ast.literal_eval(consts["PLAN_ALLOWLIST"])) == [PLAN]
     assert ast.literal_eval(consts["MAX_OPEN"]) == 1
     assert ast.literal_eval(consts["MAX_HOURS"]) == 24.0
-    assert ast.literal_eval(consts["MAX_BUDGET_USD"]) == 20.0
+    assert ast.literal_eval(consts["MAX_BUDGET_USD"]) == 30.0
 
 
 def test_launch_records_live_price_cap_and_provider(api):
@@ -462,7 +462,7 @@ def test_plans_keys_balance_commands(api, capsys, monkeypatch):
         PLAN: True, A40: False, "vcg-a16-6c-60g-16vram": False, L40S: False}
     assert plans[PLAN]["available_in"] == ["ewr"] and plans[A40]["available_in"] == ["lax", "lhr"]
     assert plans[L40S]["available_in"] == [] and plans[PLAN]["hourly_cost"] == 2.397
-    assert plans[PLAN]["cap_hours_at_max_budget"] == pytest.approx(7.9)
+    assert plans[PLAN]["cap_hours_at_max_budget"] == pytest.approx(11.9)
     assert sum(c[1].endswith("/availability") for c in calls) == 4            # one per region
     n = len(calls)
     V.main(["plans", "--region", "lax"], transport=t)

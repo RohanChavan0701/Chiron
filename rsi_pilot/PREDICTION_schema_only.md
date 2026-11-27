@@ -120,3 +120,10 @@ are context only, and the fresh baseline's mean on this hardware is reported nex
 
 ## Deviations
 
+- **Launch attempts, 2026-11-27, before any result.** Vultr refused the A100 launch three times
+  and one A40 attempt with "maximum monthly fee limit for this account" (the check uses the
+  plan's monthly list price; billing is hourly). No instance was created by any of them. The
+  owner kept the A100, set the per-launch cap to 30 dollars and a 5 hour job deadline. If the
+  deadline stops the run before all six sessions finish, the finished sessions are reported
+  as they are and the missing ones are run later with the same seeds.
+

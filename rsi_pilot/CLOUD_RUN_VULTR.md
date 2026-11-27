@@ -95,8 +95,9 @@ these figures are for planning only.
   the plan must also be among the live `vcg-` plans, and in the region's `available_plans` (today
   that means `ewr` only).
 - **Region:** `ewr` (set by the author in chat on 2026-11-27).
-- **Per-launch dollar cap:** $20 for the schema-only ablation launch, set by the author in chat
-  on 2026-11-27 ("use $20 cap"); one launch approved. `--budget-usd` is required on every launch
+- **Per-launch dollar cap:** $30 for the schema-only ablation launch, raised from $20 by the
+  author in chat on 2026-11-27 ("keep a100 ... finish the job in 5 hours and have the 30 usd
+  cap"); the job deadline is 5 hours after launch; one launch approved. `--budget-usd` is required on every launch
   and must be within the ceiling (`MAX_BUDGET_USD = 20`, still the code placeholder for later
   launches). At $2.397/h the cap is 7.9 h.
 - **Max hours:** ______ (placeholder `MAX_HOURS = 24`; not binding at $20 on the A100).

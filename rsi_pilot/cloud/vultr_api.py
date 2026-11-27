@@ -53,7 +53,7 @@ PROVIDER = "vultr"
 
 # Only the author changes the next four constants. Conservative placeholders, 2026-11-27.
 MAX_HOURS = 24.0
-MAX_BUDGET_USD = 20.0
+MAX_BUDGET_USD = 30.0   # raised from 20 by the author in chat on 2026-11-27 ("have the 30 usd capp")
 MAX_OPEN = 1
 # GPU plan ids (from `plans`) the author has approved, with where the approval came from.
 # Launch refuses every plan not listed here.
