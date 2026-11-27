@@ -174,9 +174,10 @@ def test_empty_allowlist_refuses_every_plan(api, monkeypatch):
 
 def test_only_the_author_named_plan_is_allowlisted(api):
     calls, ledger, t = api
-    assert list(V.PLAN_ALLOWLIST) == [PLAN] and "lets use a100" in V.PLAN_ALLOWLIST[PLAN]
+    assert list(V.PLAN_ALLOWLIST) == [PLAN, A40] and "lets use a100" in V.PLAN_ALLOWLIST[PLAN]
+    assert "use A40" in V.PLAN_ALLOWLIST[A40]
     with pytest.raises(V.GuardrailError, match="PLAN_ALLOWLIST"):
-        _go(t, ledger, plan=A40, region="lax")                 # available, but not allowlisted
+        _go(t, ledger, plan="vcg-a16-6c-60g-16vram", region="ewr")   # listed, but not allowlisted
     assert not [c for c in calls if c[0] == "POST"]
 
 
@@ -188,7 +189,7 @@ def test_module_constants_ship_as_set():
               for n in tree.body if isinstance(n, (ast.Assign, ast.AnnAssign))
               for t in ([n] if isinstance(n, ast.AnnAssign) else n.targets)
               if isinstance(t, ast.Name) or isinstance(t, ast.AnnAssign)}
-    assert list(ast.literal_eval(consts["PLAN_ALLOWLIST"])) == [PLAN]
+    assert list(ast.literal_eval(consts["PLAN_ALLOWLIST"])) == [PLAN, A40]
     assert ast.literal_eval(consts["MAX_OPEN"]) == 1
     assert ast.literal_eval(consts["MAX_HOURS"]) == 24.0
     assert ast.literal_eval(consts["MAX_BUDGET_USD"]) == 20.0
@@ -459,7 +460,7 @@ def test_plans_keys_balance_commands(api, capsys, monkeypatch):
     V.main(["plans"], transport=t)
     plans = {p["id"]: p for p in json.loads(capsys.readouterr().out)}
     assert {i: p["allowlisted"] for i, p in plans.items()} == {
-        PLAN: True, A40: False, "vcg-a16-6c-60g-16vram": False, L40S: False}
+        PLAN: True, A40: True, "vcg-a16-6c-60g-16vram": False, L40S: False}
     assert plans[PLAN]["available_in"] == ["ewr"] and plans[A40]["available_in"] == ["lax", "lhr"]
     assert plans[L40S]["available_in"] == [] and plans[PLAN]["hourly_cost"] == 2.397
     assert plans[PLAN]["cap_hours_at_max_budget"] == pytest.approx(7.9)

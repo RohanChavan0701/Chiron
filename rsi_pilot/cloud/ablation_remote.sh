@@ -20,9 +20,9 @@ fail() { say "FAILED: $*"; echo "$(date -u +%FT%TZ) $*" > $OUT/ABLATION_FAILED; 
 rm -f $OUT/ABLATION_FAILED $OUT/ABLATION_PARTIAL $OUT/ABLATION_DONE
 say "start deadline=$(date -u -d @$DEADLINE +%FT%TZ) workers=$W"
 
-# a. GPU: must be an A100 with a working driver; never install drivers here
+# a. GPU: must be an A100 or A40 (the author-named plans) with a working driver; never install drivers here
 nvidia-smi > $L/nvidia_smi.txt 2>&1 || fail "nvidia-smi does not work (see ablation_logs/nvidia_smi.txt)"
-grep -q A100 $L/nvidia_smi.txt || fail "nvidia-smi shows no A100"
+grep -Eq "A100|A40" $L/nvidia_smi.txt || fail "nvidia-smi shows no A100 or A40"
 
 # b. data (only spider and bird_minidev are needed)
 [ -d data/spider ] && [ -d data/bird_minidev ] || \

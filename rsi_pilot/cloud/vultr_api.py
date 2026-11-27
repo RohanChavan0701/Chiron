@@ -59,6 +59,9 @@ MAX_OPEN = 1
 # Launch refuses every plan not listed here.
 PLAN_ALLOWLIST: dict[str, str] = {
     "vcg-a100-12c-120g-80vram": 'named by the author in chat on 2026-11-27 ("lets use a100")',
+    # Vultr refused the A100 three times on 2026-11-27 (account monthly fee limit; the plan
+    # lists at 1750 per month), so the author named the A40 for the ablation launch.
+    "vcg-a40-24c-120g-48vram": 'named by the author in chat on 2026-11-27 ("Maybe use A40 instead")',
 }
 GPU_PLAN_PREFIX = "vcg-"
 
