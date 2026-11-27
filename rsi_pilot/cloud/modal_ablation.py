@@ -628,7 +628,11 @@ def run_seed(seed: int) -> dict:
         normalize_eol(work.parent)
         if (work / f"runs_v5/s{seed}/ablation").exists():
             raise RuntimeError("the uploaded repo already has an ablation dir for this seed")
-        (work / "data").symlink_to(DATA_IN_VOLUME, target_is_directory=True)
+        # Copy the data to the container's local disk instead of reading it through the volume
+        # mount. Gold and predicted queries run under a 30 s timeout (frozen eval settings); on
+        # the network mount some BIRD gold queries exceeded it, which changed which tasks count
+        # as eligible when the splits are regenerated (first smoke attempt, 2026-11-27).
+        shutil.copytree(DATA_IN_VOLUME, work / "data")
         for d in DATA_SUBDIRS:
             if not (work / "data" / d).is_dir():
                 raise RuntimeError(f"data/{d} missing in volume chiron-data (run prepare)")
