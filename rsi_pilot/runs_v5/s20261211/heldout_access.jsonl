@@ -25,3 +25,13 @@
 {"time": 1793679813.941918, "split": "E2", "harness_id": "cf03f64e64e003be", "is_baseline": false, "purpose": "audit"}
 {"time": 1793679813.9452226, "split": "H", "harness_id": "cf03f64e64e003be", "is_baseline": false, "purpose": "audit"}
 {"time": 1793679816.0085194, "split": "B", "harness_id": "cf03f64e64e003be", "is_baseline": false, "purpose": "audit"}
+{"time": 1795773871.8167706, "split": "H", "harness_id": "b1f0f3d8cc6e84b3", "is_baseline": false, "purpose": "ablation_schema_only"}
+{"time": 1795774029.7728226, "split": "B", "harness_id": "b1f0f3d8cc6e84b3", "is_baseline": false, "purpose": "ablation_schema_only"}
+{"time": 1795774150.3166137, "split": "H", "harness_id": "83c6007558609821", "is_baseline": false, "purpose": "ablation_sample_rows_only"}
+{"time": 1795774279.7384827, "split": "B", "harness_id": "83c6007558609821", "is_baseline": false, "purpose": "ablation_sample_rows_only"}
+{"time": 1795774430.1199918, "split": "H", "harness_id": "8679b07b42c9fce5", "is_baseline": false, "purpose": "ablation_verify_only"}
+{"time": 1795774559.3780386, "split": "B", "harness_id": "8679b07b42c9fce5", "is_baseline": false, "purpose": "ablation_verify_only"}
+{"time": 1795774726.8339891, "split": "H", "harness_id": "c6db15a029219a7f", "is_baseline": false, "purpose": "ablation_steps_only"}
+{"time": 1795774850.5092995, "split": "B", "harness_id": "c6db15a029219a7f", "is_baseline": false, "purpose": "ablation_steps_only"}
+{"time": 1795775021.178036, "split": "H", "harness_id": "fdbf0d83f23efe48", "is_baseline": true, "purpose": "ablation_baseline"}
+{"time": 1795775137.051596, "split": "B", "harness_id": "fdbf0d83f23efe48", "is_baseline": true, "purpose": "ablation_baseline"}

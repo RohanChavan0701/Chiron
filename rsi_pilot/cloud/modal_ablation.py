@@ -333,7 +333,10 @@ def merge_plan(stage: Path, repo: Path) -> tuple[list[tuple[Path, Path]], list[s
         for src in sorted(p for p in base.rglob("*") if p.is_file()):
             dst = Path(repo) / src.relative_to(base)
             if dst.exists():
-                a, b = dst.read_bytes(), src.read_bytes()
+                # Compare with line endings normalized: the laptop's working copy may hold CRLF
+                # (core.autocrlf) while the container wrote LF.
+                crlf, lf = bytes([13, 10]), bytes([10])
+                a, b = dst.read_bytes().replace(crlf, lf), src.read_bytes().replace(crlf, lf)
                 if a == b:
                     continue
                 if not b.startswith(a):

@@ -1,0 +1,11 @@
+splits consistent with run 5: splits_v5_s20261216.json vs /tmp/chiron_work/s20261216_a1/rsi_pilot/runs_v5/s20261216
+baseline H: 95/200 = 47.5% | 201s wall
+baseline B: 35/200 = 17.5% | 159s wall
+schema_only H: 120/200 = 60.0% | 86s wall
+schema_only B: 79/200 = 39.5% | 122s wall
+sample_rows_only H: 98/200 = 49.0% | 132s wall
+sample_rows_only B: 43/200 = 21.5% | 165s wall
+verify_only H: 96/200 = 48.0% | 135s wall
+verify_only B: 38/200 = 19.0% | 172s wall
+steps_only H: 99/200 = 49.5% | 132s wall
+steps_only B: 40/200 = 20.0% | 178s wall

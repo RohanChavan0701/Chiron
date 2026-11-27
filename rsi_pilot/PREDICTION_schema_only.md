@@ -155,3 +155,47 @@ are context only, and the fresh baseline's mean on this hardware is reported nex
   evaluation records (`scripts/pin_splits_v5.py`) and committed, so each session scores exactly
   the tasks run 5 scored. Still no evaluation had run.
 
+
+## Result (2026-11-27, written after all six sessions finished)
+
+Run: Modal, six containers, each 1x NVIDIA A100-SXM4-80GB, Ollama 0.40.13, student
+`qwen2.5:7b-instruct` digest `845dbda0ea48`, 100% GPU in every session (`ablation_modal/ollama_ps.txt`),
+8 parallel slots. Sessions took 23 to 28 minutes each. Per-seed records: `runs_v5/s<SEED>/ablation/`;
+report: `runs_v5/ablation_seed_level.md` (`python -m rsi.ablate report runs_v5/s2026121?`).
+
+**Primary endpoint.** `schema_only` minus the same-session baseline on H: +23, +25, +27, +18, +21,
++25 tasks of 200; mean **+11.6 pp** (SD 1.6), positive in 6 of 6 sessions, exact Wilcoxon p = 0.031.
+Same-session baseline 47.8% (SD 1.5); `schema_only` 59.4% (SD 0.6).
+
+**Secondary.** On B (BIRD): +45, +50, +42, +44, +45, +44; mean **+22.5 pp** (SD 1.3), 6 of 6,
+p = 0.031 (19.8% to 42.3%). Tokens per task: 0.88x the baseline on H, 1.59x on B.
+
+**Extra single-field variants** (H gain over the same-session baseline; Holm as one family):
+
+| Variant | Mean pp | SD | Positive/negative | p | p (Holm) |
+|---|---|---|---|---|---|
+| `steps_only` (max_steps 8) | +3.3 | 3.9 | 5/1 | 0.094 | 0.281 |
+| `sample_rows_only` (3 rows) | +0.3 | 3.2 | 4/2 | 0.750 | 1.000 |
+| `verify_only` | +0.1 | 3.3 | 4/2 | 0.594 | 1.000 |
+
+None moved B by more than 0.7 pp.
+
+**Pre-stated readings.** The primary gain, +11.6 pp, is within 2 pp of the evolved arms' mean gain
+(+12.1 pp; arms +11.8, +12.0, +12.4 in run 5, a different session), so reading 1 applies: one field
+is sufficient for the gain; with 7 of 18 evolved harnesses reaching the same level without it,
+the edit space has several cheap routes to the same ceiling, which is why random edits match the
+proposer. For the extras, no variant reached +6.0 pp and `steps_only` is above +3.0 pp, so the
+"otherwise" rule applies: the table is reported and no sentence about other routes is made.
+
+**Predictions.**
+
+| # | Prediction | Result |
+|---|---|---|
+| 1 | `schema_only` H gain +10 to +13 pp, positive 6 of 6 | **Held**: +11.6 pp, 6 of 6 |
+| 2 | B gain positive but smaller than the arms' mean B gain (+16.3 pp) | **Wrong**: +22.5 pp, larger than the arms' mean (arms are a different session) |
+| 3 | Tokens within 15% of baseline on H; 1.5x to 3x on B | **Held**: 0.88x on H, 1.59x on B |
+| 4 | `sample_rows_only` +4 to +9 pp; `verify_only` and `steps_only` under +4; none matches `schema_only` | **Partly wrong**: `sample_rows_only` +0.3 pp; the other two parts held |
+
+**Not claimed.** The arms' means come from a different session and card (Lambda A10); the fresh
+baseline here is 47.8% against 46.4% in run 5. Nothing here says the evolved harnesses' other
+edits hurt, or that the schema is the only route: 7 of 18 run-5 finals got there without it.

@@ -38,6 +38,8 @@ A 7B SQL agent (`qwen2.5:7b-instruct`) evolves its own harness on 50 Spider-trai
 - The baseline's own SD across reruns of the same harness on the same tasks is 1.69 pp.
 - Spider 1.0 is likely in the student's pretraining data. That affects every arm equally, but it limits what the absolute numbers mean.
 
+**Why random edits match the proposer (pre-registered ablation, 6 sessions).** The baseline harness with exactly one field changed, `schema_upfront: full`, scored fresh next to a same-session baseline: **+11.6 pp on held-out Spider** (SD 1.6, 6 of 6 sessions, p = 0.031) and +22.5 pp on BIRD, at 0.88x the baseline's tokens. That is within 2 pp of the evolved arms' mean gain, so one field is sufficient for the gain; three other single fields (more steps, sample rows, verify before submit) gave +3.3, +0.3 and +0.1 pp. Predictions were registered before the run; two of four held. Details and the per-session table: [`rsi_pilot/README.md`](rsi_pilot/README.md#single-field-ablation-of-run-5-pre-registered-six-sessions), [`PREDICTION_schema_only.md`](rsi_pilot/PREDICTION_schema_only.md), [`ablation_seed_level.md`](rsi_pilot/runs_v5/ablation_seed_level.md).
+
 ![Held-out gain per seed and harness cost per arm](rsi_pilot/figures/run5_headline.png)
 
 Numbers: [`arm_stats.md`](rsi_pilot/runs_v5/arm_stats.md) (reproduce with `python scripts/arm_stats.py` from `rsi_pilot/`), [`summary.csv`](rsi_pilot/runs_v5/summary.csv), [`seed_level.md`](rsi_pilot/runs_v5/seed_level.md). Predictions: [`PREDICTION_run5.md`](rsi_pilot/PREDICTION_run5.md). Design, leakage controls and caveats: [`rsi_pilot/README.md`](rsi_pilot/README.md).
