@@ -58,6 +58,15 @@ docstring lists the commands. Guardrail tests: `tests/test_cloud.py`.
   discarded.
 - Run-4 instances run the working branch (a git bundle, not a push); see `cloud/bootstrap.sh`.
 
+### Author changes for run 7 (2026-11-10, in chat)
+
+- Run 7 only may launch **one 1x H100** (`gpu_1x_h100_pcie`) instead of the A10, with a budget
+  of **$30** for the launch (cap = 3000 / live price, 9.1 h at $3.29). The author's words:
+  "use h100 for this run only i want faster results so go ahead cap it at 30".
+- Enforced in `lambda_api.TYPE_EXCEPTIONS`: the type is accepted only for a name starting
+  `chiron-run7` and a budget of at most $30. Every other guardrail above is unchanged, and
+  later runs are back on the A10 unless the author says otherwise.
+
 ## Ledger (`rsi_pilot/cloud/ledger.jsonl`, committed)
 
 Append one JSON line per event and commit it:

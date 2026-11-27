@@ -1,0 +1,15 @@
+--- 2026-11-27T10:34:06Z
+NAME                   ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL   
+qwen2.5:7b-instruct    845dbda0ea48    8.7 GB    100% GPU     8192       llamacpp    Forever    
+--- 2026-11-27T10:39:06Z
+NAME                   ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL   
+qwen2.5:7b-instruct    845dbda0ea48    8.7 GB    100% GPU     8192       llamacpp    Forever    
+--- 2026-11-27T10:44:06Z
+NAME                   ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL   
+qwen2.5:7b-instruct    845dbda0ea48    8.7 GB    100% GPU     8192       llamacpp    Forever    
+--- 2026-11-27T10:49:06Z
+NAME                   ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL   
+qwen2.5:7b-instruct    845dbda0ea48    8.7 GB    100% GPU     8192       llamacpp    Forever    
+--- 2026-11-27T10:54:06Z
+NAME                   ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL   
+qwen2.5:7b-instruct    845dbda0ea48    8.7 GB    100% GPU     8192       llamacpp    Forever    

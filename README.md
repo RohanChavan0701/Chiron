@@ -10,20 +10,36 @@ Chiron has two experiments. The runtime loop detects accuracy drift and adds ver
 
 ### Run 5: harness performance and random-edit control
 
-A 7B SQL agent uses a 32B proposer to revise its harness. The harnesses are frozen before scoring on held-out databases and a second benchmark. Each row below aggregates six seeds, with 200 tasks per benchmark in each seed.
+A 7B SQL agent (`qwen2.5:7b-instruct`) evolves its own harness on 50 Spider-train tasks. The evolved harness is then frozen and scored on 200 held-out Spider dev tasks (unseen databases) and 200 BIRD Mini-Dev tasks. Three search arms, 6 seeds each; mean (SD) over seeds:
 
-| Harness | Held-out Spider | BIRD Mini-Dev |
-| --- | ---: | ---: |
-| Baseline | 46.4% | 20.1% |
-| Plain LLM proposer | 58.2% | 36.7% |
-| Regularized LLM proposer | 58.4% | 35.8% |
-| Random-edit control | 58.8% | 36.6% |
+| Harness | What it is | Held-out Spider % | Test-suite-corrected % | BIRD % |
+|---|---|---:|---:|---:|
+| baseline | unevolved harness, re-scored each seed | 46.42 (1.69) | 35.00 (1.61) | 20.08 (0.86) |
+| A | 32B LLM proposer, keeps any edit that helps | 58.17 (1.51) | 44.33 (5.44) | 36.67 (3.74) |
+| B | same proposer, regularized (RRSI-style) | 58.42 (1.36) | 47.25 (1.81) | 35.75 (6.02) |
+| C | random edits with A's keep rule (control) | 58.83 (2.29) | 46.75 (4.26) | 36.58 (5.50) |
 
-The edits helped all three arms. The LLM proposer showed no measurable advantage over random edits on held-out Spider. The baseline exposed table names only, and all three arms often surfaced the full schema or added useful examples. Regularization did not produce a clear accuracy gain over the plain proposer. An exploratory comparison found fewer tokens per held-out task with regularization, 1,918 versus 4,969 for the plain proposer.
+**Controlled comparison.** Paired per seed on held-out Spider, A minus C is -0.67 pp (SD 1.86, exact Wilcoxon p = 0.53, pre-registered secondary endpoint) and B minus C is -0.42 pp (SD 2.91). We measured no accuracy advantage for the 32B proposer over the random-edit control on held-out Spider. The pre-registered primary endpoint, B minus A, is +0.25 pp (p = 0.84).
 
-**Grader audit.** On an earlier run, about half of the tuning-set passes contained wrong queries that happened to produce the expected result on a single database. Rescoring against test-suite databases exposed the false positives. Later runs split by database and guarded access to the held-out sets. Spider 1.0 may already be in the student's training data.
+**What held.**
+- Every evolved arm beat the baseline in 6 of 6 seeds, on held-out Spider and on BIRD (18 of 18 runs). The raw held-out gain is about +12 pp (A +11.8, B +12.0, C +12.4); under the test-suite re-score it is +9.3 pp for A, +12.3 for B and +11.8 for C. On BIRD it is about +16 pp. With 6 seeds, p = 0.031 is the smallest exact p possible (Holm-corrected 0.25 in the pre-registered family).
+- Exploratory, not pre-registered: the regularized arm got its gain at baseline token cost, 1,918 tokens per held-out task against 1,990 for the baseline and 4,969 for A.
 
-[Run 5 design and limitations](rsi_pilot/README.md#run-5-multi-step-sql-agent-pre-registered) · [Per-seed results](rsi_pilot/runs_v5/seed_level.md) · [Committed measurements](rsi_pilot/runs_v5/summary.csv)
+**Grader audit.**
+- 19% to 25% of held-out passes fail Spider's distilled test-suite databases (baseline 24.6%, A 23.8%, B 19.1%, C 20.5%). Absolute accuracies are inflated by 11 to 14 points; the gain over baseline survives.
+- Scoring uses Spider's official result comparison. Tasks whose gold query returns no rows were excluded when the splits were built, and the audit counts 0 such passes in every seed.
+- On an earlier run, about half of the tuning-set passes were wrong queries that happened to produce the expected result on a single database; the test-suite re-score exposed them, and later runs split by database and guard access to the held-out sets.
+- BIRD has no test suite. The per-seed BIRD hand-label files (`audit_bird_labels.csv`, 20 passes each) are not labeled yet, so the BIRD numbers are unaudited.
+
+**Scope.**
+- Seeds replicate the search, not the test set: the same 200 held-out tasks are used in every seed.
+- The baseline harness showed only table names, so much of the gain is supplying missing general information (most often the full schema up front or sample rows in table descriptions).
+- The baseline's own SD across reruns of the same harness on the same tasks is 1.69 pp.
+- Spider 1.0 is likely in the student's pretraining data. That affects every arm equally, but it limits what the absolute numbers mean.
+
+**Why random edits match the proposer (pre-registered ablation, 6 sessions).** The baseline harness with exactly one field changed, `schema_upfront: full`, scored fresh next to a same-session baseline: **+11.6 pp on held-out Spider** (SD 1.6, 6 of 6 sessions, p = 0.031) and +22.5 pp on BIRD, at 0.88x the baseline's tokens. That is within 2 pp of the evolved arms' mean gain, so one field is sufficient for the gain; three other single fields (more steps, sample rows, verify before submit) gave +3.3, +0.3 and +0.1 pp. Predictions were registered before the run; two of four held. Details and the per-session table: [`rsi_pilot/README.md`](rsi_pilot/README.md#single-field-ablation-of-run-5-pre-registered-six-sessions), [`PREDICTION_schema_only.md`](rsi_pilot/PREDICTION_schema_only.md), [`ablation_seed_level.md`](rsi_pilot/runs_v5/ablation_seed_level.md).
+
+Numbers: [`arm_stats.md`](rsi_pilot/runs_v5/arm_stats.md) (reproduce with `python scripts/arm_stats.py` from `rsi_pilot/`), [`summary.csv`](rsi_pilot/runs_v5/summary.csv), [`seed_level.md`](rsi_pilot/runs_v5/seed_level.md). Predictions: [`PREDICTION_run5.md`](rsi_pilot/PREDICTION_run5.md). Design, leakage controls and caveats: [`rsi_pilot/README.md`](rsi_pilot/README.md).
 
 ### Runtime teacher repair: coding
 

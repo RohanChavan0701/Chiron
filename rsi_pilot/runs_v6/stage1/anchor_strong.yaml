@@ -1,0 +1,18 @@
+system_prompt: 'You are a financial analyst working as an agent. You answer a question
+  about a page of a
+
+  financial report, then submit one answer.
+
+  '
+tool_guide: 'Reply with exactly one JSON object per turn, and nothing else:
+
+  {"tool": "calc", "arg": "(120.5 - 98.2) / 98.2"}   do arithmetic
+
+  {"tool": "submit", "arg": "22.7%"}                 give your final answer (ends
+  the task)
+
+  '
+rules: ''
+table_format: rows
+max_steps: 4
+verify_before_submit: true

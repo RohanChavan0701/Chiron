@@ -1,0 +1,10 @@
+schema_only H: 120/200 = 60.0% | 146s wall
+schema_only B: 83/200 = 41.5% | 109s wall
+sample_rows_only H: 98/200 = 49.0% | 125s wall
+sample_rows_only B: 38/200 = 19.0% | 150s wall
+verify_only H: 97/200 = 48.5% | 124s wall
+verify_only B: 41/200 = 20.5% | 158s wall
+steps_only H: 101/200 = 50.5% | 122s wall
+steps_only B: 44/200 = 22.0% | 174s wall
+baseline H: 93/200 = 46.5% | 114s wall
+baseline B: 41/200 = 20.5% | 143s wall

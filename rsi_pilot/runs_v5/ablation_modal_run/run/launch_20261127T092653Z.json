@@ -1,0 +1,26 @@
+{
+ "time": "2026-11-27T09:26:53Z",
+ "git_commit": "678c0ef1980ae785abed4df0c62c4aa6a2856163",
+ "seeds": [
+  20261211,
+  20261212,
+  20261213,
+  20261214,
+  20261215,
+  20261216
+ ],
+ "gpu": "A100-80GB",
+ "plan": {
+  "gpu": "A100-80GB",
+  "price_source": "https://modal.com/pricing (read 2026-11-27)",
+  "rate_usd_per_hour": 3.1314239999999995,
+  "minutes": 75,
+  "per_attempt_worst": 4.175231999999999,
+  "overhead_worst": 0.435204,
+  "first_round_worst": 25.486595999999995,
+  "all_twice_worst": 50.53798799999999,
+  "guaranteed_retries": 1,
+  "budget": 30.0
+ },
+ "max_seed_minutes": 75
+}

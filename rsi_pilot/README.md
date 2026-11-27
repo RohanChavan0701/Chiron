@@ -463,6 +463,40 @@ the poisoned tasks and the report; `scripts/run_poison.sh` runs one cell; `tests
 covers the plumbing on synthetic data. Predictions are in the design file and precede any run.
 Requires run 4 to have finished, since run 4's arms are the clean control.
 
+## Single-field ablation of run 5 (pre-registered, six sessions)
+
+Why do random edits match the proposer in run 5? Hypothesis: the gain is mostly one field,
+`schema_upfront: full` (the baseline showed only table names). Design, predictions and readings
+were registered before any result (`PREDICTION_schema_only.md`, with a dated deviations list).
+Four variants of the baseline, each changing exactly one field (`ablations_v5.yaml`), scored
+fresh on H and B next to a same-session baseline, in six replicate sessions keyed to the run-5
+seeds. H, B and the student seed are fixed, so the sessions replicate the evaluation, not a
+search. Hardware: Modal, one A100 80 GB per session, Ollama 0.40.13 (run 5 used a Lambda A10, so
+only the paired same-session comparison is evidence). Report: `runs_v5/ablation_seed_level.md`;
+records: `runs_v5/s<SEED>/ablation/`.
+
+| Variant (baseline + one field) | H gain, mean pp (SD) | +/- sessions | p | B gain, mean pp |
+|---|---|---|---|---|
+| **`schema_only`** (`schema_upfront: full`), primary | **+11.6** (1.6) | 6/0 | 0.031 | +22.5 |
+| `steps_only` (`max_steps: 8`) | +3.3 (3.9) | 5/1 | 0.094 (Holm 0.28) | +0.7 |
+| `sample_rows_only` (`describe_sample_rows: 3`) | +0.3 (3.2) | 4/2 | 0.750 | +0.2 |
+| `verify_only` (`verify_before_submit: true`) | +0.1 (3.3) | 4/2 | 0.594 | -0.2 |
+
+Same-session baseline: 47.8% on H (SD 1.5), 19.8% on B. `schema_only`: 59.4% on H (SD 0.6),
+42.3% on B, at 0.88x the baseline's tokens per task on H (1.59x on B, where schemas are larger).
+
+Pre-stated reading 1 applies: the one-field gain (+11.6 pp) is within 2 pp of the evolved arms'
+mean gain (+12.1 pp). **One field is sufficient for run 5's held-out gain.** With 7 of 18 evolved
+harnesses reaching the same level without that field, the edit space has several cheap routes to
+the same ceiling, which is why random edits match the proposer. No other single field tested
+reaches +6 pp on its own. Predictions 1 and 3 held; prediction 2 (BIRD gain smaller than the
+arms') and half of prediction 4 (`sample_rows_only` +4 to +9 pp) were wrong.
+
+Code: `rsi/ablate.py`, `scripts/run_ablation.sh`, `scripts/pin_splits_v5.py` (the split files are
+written from run 5's own records: one BIRD gold query, `bird_518`, exceeds the 30 s eligibility
+timeout on slower CPUs, so regeneration is machine-dependent), `cloud/modal_ablation.py` and
+`CLOUD_RUN_MODAL.md` (Modal run), `tests/test_ablate.py`, `tests/test_modal_ablation.py`.
+
 ## Limitations
 
 **Runs 1-3:** n = 50 per set, up to 4 seeds, one student model and one proposer model.
