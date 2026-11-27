@@ -15,7 +15,7 @@ from rsi.agent import first_message
 from rsi.config import ROOT, dump_yaml, load_yaml
 from rsi.fewshot import FewShotPool
 from rsi.harness import HarnessError, validate
-from rsi.pool import wilcoxon_exact
+from rsi.pool import holm, wilcoxon_exact
 from rsi.runner import Context
 from rsi.student import Completion
 
@@ -179,12 +179,52 @@ def test_report_math(tmp_path):
     net = [22, 18, 26, 0]
     p = wilcoxon_exact(net)
     assert p == pytest.approx(0.25)                                          # zero dropped, 3 positive
-    assert f"| schema_only | H | +22, +18, +26, +0 | +11.0, +9.0, +13.0, +0.0 | +8.2 | 5.7 | 66/0 | 3/0 | 0.90 | {p:.3f} |" in md
+    assert f"| schema_only | H | +22, +18, +26, +0 | +11.0, +9.0, +13.0, +0.0 | +8.2 | 5.7 | 66/0 | 3/0 | 0.90 | {p:.3f} | - |" in md
+    assert "| p (Holm) |" in md
     assert "| baseline | H | 4 | 47.1% | 1.1 | 2000 |" in md
     assert "| 20261211 | schema_only | 1 | 118/200 | 1800 |" in md and "| 20261211 | baseline | 2 | 96/200 | 2000 |" in md
     assert "reference from run 5, different session, not a paired comparison" in md.lower()
     assert "| arm_B | 59.0% | +12.0 pp | 30.0% | +10.0 pp |" in md          # baseline mean H = 47.0%
     assert "Arms' mean H gain over the run-5 baseline: +12.0 pp." in md
+
+
+def test_report_holm_family_and_variant_order(tmp_path):
+    """4 variants x 6 seeds on H and B: schema_only on H is primary (no Holm); the other three on H
+    are one Holm family; B rows are raw p only. schema_only is listed first, then alphabetically."""
+    n, base = 200, {"H": 95, "B": 40}
+    gains = {"schema_only": {"H": [22, 18, 26, 20, 24, 30], "B": [20, 25, 22, 18, 30, 24]},
+             "verify_only": {"H": [3, -2, 5, 1, 4, 2], "B": [1, -1, 2, 0, 3, -2]},
+             "sample_rows_only": {"H": [10, 12, 8, 14, 9, 11], "B": [6, 4, 8, 5, 7, 3]},
+             "steps_only": {"H": [1, -3, 2, -1, 0, 4], "B": [0, 1, -1, 2, -2, 1]}}
+    vec = lambda k: {f"t{i}": i < k for i in range(n)}
+    res = lambda k: {"passed": k, "n": n, "accuracy": k / n, "tokens_per_task": 2000.0, "vector": vec(k)}
+    for i, seed in enumerate(range(20261211, 20261217)):
+        d = tmp_path / f"s{seed}" / "ablation"
+        d.mkdir(parents=True)
+        results = {"baseline": {s: res(base[s]) for s in base}}
+        results.update({v: {s: res(base[s] + g[s][i]) for s in base} for v, g in gains.items()})
+        order = [f"{h}/{s}" for h in results for s in base]
+        (d / "ablation.json").write_text(json.dumps({
+            "seed": seed, "splits": ["H", "B"], "order": order, "results": results,
+            "changed_field": {v: "x" for v in gains}, "harnesses": {v: {"x": v} for v in ["baseline", *gains]}}))
+    md = report(sorted(tmp_path.glob("s*")), tmp_path / "missing.csv")
+    paired = md.split("## Paired")[1].split("## Reference")[0]
+    rows = [l.split(" | ") for l in paired.splitlines() if l.startswith("| ") and l.split(" | ")[1] in ("H", "B")]
+    assert [r[0][2:] for r in rows][::2] == ["schema_only", "sample_rows_only", "steps_only", "verify_only"]
+    raw = {(r[0][2:], r[1]): r[-2] for r in rows}
+    hcol = {(r[0][2:], r[1]): r[-1].rstrip(" |") for r in rows}
+    for (v, s), p in raw.items():
+        assert p == f"{wilcoxon_exact(gains[v][s]):.3f}"
+    expected = holm({v: wilcoxon_exact(gains[v]["H"]) for v in ("sample_rows_only", "steps_only", "verify_only")})
+    for v, p in expected.items():
+        assert hcol[(v, "H")] == f"{p:.3f}"
+    assert hcol[("schema_only", "H")] == "-"
+    assert all(hcol[(v, "B")] == "-" for v in gains)
+    assert expected["sample_rows_only"] == pytest.approx(3 * 0.03125)        # 6 of 6 positive, smallest p
+    per_seed = md.split("## Per seed")[1].split("## Per harness")[0]
+    first = [l.split(" | ")[1] for l in per_seed.splitlines() if l.startswith("| 20261211 ")]
+    assert first == ["baseline", "schema_only", "sample_rows_only", "steps_only", "verify_only"]
+    assert md.index("`schema_only` = ") < md.index("`sample_rows_only` = ") < md.index("`verify_only` = ")
 
 
 def test_agent_kind_end_to_end():
@@ -214,7 +254,8 @@ def student(messages):
     return Completion(json.dumps({"tool": "submit", "arg": sql}), 50, 5, 0.01)
 base = validate(load_yaml(BASELINE))
 variants = load_variants(VARIANTS, base)
-assert list(variants) == ["schema_only"], variants
+assert list(variants) == ["schema_only", "sample_rows_only", "verify_only", "steps_only"], list(variants)
+variants = {"schema_only": variants["schema_only"]}     # this test exercises one variant end to end
 cfg = load_yaml(ROOT / "frozen_v5_s20261214.yaml")
 runs = tmp / "runs"
 for a in "ABC":

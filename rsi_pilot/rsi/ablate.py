@@ -35,7 +35,7 @@ from statistics import fmean, stdev
 
 from rsi.config import BASELINE, ROOT, RUNS, SPLITS, load_yaml
 from rsi.harness import HarnessError, diff_fields, harness_id, validate
-from rsi.pool import wilcoxon_exact
+from rsi.pool import holm, wilcoxon_exact
 from rsi.runner import Context, evaluate, load_context
 
 VARIANTS = ROOT / "ablations_v5.yaml"
@@ -150,6 +150,14 @@ def run_seed(ctx: Context, variants: dict[str, dict], splits: list[str], baselin
 
 # ---------------- report ----------------
 
+PRIMARY_VARIANT = "schema_only"
+
+
+def variant_order(names) -> list[str]:
+    """The primary variant first, then the others alphabetically."""
+    return sorted(names, key=lambda n: (n != PRIMARY_VARIANT, n))
+
+
 def _sd(xs: list[float]) -> float:
     return stdev(xs) if len(xs) > 1 else 0.0
 
@@ -183,14 +191,15 @@ def report(run_dirs: list[Path], summary_csv: Path) -> str:
                   if (d / "ablation" / "ablation.json").exists()), key=lambda a: a["seed"])
     if not abl:
         raise SystemExit("no ablation/ablation.json in the given runs dirs")
-    names = ["baseline"] + sorted({n for a in abl for n in a["results"] if n != "baseline"})
+    names = ["baseline"] + variant_order({n for a in abl for n in a["results"] if n != "baseline"})
     splits = [s for s in ("H", "B", "E2") if any(s in a["splits"] for a in abl)]
     lines = [f"# Fixed-harness ablation, seed level ({len(abl)} replicate sessions)", "",
              "Each session scores the run-5 baseline harness and each single-field variant fresh (no cache),",
              "in the same session on the same server. H and B are the same tasks for every seed and the",
              "student seed is fixed, so the seeds replicate the evaluation (server nondeterminism), not a search.",
              "", "Variants: " + "; ".join(f"`{n}` = baseline with `{f}: {json.dumps(abl[0]['harnesses'][n][f])}`"
-                                         for n, f in sorted(abl[0]["changed_field"].items())), "",
+                                         for n, f in ((n, abl[0]["changed_field"][n])
+                                                      for n in variant_order(abl[0]["changed_field"]))), "",
              "## Per seed", "",
              "| Seed | Harness | Order | " + " | ".join(f"{s} passed | {s} tokens/task" for s in splits) + " |",
              "|---|---|---|" + "---|---|" * len(splits)]
@@ -215,10 +224,13 @@ def report(run_dirs: list[Path], summary_csv: Path) -> str:
                              f"{fmean(r['tokens_per_task'] for r in rs):.0f} |")
     lines += ["", "## Paired: variant minus same-session baseline", "",
               "Net tasks = variant passed - baseline passed (= improved - regressed). Exact two-sided Wilcoxon",
-              "signed-rank across seeds (`rsi.pool.wilcoxon_exact`); with 6 seeds the smallest possible p is 0.031.", "",
+              "signed-rank across seeds (`rsi.pool.wilcoxon_exact`); with 6 seeds the smallest possible p is 0.031.",
+              f"`{PRIMARY_VARIANT}` on H is the primary endpoint (uncorrected). Every other variant on H is one",
+              "Holm-corrected family (`rsi.pool.holm`); B rows are raw p only.", "",
               "| Variant | Set | Per-seed net tasks | Per-seed pp | Mean pp | SD pp | Improved/regressed (summed) | "
-              "Positive/negative seeds | Tokens/task ratio (mean) | Wilcoxon p |",
-              "|---|---|---|---|---|---|---|---|---|---|"]
+              "Positive/negative seeds | Tokens/task ratio (mean) | Wilcoxon p | p (Holm) |",
+              "|---|---|---|---|---|---|---|---|---|---|---|"]
+    rows = []
     for n in names[1:]:
         for s in splits:
             pairs = [(a["results"]["baseline"][s], a["results"][n][s]) for a in abl
@@ -230,9 +242,14 @@ def report(run_dirs: list[Path], summary_csv: Path) -> str:
             imp = sum(v["vector"][k] and not b["vector"][k] for b, v in pairs for k in b["vector"])
             reg = sum(b["vector"][k] and not v["vector"][k] for b, v in pairs for k in b["vector"])
             ratio = fmean(v["tokens_per_task"] / b["tokens_per_task"] for b, v in pairs if b["tokens_per_task"])
-            lines.append(f"| {n} | {s} | {', '.join(f'{x:+d}' for x in net)} | {', '.join(f'{x:+.1f}' for x in pp)} | "
+            rows.append((n, s, wilcoxon_exact(net),
+                         f"| {n} | {s} | {', '.join(f'{x:+d}' for x in net)} | {', '.join(f'{x:+.1f}' for x in pp)} | "
                          f"{fmean(pp):+.1f} | {_sd(pp):.1f} | {imp}/{reg} | {sum(x > 0 for x in net)}/"
-                         f"{sum(x < 0 for x in net)} | {ratio:.2f} | {wilcoxon_exact(net):.3f} |")
+                         f"{sum(x < 0 for x in net)} | {ratio:.2f} | "))
+    p_holm = holm({n: p for n, s, p, _ in rows if s == "H" and n != PRIMARY_VARIANT})
+    for n, s, p, row in rows:
+        ph = f"{p_holm[n]:.3f}" if s == "H" and n in p_holm else "-"
+        lines.append(row + f"{p:.3f} | {ph} |")
     lines += ["", "## Reference (unpaired)", ""] + _arm_reference(summary_csv)
     lines += ["", "Variant means above against these arm means compare different sessions; if the server, GPU",
               "or Ollama version differs from run 5, only the paired table is a valid comparison."]

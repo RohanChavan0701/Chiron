@@ -5,11 +5,12 @@
 schema_only:
   schema_upfront: full
 
-# Optional extras, pending the owner's decision. Not part of the drafted pre-registration;
-# uncomment only before registering, and add them to PREDICTION_schema_only.md if so.
-# sample_rows_only:
-#   describe_sample_rows: 3
-# verify_only:
-#   verify_before_submit: true
-# steps_only:
-#   max_steps: 8
+# Single-field extras, added by the owner's decision on 2026-11-27 before registration. They test
+# whether fields other than the schema reach the same level on their own. Values are the most
+# common ones in run 5's final harnesses.
+sample_rows_only:
+  describe_sample_rows: 3
+verify_only:
+  verify_before_submit: true
+steps_only:
+  max_steps: 8

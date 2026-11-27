@@ -465,10 +465,12 @@ Requires run 4 to have finished, since run 4's arms are the clean control.
 
 ## Schema-only ablation (built, not run)
 
-Tests whether run 5's held-out gain is mostly one field: the baseline harness with only
-`schema_upfront: full` (`ablations_v5.yaml`), scored fresh on H and B next to a same-session
-baseline, six replicate sessions keyed to the run-5 seeds. H/B and the student seed are fixed,
-so the seeds replicate the evaluation, not a search. Draft pre-registration:
+Tests whether run 5's held-out gain is mostly one field. Four variants of the baseline, each
+changing one field (`ablations_v5.yaml`): `schema_only` (`schema_upfront: full`, primary),
+`sample_rows_only`, `verify_only` and `steps_only` (Holm-corrected as one family on H). Each is
+scored fresh on H and B next to a same-session baseline, six replicate sessions keyed to the
+run-5 seeds. H/B and the student seed are fixed, so the seeds replicate the evaluation, not a
+search. Draft pre-registration:
 `PREDICTION_schema_only.md`. Code: `rsi/ablate.py` (variants must change exactly one field; the
 held-out guard passes because run 5's finals exist, and accesses are logged as `ablation_*`).
 Run: `scripts/run_ablation_all.sh 8` (student server only; regenerates and checks splits), then
