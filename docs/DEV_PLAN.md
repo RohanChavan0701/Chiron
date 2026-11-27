@@ -21,6 +21,23 @@ Working branch: `claude/laughing-ritchie-zafhnk`, open as PR RohanChavan0701/Chi
 | Write-up | Draft in `docs/writeup/post.md` covers runs 1 to 5 (runs 4 and 5 folded in 2026-11-05; figures regenerated, `fig3_arms` added). Not published; citations unchecked. |
 | BIRD hand labels | `audit_bird_labels.csv` per run and seed, unlabeled. |
 
+## Update 2026-11-27 (after the run-5 single-field ablation)
+
+- Ablation done and merged (`e80d757`): `schema_upfront: full` alone gives +11.6 pp on H and
+  +22.5 pp on B, 6 of 6 sessions, same-session paired. Readings and prediction verdicts in
+  `rsi_pilot/PREDICTION_schema_only.md`. Ran on Modal (six A100 containers, about 25 min each)
+  after Vultr refused every GPU launch; `rsi_pilot/CLOUD_RUN_MODAL.md` is the runbook.
+- Nothing is running. Lambda ledger: all instances terminated. Modal: `ABLATION_DONE` written
+  10:59 UTC; the author should confirm `modal app list` shows no live app.
+- Next GPU candidate: run 8, a LoRA arm on the run-5 substrate (`rsi_pilot/RUN8_DESIGN.md`,
+  design only; `PREDICTION_run8.md` is a draft, not registered). Needs an `openai_compatible`
+  student, a full-text rollout harvester (the agent truncates tool calls to 500 characters),
+  an SFT exporter, a training script, and a smoke session before any cap is set. The core
+  loop's "LoRA on verified teacher repairs" is not runnable as stated: 11 real verified pairs
+  exist in the repo.
+- Untracked drafts from 2026-11-09 (`rsi_pilot/PREDICTION_run6.md`, `frozen_v6_smoke.yaml`)
+  are stale: run 6 was redesigned (`RUN6_DESIGN.md`) and run. Delete or keep out of git.
+
 ## Rules that hold in every phase
 
 - Spending limits and termination rules in `CLOUD_RUN.md` are the author's and do not change
