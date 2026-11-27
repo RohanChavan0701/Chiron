@@ -120,10 +120,3 @@ are context only, and the fresh baseline's mean on this hardware is reported nex
 
 ## Deviations
 
-- **Hardware, 2026-11-27, before any result.** Vultr refused the A100 launch three times with
-  "maximum monthly fee limit for this account" (the plan lists at 1750 per month; billing is
-  hourly). No instance was created. The owner then named the A40 (`vcg-a40-24c-120g-48vram`,
-  1x NVIDIA A40 48 GB) for this run. Everything else in the design is unchanged. The analysis
-  already rests only on the paired same-session comparison, so the card does not enter it; the
-  `nvidia-smi` output is kept in `runs_v5/ablation_logs/`.
-
