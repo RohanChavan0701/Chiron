@@ -1,0 +1,15 @@
+# Fixed-harness ablation for run 5 (rsi/ablate.py, PREDICTION_schema_only.md).
+# Each entry: variant name -> {field: value}, applied to the baseline harness (harness_agent.yaml).
+# A variant must change exactly ONE field; rsi.ablate refuses anything else.
+
+schema_only:
+  schema_upfront: full
+
+# Optional extras, pending the owner's decision. Not part of the drafted pre-registration;
+# uncomment only before registering, and add them to PREDICTION_schema_only.md if so.
+# sample_rows_only:
+#   describe_sample_rows: 3
+# verify_only:
+#   verify_before_submit: true
+# steps_only:
+#   max_steps: 8

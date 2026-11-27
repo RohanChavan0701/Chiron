@@ -463,6 +463,18 @@ the poisoned tasks and the report; `scripts/run_poison.sh` runs one cell; `tests
 covers the plumbing on synthetic data. Predictions are in the design file and precede any run.
 Requires run 4 to have finished, since run 4's arms are the clean control.
 
+## Schema-only ablation (built, not run)
+
+Tests whether run 5's held-out gain is mostly one field: the baseline harness with only
+`schema_upfront: full` (`ablations_v5.yaml`), scored fresh on H and B next to a same-session
+baseline, six replicate sessions keyed to the run-5 seeds. H/B and the student seed are fixed,
+so the seeds replicate the evaluation, not a search. Draft pre-registration:
+`PREDICTION_schema_only.md`. Code: `rsi/ablate.py` (variants must change exactly one field; the
+held-out guard passes because run 5's finals exist, and accesses are logged as `ablation_*`).
+Run: `scripts/run_ablation_all.sh 8` (student server only; regenerates and checks splits), then
+`python -m rsi.ablate report runs_v5/s2026121?` -> `runs_v5/ablation_seed_level.md`. Outputs:
+`runs_v5/s<SEED>/ablation/`. Plumbing tests: `tests/test_ablate.py`.
+
 ## Limitations
 
 **Runs 1-3:** n = 50 per set, up to 4 seeds, one student model and one proposer model.
