@@ -81,6 +81,10 @@ GPU_RECHECK_S = 300
 
 LOCAL_REPO = Path(__file__).resolve().parents[1]      # rsi_pilot/ on the laptop
 IMAGE_REPO = "/opt/chiron/rsi_pilot"                  # rsi_pilot/ inside the image (pristine)
+# rsi/sqlexec.py imports the parent repo's checker (harness/evaluator.py) from the directory
+# above rsi_pilot, for the second-verifier verdict recorded on every task.
+IMAGE_HARNESS = "/opt/chiron/harness"
+HARNESS_FILES = ("__init__.py", "evaluator.py")
 WORK_ROOT = "/tmp/chiron_work"
 DATA_MOUNT = "/vol/data"
 MODELS_MOUNT = "/vol/ollama"
@@ -369,6 +373,8 @@ image = (
     )
     .env({"PYTHONUNBUFFERED": "1"})
     .add_local_dir(str(LOCAL_REPO), remote_path=IMAGE_REPO, ignore=IGNORE)
+    .add_local_file(str(LOCAL_REPO.parent / "harness" / HARNESS_FILES[0]), f"{IMAGE_HARNESS}/{HARNESS_FILES[0]}")
+    .add_local_file(str(LOCAL_REPO.parent / "harness" / HARNESS_FILES[1]), f"{IMAGE_HARNESS}/{HARNESS_FILES[1]}")
 )
 
 data_vol = modal.Volume.from_name("chiron-data", create_if_missing=True, version=2)
@@ -533,6 +539,7 @@ def prepare() -> dict:
     if work.exists():
         shutil.rmtree(work)
     shutil.copytree(IMAGE_REPO, work, symlinks=True)
+    shutil.copytree(IMAGE_HARNESS, work.parent / "harness", dirs_exist_ok=True)
     t = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
                         "tests/test_ablate.py", "tests/test_agent.py"], cwd=work, capture_output=True, text=True)
     (rec_dir / "pytest.log").write_text(t.stdout + t.stderr)
@@ -596,6 +603,7 @@ def run_seed(seed: int) -> dict:
         if work.parent.exists():
             shutil.rmtree(work.parent)
         shutil.copytree(IMAGE_REPO, work, symlinks=True)
+        shutil.copytree(IMAGE_HARNESS, work.parent / "harness")
         if (work / f"runs_v5/s{seed}/ablation").exists():
             raise RuntimeError("the uploaded repo already has an ablation dir for this seed")
         (work / "data").symlink_to(DATA_IN_VOLUME, target_is_directory=True)
