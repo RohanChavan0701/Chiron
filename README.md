@@ -12,21 +12,35 @@ Chiron makes a small model better at runtime. It watches the model work, finds w
 
 ### Self-improving SQL agent: +12 points on unseen databases, +16 points on BIRD
 
-A 7B SQL agent (`qwen2.5:7b-instruct`) evolves its own harness on 50 Spider tasks, guided by a local 32B proposer. The evolved harness is then frozen and scored on data it never saw.
+A 7B SQL agent (`qwen2.5:7b-instruct`) evolves its own harness on 50 Spider-train tasks. The evolved harness is then frozen and scored on 200 held-out Spider dev tasks (unseen databases) and 200 BIRD Mini-Dev tasks. Three search arms, 6 seeds each; mean (SD) over seeds:
 
-| Evaluation set | Baseline harness | Self-improved harness | Gain |
-|---|---:|---:|---:|
-| Held-out Spider (200 tasks, unseen databases) | 46.4% | **58.5%** | **+12.1 pts** |
-| BIRD Mini-Dev (200 tasks, different benchmark) | 20.1% | **36.3%** | **+16.3 pts (1.8x)** |
+| Harness | What it is | Held-out Spider % | Test-suite-corrected % | BIRD % |
+|---|---|---:|---:|---:|
+| baseline | unevolved harness, re-scored each seed | 46.42 (1.69) | 35.00 (1.61) | 20.08 (0.86) |
+| A | 32B LLM proposer, keeps any edit that helps | 58.17 (1.51) | 44.33 (5.44) | 36.67 (3.74) |
+| B | same proposer, regularized (RRSI-style) | 58.42 (1.36) | 47.25 (1.81) | 35.75 (6.02) |
+| C | random edits with A's keep rule (control) | 58.83 (2.29) | 46.75 (4.26) | 36.58 (5.50) |
 
-- **18 of 18 runs improved** on both sets (6 seeds x 3 search strategies).
-- **Pre-registered**: predictions and analysis plan were committed before the run.
-- **No extra cost**: the regularized (RRSI-style) arm matched the gain while keeping the harness at baseline size, 1,918 tokens per task against the baseline's 1,990.
-- The loop found real, general fixes on its own, most often showing the full database schema up front, adding sample rows to table descriptions, and verifying a query before submitting it.
+**Controlled comparison.** Paired per seed on held-out Spider, A minus C is -0.67 pp (SD 1.86, exact Wilcoxon p = 0.53, pre-registered secondary endpoint) and B minus C is -0.42 pp (SD 2.91). We measured no accuracy advantage for the 32B proposer over the random-edit control on held-out Spider. The pre-registered primary endpoint, B minus A, is +0.25 pp (p = 0.84).
+
+**What held.**
+- Every evolved arm beat the baseline in 6 of 6 seeds, on held-out Spider and on BIRD (18 of 18 runs). The raw held-out gain is about +12 pp (A +11.8, B +12.0, C +12.4); under the test-suite re-score it is +9.3 pp for A, +12.3 for B and +11.8 for C. On BIRD it is about +16 pp. With 6 seeds, p = 0.031 is the smallest exact p possible (Holm-corrected 0.25 in the pre-registered family).
+- Exploratory, not pre-registered: the regularized arm got its gain at baseline token cost, 1,918 tokens per held-out task against 1,990 for the baseline and 4,969 for A.
+
+**Grader audit.**
+- 19% to 25% of held-out passes fail Spider's distilled test-suite databases (baseline 24.6%, A 23.8%, B 19.1%, C 20.5%). Absolute accuracies are inflated by 11 to 14 points; the gain over baseline survives.
+- Scoring uses Spider's official result comparison. Tasks whose gold query returns no rows were excluded when the splits were built, and the audit counts 0 such passes in every seed.
+- BIRD has no test suite. The per-seed BIRD hand-label files (`audit_bird_labels.csv`, 20 passes each) are not labeled yet, so the BIRD numbers are unaudited.
+
+**Scope.**
+- Seeds replicate the search, not the test set: the same 200 held-out tasks are used in every seed.
+- The baseline harness showed only table names, so much of the gain is supplying missing general information (most often the full schema up front or sample rows in table descriptions).
+- The baseline's own SD across reruns of the same harness on the same tasks is 1.69 pp.
+- Spider 1.0 is likely in the student's pretraining data. That affects every arm equally, but it limits what the absolute numbers mean.
 
 ![Held-out gain per seed and harness cost per arm](rsi_pilot/figures/run5_headline.png)
 
-Full design, leakage controls, per-seed tables and statistics: [`rsi_pilot/README.md`](rsi_pilot/README.md).
+Numbers: [`arm_stats.md`](rsi_pilot/runs_v5/arm_stats.md) (reproduce with `python scripts/arm_stats.py` from `rsi_pilot/`), [`summary.csv`](rsi_pilot/runs_v5/summary.csv), [`seed_level.md`](rsi_pilot/runs_v5/seed_level.md). Predictions: [`PREDICTION_run5.md`](rsi_pilot/PREDICTION_run5.md). Design, leakage controls and caveats: [`rsi_pilot/README.md`](rsi_pilot/README.md).
 
 ### Runtime teacher repair: coding accuracy +67% relative
 
