@@ -185,7 +185,7 @@ def summary_lines(res: dict) -> list[str]:
 image = (
     modal.Image.debian_slim(python_version="3.11")
     .apt_install("git", "curl", "ca-certificates", "procps")
-    .pip_install(f"vllm=={VLLM_VERSION}", "pyyaml")
+    .pip_install(f"vllm[bench]=={VLLM_VERSION}", "pyyaml")
     .env({"PYTHONUNBUFFERED": "1", "HF_HOME": f"{HF_MOUNT}/hf_home"})
     .add_local_file(str(PATCH_LOCAL), PATCH_IMAGE)
 )
